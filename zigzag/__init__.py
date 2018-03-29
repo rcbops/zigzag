@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for Python Result Uploader."""
+"""Top-level package for Zigzag."""
 
 __author__ = """rcbops"""
 __email__ = 'rcb-deploy@lists.rackspace.com'
-__version__ = '0.1.0'
+__version__ = '0.2.0'
