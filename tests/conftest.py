@@ -29,7 +29,11 @@ def single_passing_xml(tmpdir_factory):
                 <property name="GIT_BRANCH" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
-            name="test_pass[ansible://localhost]" time="0.00372695922852"/>
+            name="test_pass[ansible://localhost]" time="0.00372695922852">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
         </testsuite>
         """
 
@@ -67,6 +71,9 @@ def single_fail_xml(tmpdir_factory):
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
         </testsuite>
         """
@@ -106,6 +113,9 @@ def single_error_xml(tmpdir_factory):
         E       RuntimeError: oops
 
         tests/test_default.py:10: RuntimeError</error>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
         </testsuite>
         """
@@ -140,6 +150,9 @@ def single_skip_xml(tmpdir_factory):
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
         </testsuite>
         """
@@ -170,15 +183,35 @@ def flat_all_passing_xml(tmpdir_factory):
                 <property name="GIT_BRANCH" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
-            name="test_pass1[ansible://localhost]" time="0.00372695922852"/>
+            name="test_pass1[ansible://localhost]" time="0.00372695922852">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="12"
-            name="test_pass2[ansible://localhost]" time="0.00341415405273"/>
+            name="test_pass2[ansible://localhost]" time="0.00341415405273">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="15"
-            name="test_pass3[ansible://localhost]" time="0.00363945960999"/>
+            name="test_pass3[ansible://localhost]" time="0.00363945960999">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="18"
-            name="test_pass4[ansible://localhost]" time="0.00314617156982"/>
+            name="test_pass4[ansible://localhost]" time="0.00314617156982">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="21"
-            name="test_pass5[ansible://localhost]" time="0.00332307815552"/>
+            name="test_pass5[ansible://localhost]" time="0.00332307815552">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
         </testsuite>
         """
 
@@ -208,7 +241,11 @@ def flat_mix_status_xml(tmpdir_factory):
                 <property name="GIT_BRANCH" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="12"
-            name="test_pass[ansible://localhost]" time="0.0034921169281"/>
+            name="test_pass[ansible://localhost]" time="0.0034921169281">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
             name="test_fail[ansible://localhost]" time="0.00335693359375">
                 <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
@@ -218,6 +255,9 @@ def flat_mix_status_xml(tmpdir_factory):
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="20"
             name="test_error[ansible://localhost]" time="0.00208067893982">
@@ -229,12 +269,18 @@ def flat_mix_status_xml(tmpdir_factory):
         E       RuntimeError: oops
 
         tests/test_default.py:10: RuntimeError</error>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="24"
             name="test_skip[ansible://localhost]" time="0.00197100639343">
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
         </testsuite>
         """
@@ -265,7 +311,11 @@ def suite_mix_status_xml(tmpdir_factory):
                 <property name="GIT_BRANCH" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="35"
-            name="test_pass[ansible://localhost]" time="0.00357985496521"/>
+            name="test_pass[ansible://localhost]" time="0.00357985496521">
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
+            </testcase>
             <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="38"
             name="test_fail[ansible://localhost]" time="0.00310778617859">
                 <failure message="assert False">self = &lt;test_default.TestClass object at 0x7fb9c7b9a790&gt;
@@ -276,6 +326,9 @@ def suite_mix_status_xml(tmpdir_factory):
         E       assert False
 
         tests/test_default.py:40: AssertionError</failure>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
             <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="41"
             name="test_error[ansible://localhost]" time="0.00223517417908">
@@ -288,12 +341,18 @@ def suite_mix_status_xml(tmpdir_factory):
         E       RuntimeError: oops
 
         tests/test_default.py:34: RuntimeError</error>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
             <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="44"
             name="test_skip[ansible://localhost]" time="0.00199604034424">
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:44: &lt;py._xmlgen.raw object at 0x7fb9c904d190&gt;
                 </skipped>
+                <properties>
+                    <property name="test_id" value="1"/>
+                </properties>
             </testcase>
         </testsuite>
         """

@@ -83,7 +83,7 @@ class TestGenerateTestLog(object):
         test_log_exp = {'name': test_name,
                         'status': 'PASSED',
                         'module_names': [properties['GIT_BRANCH']],
-                        'automation_content': '{}#{}'.format(properties['GIT_BRANCH'], test_name)}
+                        'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
@@ -104,7 +104,7 @@ class TestGenerateTestLog(object):
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
                         'module_names': [properties['GIT_BRANCH']],
-                        'automation_content': '{}#{}'.format(properties['GIT_BRANCH'], test_name)}
+                        'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
@@ -125,7 +125,7 @@ class TestGenerateTestLog(object):
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
                         'module_names': [properties['GIT_BRANCH']],
-                        'automation_content': '{}#{}'.format(properties['GIT_BRANCH'], test_name)}
+                        'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
@@ -146,7 +146,7 @@ class TestGenerateTestLog(object):
         test_log_exp = {'name': test_name,
                         'status': 'SKIPPED',
                         'module_names': [properties['GIT_BRANCH']],
-                        'automation_content': '{}#{}'.format(properties['GIT_BRANCH'], test_name)}
+                        'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
@@ -172,19 +172,19 @@ class TestGenerateAutoRequest(object):
         test_logs_exp = [{'name': 'test_pass',
                           'status': 'PASSED',
                           'module_names': [prop_value],
-                          'automation_content': '{}#{}'.format(prop_value, 'test_pass')},
+                          'automation_content': '1'},
                          {'name': 'test_fail',
                           'status': 'FAILED',
                           'module_names': [prop_value],
-                          'automation_content': '{}#{}'.format(prop_value, 'test_fail')},
+                          'automation_content': '1'},
                          {'name': 'test_error',
                           'status': 'FAILED',
                           'module_names': [prop_value],
-                          'automation_content': '{}#{}'.format(prop_value, 'test_error')},
+                          'automation_content': '1'},
                          {'name': 'test_skip',
                           'status': 'SKIPPED',
                           'module_names': [prop_value],
-                          'automation_content': '{}#{}'.format(prop_value, 'test_skip')}]
+                          'automation_content': '1'}]
 
         # Test
         for x in range(len(auto_req_dict['test_logs'])):
