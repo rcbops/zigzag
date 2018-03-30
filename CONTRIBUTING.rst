@@ -17,11 +17,11 @@ Ready to contribute? Here's how to set up `zigzag` for local development.
 
     $ git clone git@github.com:your_name_here/zigzag.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. (You must have virtualenvwrapper installed) This is how you set up your fork for local development::
 
     $ mkvirtualenv zigzag
     $ cd zigzag/
-    $ python setup.py develop
+    $ make develop
 
 4. Create a branch for local development::
 
@@ -32,11 +32,7 @@ Ready to contribute? Here's how to set up `zigzag` for local development.
 5. When you're done making changes, check that your changes pass flake8 and the
    tests, including testing other Python versions with tox::
 
-    $ flake8 zigzag tests
-    $ python setup.py test or py.test
-    $ tox
-
-   To get flake8 and tox, just pip install them into your virtualenv.
+    $ make test-all
 
 6. Commit your changes and push your branch to GitHub::
 
@@ -62,6 +58,18 @@ Before you submit a pull request, check that it meets these guidelines:
 Tips
 ----
 
-To run a subset of tests::
+Get a list of available `make` tasks::
 
-$ py.test tests.test_zigzag
+   $ make help
+
+Install `zigzag` into the active virtualenv::
+
+   $ make install
+
+Clean-up the `zigzag` build artifacts and wipe the active virtualenv::
+
+   $ make clean
+
+Run a subset of tests::
+
+   $ py.test tests/test_zigzag.py

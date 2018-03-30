@@ -1,5 +1,8 @@
-.PHONY: clean clean-test clean-pyc clean-build help
+.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv help
 .DEFAULT_GOAL := help
+
+SHELL := /bin/bash
+export VIRTUALENVWRAPPER_PYTHON := /usr/bin/python
 
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -29,7 +32,11 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+check-venv: ## verify that the user is running in a Python virtual environment
+	@if [ -z "$(VIRTUALENVWRAPPER_SCRIPT)" ]; then echo 'Python virtualenvwrapper not installed!' && exit 1; fi
+	@if [ -z "$(VIRTUAL_ENV)" ]; then echo 'Not running within a virtual environment!' && exit 1; fi
+
+clean: clean-venv clean-build clean-pyc clean-test ## remove all build, test, coverage, artifacts and wipe virtualenv
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -49,6 +56,10 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr .pytest_cache/
+
+clean-venv: check-venv ## remove all packages from current virtual environment
+	@pip uninstall -y swagger-client || echo "Skipping uninstall of swagger-client"
+	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
 	flake8 zigzag tests
@@ -76,3 +87,6 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
+
+develop: clean ## install necessary packages to setup a dev environment
+	pip install -r requirements_dev.txt
