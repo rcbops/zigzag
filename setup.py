@@ -14,7 +14,6 @@ with open('HISTORY.rst') as history_file:
 dependency_links = ['http://github.com/ryan-rs/qtest-swagger-client/tarball/master#egg=swagger-client-1.0.0']
 requirements = ['Click>=6.0', 'swagger-client']
 setup_requirements = ['pytest-runner']
-test_requirements = ['pytest']
 
 setup(
     author="rcbops",
@@ -46,9 +45,7 @@ setup(
     name='zigzag',
     packages=find_packages(include=['zigzag']),
     setup_requires=setup_requirements,
-    test_suite='tests',
-    tests_require=test_requirements,
     url='https://github.com/rcbops/zigzag',
-    version='0.3.0',
+    version='0.4.0',
     zip_safe=False,
 )
