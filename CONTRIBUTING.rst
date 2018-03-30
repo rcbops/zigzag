@@ -72,4 +72,4 @@ Clean-up the `zigzag` build artifacts and wipe the active virtualenv::
 
 Run a subset of tests::
 
-   $ py.test tests.test_zigzag
+   $ py.test tests/test_zigzag.py
