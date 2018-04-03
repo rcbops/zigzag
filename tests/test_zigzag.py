@@ -5,8 +5,9 @@
 # Imports
 # ======================================================================================================================
 import pytest
-from swagger_client.rest import ApiException
+from hashlib import md5
 from zigzag import zigzag
+from swagger_client.rest import ApiException
 
 
 class TestLoadingInputJunitXMLFile(object):
@@ -51,45 +52,31 @@ class TestLoadingInputJunitXMLFile(object):
             zigzag._load_input_file(bad_junit_root)
 
 
-class TestGenerateTestLog(object):
-    """Test cases for the '_generate_test_log' function"""
+class TestGenerateTestLogs(object):
+    """Test cases for the '_generate_test_logs' function"""
 
-    @pytest.fixture()
-    def properties(self):
-        props = {'JENKINS_CONSOLE_LOG_URL': 'JENKINS_CONSOLE_LOG_URL',
-                 'SCENARIO': 'SCENARIO',
-                 'ACTION': 'ACTION',
-                 'IMAGE': 'IMAGE',
-                 'OS_ARTIFACT_SHA': 'OS_ARTIFACT_SHA',
-                 'PYTHON_ARTIFACT_SHA': 'PYTHON_ARTIFACT_SHA',
-                 'APT_ARTIFACT_SHA': 'APT_ARTIFACT_SHA',
-                 'GIT_REPO': 'GIT_REPO',
-                 'GIT_BRANCH': 'GIT_BRANCH'}
-
-        return props
-
-    def test_pass(self, single_passing_xml, properties):
+    def test_pass(self, single_passing_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated from a JUnitXML file
-        that contains a single passing test
+        that contains a single passing test.
         """
 
         # Setup
         junit_xml = zigzag._load_input_file(single_passing_xml)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_log(junit_xml.find('testcase'), properties).to_dict()
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_pass'
         test_log_exp = {'name': test_name,
                         'status': 'PASSED',
-                        'module_names': [properties['GIT_BRANCH']],
+                        'module_names': ['Unknown'],
                         'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_fail(self, single_fail_xml, properties):
+    def test_fail(self, single_fail_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated from a JUnitXML file
         that contains a single failing test
         """
@@ -97,20 +84,20 @@ class TestGenerateTestLog(object):
         # Setup
         junit_xml = zigzag._load_input_file(single_fail_xml)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_log(junit_xml.find('testcase'), properties).to_dict()
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_fail'
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
-                        'module_names': [properties['GIT_BRANCH']],
+                        'module_names': ['Unknown'],
                         'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_error(self, single_error_xml, properties):
+    def test_error(self, single_error_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated from a JUnitXML file
         that contains a single erroring test
         """
@@ -118,20 +105,20 @@ class TestGenerateTestLog(object):
         # Setup
         junit_xml = zigzag._load_input_file(single_error_xml)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_log(junit_xml.find('testcase'), properties).to_dict()
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_error'
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
-                        'module_names': [properties['GIT_BRANCH']],
+                        'module_names': ['Unknown'],
                         'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_skip(self, single_skip_xml, properties):
+    def test_skip(self, single_skip_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated from a JUnitXML file
         that contains a single skipping test
         """
@@ -139,20 +126,20 @@ class TestGenerateTestLog(object):
         # Setup
         junit_xml = zigzag._load_input_file(single_skip_xml)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_log(junit_xml.find('testcase'), properties).to_dict()
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_skip'
         test_log_exp = {'name': test_name,
                         'status': 'SKIPPED',
-                        'module_names': [properties['GIT_BRANCH']],
+                        'module_names': ['Unknown'],
                         'automation_content': '1'}
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_missing_test_id_xml(self, missing_test_id_xml, properties):
+    def test_missing_test_id_xml(self, missing_test_id_xml):
         """Verify that JUnitXML that is missing the 'test_id" test case property causes a RuntimeError."""
 
         # Setup
@@ -160,7 +147,27 @@ class TestGenerateTestLog(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._generate_test_log(junit_xml.find('testcase'), properties)
+            zigzag._generate_test_logs(junit_xml)
+
+    def test_junit_xml_attachment(self, single_passing_xml):
+        """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated with the raw JUnitXML
+        file included as an attachment.
+        """
+
+        # Setup
+        junit_xml = zigzag._load_input_file(single_passing_xml)
+        # noinspection PyUnresolvedReferences
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+
+        # Expectation
+        attachment_exp_name = 'junit.xml'
+        attachment_exp_content_type = 'application/xml'
+        attachment_exp_data_md5 = '45f29a8da0b0981e20c2c8562081280a'
+
+        # Test
+        assert attachment_exp_name == test_log_dict['attachments'][0]['name']
+        assert attachment_exp_content_type == test_log_dict['attachments'][0]['content_type']
+        assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
 
 class TestGenerateAutoRequest(object):

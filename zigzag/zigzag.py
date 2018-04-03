@@ -5,7 +5,8 @@
 # ======================================================================================================================
 import re
 import swagger_client
-import xml.etree.ElementTree as Etree
+from lxml import etree
+from base64 import b64encode
 from datetime import datetime
 from swagger_client.rest import ApiException
 
@@ -35,10 +36,10 @@ def _load_input_file(file_path):
     root_element = "testsuite"
 
     try:
-        junit_xml = Etree.parse(file_path).getroot()
+        junit_xml = etree.parse(file_path).getroot()
     except IOError:
         raise RuntimeError('Invalid path "{}" for JUnitXML results file!'.format(file_path))
-    except Etree.ParseError:
+    except etree.ParseError:
         raise RuntimeError('The file "{}" does not contain valid XML!'.format(file_path))
 
     if junit_xml.tag != root_element:
@@ -47,38 +48,49 @@ def _load_input_file(file_path):
     return junit_xml
 
 
-def _generate_test_log(junit_testcase_xml, testsuite_props):
-    """Construct a qTest swagger model for a single JUnitXML test result.
+def _generate_test_logs(junit_xml):
+    """Construct a qTest swagger model for all the JUnitXML test cases.
 
     Args:
-        junit_testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
-        testsuite_props (dict): A dictionary of properties for the testsuite from within which the testcase executed.
+        junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
 
     Returns:
-        AutomationTestLogResource: A qTest swagger model for an test log.
+        list(AutomationTestLogResource): A list of qTest swagger model test logs.
     """
 
-    testcase_status = 'PASSED'
+    serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
+    testsuite_props = {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+    test_logs = []
 
-    if junit_testcase_xml.find('failure') is not None or junit_testcase_xml.find('error') is not None:
-        testcase_status = 'FAILED'
-    elif junit_testcase_xml.find('skipped') is not None:
-        testcase_status = 'SKIPPED'
+    for testcase_xml in junit_xml.findall('testcase'):
+        testcase_status = 'PASSED'
 
-    test_log = swagger_client.AutomationTestLogResource()
+        if testcase_xml.find('failure') is not None or testcase_xml.find('error') is not None:
+            testcase_status = 'FAILED'
+        elif testcase_xml.find('skipped') is not None:
+            testcase_status = 'SKIPPED'
 
-    test_log.name = TESTCASE_NAME_RGX.match(junit_testcase_xml.attrib['name']).group(1)
-    test_log.status = testcase_status
-    test_log.module_names = [testsuite_props['GIT_BRANCH']]                      # GIT_BRANCH == RPC release
-    test_log.exe_start_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
-    test_log.exe_end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
+        test_log = swagger_client.AutomationTestLogResource()
 
-    try:
-        test_log.automation_content = junit_testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
-    except AttributeError:
-        raise RuntimeError("Test case '{}' is missing the required 'test_id' property!".format(test_log.name))
+        test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
+        test_log.status = testcase_status
+        test_log.module_names = [testsuite_props['GIT_BRANCH']]                      # GIT_BRANCH == RPC release
+        test_log.exe_start_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
+        test_log.exe_end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
+        test_log.attachments = \
+            [swagger_client.AttachmentResource(name='junit.xml',
+                                               content_type='application/xml',
+                                               data=b64encode(serialized_junit_xml).decode('UTF-8'),
+                                               author={})]
 
-    return test_log
+        try:
+            test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+        except AttributeError:
+            raise RuntimeError("Test case '{}' is missing the required 'test_id' property!".format(test_log.name))
+
+        test_logs.append(test_log)
+
+    return test_logs
 
 
 def _generate_auto_request(junit_xml, test_cycle):
@@ -93,12 +105,9 @@ def _generate_auto_request(junit_xml, test_cycle):
         AutomationRequest: A qTest swagger model for an automation request.
     """
 
-    testsuite_props = {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
-    test_logs = [_generate_test_log(tc_xml, testsuite_props) for tc_xml in junit_xml.findall('testcase')]
-
     auto_req = swagger_client.AutomationRequest()
     auto_req.test_cycle = test_cycle
-    auto_req.test_logs = test_logs
+    auto_req.test_logs = _generate_test_logs(junit_xml)
     auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
 
     return auto_req

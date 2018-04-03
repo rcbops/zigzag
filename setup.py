@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 dependency_links = ['http://github.com/ryan-rs/qtest-swagger-client/tarball/master#egg=swagger-client-1.0.0']
-requirements = ['Click>=6.0', 'swagger-client']
+requirements = ['Click>=6.0', 'swagger-client', 'lxml']
 setup_requirements = ['pytest-runner']
 
 setup(

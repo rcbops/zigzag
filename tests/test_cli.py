@@ -4,8 +4,8 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-from click.testing import CliRunner
 from zigzag import cli
+from click.testing import CliRunner
 
 
 def test_cli_happy_path(single_passing_xml, mocker):
