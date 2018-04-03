@@ -72,7 +72,11 @@ def _generate_test_log(junit_testcase_xml, testsuite_props):
     test_log.module_names = [testsuite_props['GIT_BRANCH']]                      # GIT_BRANCH == RPC release
     test_log.exe_start_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
     test_log.exe_end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
-    test_log.automation_content = junit_testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+
+    try:
+        test_log.automation_content = junit_testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+    except AttributeError:
+        raise RuntimeError("Test case '{}' is missing the required 'test_id' property!".format(test_log.name))
 
     return test_log
 

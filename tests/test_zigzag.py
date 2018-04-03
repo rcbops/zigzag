@@ -152,6 +152,16 @@ class TestGenerateTestLog(object):
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
+    def test_missing_test_id_xml(self, missing_test_id_xml, properties):
+        """Verify that JUnitXML that is missing the 'test_id" test case property causes a RuntimeError."""
+
+        # Setup
+        junit_xml = zigzag._load_input_file(missing_test_id_xml)
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._generate_test_log(junit_xml.find('testcase'), properties)
+
 
 class TestGenerateAutoRequest(object):
     """Test cases for the '_generate_auto_request' function"""
