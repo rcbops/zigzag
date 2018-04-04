@@ -51,6 +51,18 @@ class TestLoadingInputJunitXMLFile(object):
         with pytest.raises(RuntimeError):
             zigzag._load_input_file(bad_junit_root)
 
+    def test_exceeds_max_file_size(self, flat_all_passing_xml, mocker):
+        """Verify that XML files that exceed the max file size are rejected"""
+        # Setup
+        file_size = 52428801
+
+        # Mock
+        mocker.patch('os.path.getsize', return_value=file_size)
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._load_input_file(flat_all_passing_xml)
+
 
 class TestGenerateTestLogs(object):
     """Test cases for the '_generate_test_logs' function"""

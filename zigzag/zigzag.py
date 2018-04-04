@@ -3,6 +3,7 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
+import os
 import re
 import swagger_client
 from lxml import etree
@@ -15,6 +16,7 @@ from swagger_client.rest import ApiException
 # Globals
 # ======================================================================================================================
 TESTCASE_NAME_RGX = re.compile(r'(\w+)(\[.+\])')
+MAX_FILE_SIZE = 52428800
 
 
 # ======================================================================================================================
@@ -36,8 +38,11 @@ def _load_input_file(file_path):
     root_element = "testsuite"
 
     try:
+        if os.path.getsize(file_path) > MAX_FILE_SIZE:
+            raise RuntimeError('Input file "{}" is larger than allowed max file size!'.format(file_path))
+
         junit_xml = etree.parse(file_path).getroot()
-    except IOError:
+    except (IOError, OSError):
         raise RuntimeError('Invalid path "{}" for JUnitXML results file!'.format(file_path))
     except etree.ParseError:
         raise RuntimeError('The file "{}" does not contain valid XML!'.format(file_path))
