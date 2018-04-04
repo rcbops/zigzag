@@ -7,41 +7,83 @@ Contributing
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given.
 
+------------
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `zigzag` for local development.
+Ready to contribute? Here's how to set up ``zigzag`` for local development using the handy built-in ``make`` tasks.
+If you're not using virtualenvwrapper_ then skip ahead to the `Doing it the Hard Way`_ section for detailed
+instructions.
 
-1. Fork the `zigzag` repo on GitHub.
-2. Clone your fork locally::
+Prerquisites
+------------
+
+In order to take full advantage of the built-in ``make`` tasks you must install virtualenvwrapper_ with the **system**
+Python interpreter. Also, virtualenvwrapper_ must be fully configured and a virtual environment needs to be **active**
+before running the ``make`` tasks specified in the next section.
+
+Getting Help with Make Tasks
+----------------------------
+
+Execute the following command to get a full list of ``make`` tasks::
+
+    $ make help
+
+Using Make Tasks for Development Environment Setup
+--------------------------------------------------
+
+1. Fork the ``zigzag`` repo on GitHub.
+2. Create a virtual environment using virtualenvwrapper_ if you have not created one already::
+
+    $ mkvirtualenv zigzag
+
+3. Clone your fork locally::
 
     $ git clone git@github.com:your_name_here/zigzag.git
 
-3. Install your local copy into a virtualenv. (You must have virtualenvwrapper installed) This is how you set up your fork for local development::
+4. Setup develop environment::
 
-    $ mkvirtualenv zigzag
     $ cd zigzag/
     $ make develop
 
-4. Create a branch for local development::
+5. Create a branch for local development::
 
     $ git checkout -b name-of-your-bugfix-or-feature
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
+6. When you're done making changes, check that your changes pass flake8 and the
    tests, including testing other Python versions with tox::
 
     $ make test-all
 
-6. Commit your changes and push your branch to GitHub::
+7. Commit your changes and push your branch to GitHub::
 
     $ git add .
     $ git commit -m "Your detailed description of your changes."
     $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+8. Submit a pull request through the GitHub website.
 
+Doing it the Hard Way
+---------------------
+
+So you're just not into virtualenvwrapper_ ? That's okay! Here is what you'll have to do to get going with development
+without having to install anything extra on the system.
+
+1. Install Python dependencies::
+
+    $ pip install -r requirements_dev.txt
+
+2. Run tests::
+
+    $ tox
+
+3. Clean-up test artifacts::
+
+    $ make clean-test
+
+-----------------------
 Pull Request Guidelines
 -----------------------
 
@@ -73,3 +115,5 @@ Clean-up the `zigzag` build artifacts and wipe the active virtualenv::
 Run a subset of tests::
 
    $ py.test tests/test_zigzag.py
+
+.. _virtualenvwrapper: https://virtualenvwrapper.readthedocs.io/en/latest/
