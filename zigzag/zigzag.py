@@ -65,6 +65,7 @@ def _generate_test_logs(junit_xml):
 
     serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
     testsuite_props = {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+    date_time_now = datetime.utcnow()
     test_logs = []
 
     for testcase_xml in junit_xml.findall('testcase'):
@@ -79,11 +80,11 @@ def _generate_test_logs(junit_xml):
 
         test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
         test_log.status = testcase_status
-        test_log.module_names = [testsuite_props['GIT_BRANCH']]                      # GIT_BRANCH == RPC release
-        test_log.exe_start_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
-        test_log.exe_end_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
+        test_log.module_names = [testsuite_props['GIT_BRANCH']]                  # GIT_BRANCH == RPC release
+        test_log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
+        test_log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
         test_log.attachments = \
-            [swagger_client.AttachmentResource(name='junit.xml',
+            [swagger_client.AttachmentResource(name="junit_{}.xml".format(date_time_now.strftime('%Y-%m-%dT%H-%M')),
                                                content_type='application/xml',
                                                data=b64encode(serialized_junit_xml).decode('UTF-8'),
                                                author={})]

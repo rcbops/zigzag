@@ -4,6 +4,7 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
+import re
 import pytest
 from hashlib import md5
 from zigzag import zigzag
@@ -172,12 +173,12 @@ class TestGenerateTestLogs(object):
         test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
-        attachment_exp_name = 'junit.xml'
+        attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
         attachment_exp_data_md5 = '45f29a8da0b0981e20c2c8562081280a'
 
         # Test
-        assert attachment_exp_name == test_log_dict['attachments'][0]['name']
+        assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
         assert attachment_exp_content_type == test_log_dict['attachments'][0]['content_type']
         assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
