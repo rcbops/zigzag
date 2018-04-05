@@ -18,15 +18,18 @@ def single_passing_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852">
@@ -52,15 +55,18 @@ def single_fail_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
             name="test_fail[ansible://localhost]" time="0.00335693359375">
@@ -93,15 +99,18 @@ def single_error_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="20"
             name="test_error[ansible://localhost]" time="0.00208067893982">
@@ -135,15 +144,18 @@ def single_skip_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="24"
             name="test_skip[ansible://localhost]" time="0.00197100639343">
@@ -172,15 +184,18 @@ def flat_all_passing_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass1[ansible://localhost]" time="0.00372695922852">
@@ -230,15 +245,18 @@ def flat_mix_status_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="1" failures="1" name="pytest" skips="1" tests="4" time="1.901">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="12"
             name="test_pass[ansible://localhost]" time="0.0034921169281">
@@ -300,15 +318,18 @@ def suite_mix_status_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="1" failures="1" name="pytest" skips="1" tests="4" time="1.853">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="35"
             name="test_pass[ansible://localhost]" time="0.00357985496521">
@@ -402,15 +423,18 @@ def missing_test_id_xml(tmpdir_factory):
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             <properties>
-                <property name="JENKINS_CONSOLE_LOG_URL" value="Unknown"/>
-                <property name="SCENARIO" value="Unknown"/>
-                <property name="ACTION" value="Unknown"/>
-                <property name="IMAGE" value="Unknown"/>
+                <property name="BUILD_URL" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
                 <property name="OS_ARTIFACT_SHA" value="Unknown"/>
                 <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
                 <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="GIT_REPO" value="Unknown"/>
-                <property name="GIT_BRANCH" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
             </properties>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852"/>
