@@ -82,6 +82,8 @@ class TestGenerateTestLogs(object):
         test_name = 'test_pass'
         test_log_exp = {'name': test_name,
                         'status': 'PASSED',
+                        'build_url': 'Unknown',
+                        'build_number': 'Unknown',
                         'module_names': ['Unknown'],
                         'automation_content': '1'}
 
@@ -103,6 +105,8 @@ class TestGenerateTestLogs(object):
         test_name = 'test_fail'
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
+                        'build_url': 'Unknown',
+                        'build_number': 'Unknown',
                         'module_names': ['Unknown'],
                         'automation_content': '1'}
 
@@ -124,6 +128,8 @@ class TestGenerateTestLogs(object):
         test_name = 'test_error'
         test_log_exp = {'name': test_name,
                         'status': 'FAILED',
+                        'build_url': 'Unknown',
+                        'build_number': 'Unknown',
                         'module_names': ['Unknown'],
                         'automation_content': '1'}
 
@@ -145,6 +151,8 @@ class TestGenerateTestLogs(object):
         test_name = 'test_skip'
         test_log_exp = {'name': test_name,
                         'status': 'SKIPPED',
+                        'build_url': 'Unknown',
+                        'build_number': 'Unknown',
                         'module_names': ['Unknown'],
                         'automation_content': '1'}
 
@@ -175,7 +183,7 @@ class TestGenerateTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '45f29a8da0b0981e20c2c8562081280a'
+        attachment_exp_data_md5 = '21a479062af4891d07dcae6d86666adc'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
@@ -201,18 +209,26 @@ class TestGenerateAutoRequest(object):
         prop_value = 'Unknown'
         test_logs_exp = [{'name': 'test_pass',
                           'status': 'PASSED',
+                          'build_url': 'Unknown',
+                          'build_number': 'Unknown',
                           'module_names': [prop_value],
                           'automation_content': '1'},
                          {'name': 'test_fail',
                           'status': 'FAILED',
+                          'build_url': 'Unknown',
+                          'build_number': 'Unknown',
                           'module_names': [prop_value],
                           'automation_content': '1'},
                          {'name': 'test_error',
                           'status': 'FAILED',
+                          'build_url': 'Unknown',
+                          'build_number': 'Unknown',
                           'module_names': [prop_value],
                           'automation_content': '1'},
                          {'name': 'test_skip',
                           'status': 'SKIPPED',
+                          'build_url': 'Unknown',
+                          'build_number': 'Unknown',
                           'module_names': [prop_value],
                           'automation_content': '1'}]
 

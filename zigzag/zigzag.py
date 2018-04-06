@@ -80,7 +80,9 @@ def _generate_test_logs(junit_xml):
 
         test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
         test_log.status = testcase_status
-        test_log.module_names = [testsuite_props['GIT_BRANCH']]                  # GIT_BRANCH == RPC release
+        test_log.build_url = testsuite_props['BUILD_URL']
+        test_log.build_number = testsuite_props['BUILD_NUMBER']
+        test_log.module_names = [testsuite_props['RPC_PRODUCT_RELEASE']]         # RPC Release Codename (e.g. Queens)
         test_log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
         test_log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
         test_log.attachments = \
