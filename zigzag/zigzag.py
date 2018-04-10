@@ -5,6 +5,7 @@
 # ======================================================================================================================
 import os
 import re
+import pytest_rpc
 import swagger_client
 from lxml import etree
 from base64 import b64encode
@@ -36,16 +37,25 @@ def _load_input_file(file_path):
     """
 
     root_element = "testsuite"
+    junit_xsd = pytest_rpc.get_xsd()
 
     try:
         if os.path.getsize(file_path) > MAX_FILE_SIZE:
             raise RuntimeError('Input file "{}" is larger than allowed max file size!'.format(file_path))
 
-        junit_xml = etree.parse(file_path).getroot()
+        junit_xml_doc = etree.parse(file_path)
     except (IOError, OSError):
         raise RuntimeError('Invalid path "{}" for JUnitXML results file!'.format(file_path))
     except etree.ParseError:
         raise RuntimeError('The file "{}" does not contain valid XML!'.format(file_path))
+
+    try:
+        xmlschema = etree.XMLSchema(etree.parse(junit_xsd))
+        xmlschema.assertValid(junit_xml_doc)
+        junit_xml = junit_xml_doc.getroot()
+    except etree.DocumentInvalid as e:
+        raise RuntimeError('The file "{}" does not conform to schema!'
+                           '\n\nSchema Violation:\n{}'.format(file_path, str(e)))
 
     if junit_xml.tag != root_element:
         raise RuntimeError('The file "{}" does not have JUnitXML "{}" root element!'.format(file_path, root_element))
@@ -85,16 +95,12 @@ def _generate_test_logs(junit_xml):
         test_log.module_names = [testsuite_props['RPC_PRODUCT_RELEASE']]         # RPC Release Codename (e.g. Queens)
         test_log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
         test_log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
+        test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
         test_log.attachments = \
             [swagger_client.AttachmentResource(name="junit_{}.xml".format(date_time_now.strftime('%Y-%m-%dT%H-%M')),
                                                content_type='application/xml',
                                                data=b64encode(serialized_junit_xml).decode('UTF-8'),
                                                author={})]
-
-        try:
-            test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
-        except AttributeError:
-            raise RuntimeError("Test case '{}' is missing the required 'test_id' property!".format(test_log.name))
 
         test_logs.append(test_log)
 

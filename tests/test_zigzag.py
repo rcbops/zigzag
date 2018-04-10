@@ -52,6 +52,13 @@ class TestLoadingInputJunitXMLFile(object):
         with pytest.raises(RuntimeError):
             zigzag._load_input_file(bad_junit_root)
 
+    def test_missing_test_id_xml(self, missing_test_id_xml):
+        """Verify that JUnitXML that is missing the 'test_id" test case property causes a RuntimeError."""
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._load_input_file(missing_test_id_xml)
+
     def test_exceeds_max_file_size(self, flat_all_passing_xml, mocker):
         """Verify that XML files that exceed the max file size are rejected"""
         # Setup
@@ -160,16 +167,6 @@ class TestGenerateTestLogs(object):
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_missing_test_id_xml(self, missing_test_id_xml):
-        """Verify that JUnitXML that is missing the 'test_id" test case property causes a RuntimeError."""
-
-        # Setup
-        junit_xml = zigzag._load_input_file(missing_test_id_xml)
-
-        # Test
-        with pytest.raises(RuntimeError):
-            zigzag._generate_test_logs(junit_xml)
-
     def test_junit_xml_attachment(self, single_passing_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated with the raw JUnitXML
         file included as an attachment.
@@ -183,7 +180,7 @@ class TestGenerateTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '21a479062af4891d07dcae6d86666adc'
+        attachment_exp_data_md5 = '9dcbf8d31713a27d1d7a2002845975a7'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
