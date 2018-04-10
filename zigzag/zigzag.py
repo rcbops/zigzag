@@ -88,20 +88,27 @@ def _generate_test_logs(junit_xml):
 
         test_log = swagger_client.AutomationTestLogResource()
 
-        test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
+        try:
+            test_log.build_url = testsuite_props['BUILD_URL']
+            test_log.build_number = testsuite_props['BUILD_NUMBER']
+            test_log.module_names = [testsuite_props['RPC_PRODUCT_RELEASE']]  # RPC Release Codename (e.g. Queens)
+        except KeyError as e:
+            raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
+
+        try:
+            test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
+            test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+            test_log.exe_start_date = testcase_xml.find("./properties/property/[@name='start_time']").attrib['value']
+            test_log.exe_end_date = testcase_xml.find("./properties/property/[@name='end_time']").attrib['value']
+        except AttributeError:
+            raise RuntimeError("Test case '{}' is missing the required property!".format(test_log.name))
+
         test_log.status = testcase_status
-        test_log.build_url = testsuite_props['BUILD_URL']
-        test_log.build_number = testsuite_props['BUILD_NUMBER']
-        test_log.module_names = [testsuite_props['RPC_PRODUCT_RELEASE']]         # RPC Release Codename (e.g. Queens)
-        test_log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
-        test_log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')     # UTC timezone 'Zulu'
-        test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
         test_log.attachments = \
             [swagger_client.AttachmentResource(name="junit_{}.xml".format(date_time_now.strftime('%Y-%m-%dT%H-%M')),
                                                content_type='application/xml',
                                                data=b64encode(serialized_junit_xml).decode('UTF-8'),
                                                author={})]
-
         test_logs.append(test_log)
 
     return test_logs

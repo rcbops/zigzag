@@ -32,7 +32,7 @@ DEFAULT_TESTCASE_PROPERTIES = \
                 <properties>
                     <property name="test_id" value="1"/>
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
-                    <property name="end_time" value="2018-04-10T21:38:18Z"/>
+                    <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
     """
 
@@ -321,6 +321,26 @@ def bad_junit_root(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
+def missing_testcase_properties_xml(tmpdir_factory):
+    """JUnitXML sample representing a test case that is missing the test case "properties" element."""
+
+    filename = tmpdir_factory.mktemp('data').join('missing_testcase_properties.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
+            name="test_pass[ansible://localhost]" time="0.00372695922852"/>
+        </testsuite>
+        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def missing_test_id_xml(tmpdir_factory):
     """JUnitXML sample representing a test case that has a missing test id property element."""
 
@@ -331,6 +351,45 @@ def missing_test_id_xml(tmpdir_factory):
             {global_properties}
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852"/>
+                <properties>
+                    <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                    <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                    <property name="end_time" value="2018-04-10T21:38:19Z"/>
+                </properties>
+        </testsuite>
+        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def missing_build_url_xml(tmpdir_factory):
+    """JUnitXML sample representing a test suite that is missing the "BUILD_URL" property."""
+
+    filename = tmpdir_factory.mktemp('data').join('missing_build_url.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            <properties>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="BUILD_NUMBER" value="Unknown"/>
+                <property name="RE_JOB_ACTION" value="Unknown"/>
+                <property name="RE_JOB_IMAGE" value="Unknown"/>
+                <property name="RE_JOB_SCENARIO" value="Unknown"/>
+                <property name="RE_JOB_BRANCH" value="Unknown"/>
+                <property name="RPC_RELEASE" value="Unknown"/>
+                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
+                <property name="OS_ARTIFACT_SHA" value="Unknown"/>
+                <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
+                <property name="APT_ARTIFACT_SHA" value="Unknown"/>
+                <property name="REPO_URL" value="Unknown"/>
+            </properties>
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
+            name="test_pass[ansible://localhost]" time="0.00372695922852"/>
+                {testcase_properties}
         </testsuite>
         """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
 
