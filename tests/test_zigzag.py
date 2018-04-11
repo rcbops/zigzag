@@ -52,6 +52,27 @@ class TestLoadingInputJunitXMLFile(object):
         with pytest.raises(RuntimeError):
             zigzag._load_input_file(bad_junit_root)
 
+    def test_missing_build_url_xml(self, missing_build_url_xml):
+        """Verify that JUnitXML that is missing the test suite 'BUILD_URL' property element causes a RuntimeError."""
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._load_input_file(missing_build_url_xml)
+
+    def test_missing_testcase_properties_xml(self, missing_testcase_properties_xml):
+        """Verify that JUnitXML that is missing the test case 'properties' element causes a RuntimeError."""
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._load_input_file(missing_testcase_properties_xml)
+
+    def test_missing_test_id_xml(self, missing_test_id_xml):
+        """Verify that JUnitXML that is missing the 'test_id' test case property causes a RuntimeError."""
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._load_input_file(missing_test_id_xml)
+
     def test_exceeds_max_file_size(self, flat_all_passing_xml, mocker):
         """Verify that XML files that exceed the max file size are rejected"""
         # Setup
@@ -85,7 +106,9 @@ class TestGenerateTestLogs(object):
                         'build_url': 'Unknown',
                         'build_number': 'Unknown',
                         'module_names': ['Unknown'],
-                        'automation_content': '1'}
+                        'automation_content': '1',
+                        'exe_start_date': '2018-04-10T21:38:18Z',
+                        'exe_end_date': '2018-04-10T21:38:19Z'}
 
         # Test
         for exp in test_log_exp:
@@ -108,7 +131,9 @@ class TestGenerateTestLogs(object):
                         'build_url': 'Unknown',
                         'build_number': 'Unknown',
                         'module_names': ['Unknown'],
-                        'automation_content': '1'}
+                        'automation_content': '1',
+                        'exe_start_date': '2018-04-10T21:38:18Z',
+                        'exe_end_date': '2018-04-10T21:38:19Z'}
 
         # Test
         for exp in test_log_exp:
@@ -131,7 +156,9 @@ class TestGenerateTestLogs(object):
                         'build_url': 'Unknown',
                         'build_number': 'Unknown',
                         'module_names': ['Unknown'],
-                        'automation_content': '1'}
+                        'automation_content': '1',
+                        'exe_start_date': '2018-04-10T21:38:18Z',
+                        'exe_end_date': '2018-04-10T21:38:19Z'}
 
         # Test
         for exp in test_log_exp:
@@ -154,21 +181,13 @@ class TestGenerateTestLogs(object):
                         'build_url': 'Unknown',
                         'build_number': 'Unknown',
                         'module_names': ['Unknown'],
-                        'automation_content': '1'}
+                        'automation_content': '1',
+                        'exe_start_date': '2018-04-10T21:38:18Z',
+                        'exe_end_date': '2018-04-10T21:38:19Z'}
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
-
-    def test_missing_test_id_xml(self, missing_test_id_xml):
-        """Verify that JUnitXML that is missing the 'test_id" test case property causes a RuntimeError."""
-
-        # Setup
-        junit_xml = zigzag._load_input_file(missing_test_id_xml)
-
-        # Test
-        with pytest.raises(RuntimeError):
-            zigzag._generate_test_logs(junit_xml)
 
     def test_junit_xml_attachment(self, single_passing_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated with the raw JUnitXML
@@ -183,7 +202,7 @@ class TestGenerateTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '21a479062af4891d07dcae6d86666adc'
+        attachment_exp_data_md5 = '2307a9603b0eb70c45058dc4fc44ad91'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
@@ -212,25 +231,33 @@ class TestGenerateAutoRequest(object):
                           'build_url': 'Unknown',
                           'build_number': 'Unknown',
                           'module_names': [prop_value],
-                          'automation_content': '1'},
+                          'automation_content': '1',
+                          'exe_start_date': '2018-04-10T21:38:18Z',
+                          'exe_end_date': '2018-04-10T21:38:19Z'},
                          {'name': 'test_fail',
                           'status': 'FAILED',
                           'build_url': 'Unknown',
                           'build_number': 'Unknown',
                           'module_names': [prop_value],
-                          'automation_content': '1'},
+                          'automation_content': '1',
+                          'exe_start_date': '2018-04-10T21:38:18Z',
+                          'exe_end_date': '2018-04-10T21:38:19Z'},
                          {'name': 'test_error',
                           'status': 'FAILED',
                           'build_url': 'Unknown',
                           'build_number': 'Unknown',
                           'module_names': [prop_value],
-                          'automation_content': '1'},
+                          'automation_content': '1',
+                          'exe_start_date': '2018-04-10T21:38:18Z',
+                          'exe_end_date': '2018-04-10T21:38:19Z'},
                          {'name': 'test_skip',
                           'status': 'SKIPPED',
                           'build_url': 'Unknown',
                           'build_number': 'Unknown',
                           'module_names': [prop_value],
-                          'automation_content': '1'}]
+                          'automation_content': '1',
+                          'exe_start_date': '2018-04-10T21:38:18Z',
+                          'exe_end_date': '2018-04-10T21:38:19Z'}]
 
         # Test
         for x in range(len(auto_req_dict['test_logs'])):
