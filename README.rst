@@ -12,25 +12,20 @@ Parse JUnitXML and upload test results to qTest Manager.
 Quick Start Guide
 -----------------
 
-1. Clone the repo locally::
+1. Install ``zigzag`` from PyPI with pip::
 
-    $ git clone git@github.com:rcbops/zigzag.git
+    $ pip install --process-dependency-links rpc-zigzag
 
-2. Install the package into your active Python environment::
-
-    $ cd zigzag/
-    $ python setup.py install
-
-3. For more information on using the Zigzag launch help by::
+2. For more information on using the Zigzag launch help by::
 
     $ zigzag --help
 
-4. Here is an example of uploading a results JUnitXML file from Molecule::
+3. Here is an example of uploading a results JUnitXML file from Molecule::
 
     $ export QTEST_API_TOKEN="SECRET"
     $ zigzag junit.xml 12345 TC-1
 
-5. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
+4. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
 
 Contributing
 ------------
