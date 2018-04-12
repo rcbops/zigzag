@@ -12,10 +12,9 @@ Get Started!
 ------------
 
 Ready to contribute? Here's how to set up ``zigzag`` for local development using the handy built-in ``make`` tasks.
-If you're not using virtualenvwrapper_ then skip ahead to the `Doing it the Hard Way`_ section for detailed
-instructions.
+If you're not using virtualenvwrapper_ then just be aware that some of the available ``make`` tasks will not work.
 
-Prerquisites
+Prerequisites
 ------------
 
 In order to take full advantage of the built-in ``make`` tasks you must install virtualenvwrapper_ with the **system**
