@@ -12,15 +12,14 @@ Get Started!
 ------------
 
 Ready to contribute? Here's how to set up ``zigzag`` for local development using the handy built-in ``make`` tasks.
-If you're not using virtualenvwrapper_ then skip ahead to the `Doing it the Hard Way`_ section for detailed
-instructions.
+If you're not using virtualenvwrapper_ then just be aware that some of the available ``make`` tasks will not work.
 
-Prerquisites
+Prerequisites
 ------------
 
 In order to take full advantage of the built-in ``make`` tasks you must install virtualenvwrapper_ with the **system**
 Python interpreter. Also, virtualenvwrapper_ must be fully configured and a virtual environment needs to be **active**
-before running the ``make`` tasks specified in the next section.
+before running some of the ``make`` tasks specified in the next section.
 
 Getting Help with Make Tasks
 ----------------------------
@@ -64,24 +63,13 @@ Using Make Tasks for Development Environment Setup
     $ git push origin name-of-your-bugfix-or-feature
 
 8. Submit a pull request through the GitHub website.
+9. Clean-up your environment::
 
-Doing it the Hard Way
----------------------
+    $ make clean
 
-So you're just not into virtualenvwrapper_ ? That's okay! Here is what you'll have to do to get going with development
-without having to install anything extra on the system.
+10. If you're running virtualenvwrapper_ then you can clean your virtual environment using this task::
 
-1. Install Python dependencies::
-
-    $ pip install -r requirements_dev.txt
-
-2. Run tests::
-
-    $ tox
-
-3. Clean-up test artifacts::
-
-    $ make clean-test
+    $ make clean-venv
 
 -----------------------
 Pull Request Guidelines

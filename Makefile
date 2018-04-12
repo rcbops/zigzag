@@ -36,7 +36,7 @@ check-venv: ## verify that the user is running in a Python virtual environment
 	@if [ -z "$(VIRTUALENVWRAPPER_SCRIPT)" ]; then echo 'Python virtualenvwrapper not installed!' && exit 1; fi
 	@if [ -z "$(VIRTUAL_ENV)" ]; then echo 'Not running within a virtual environment!' && exit 1; fi
 
-clean: clean-venv clean-build clean-pyc clean-test ## remove all build, test, coverage, artifacts and wipe virtualenv
+clean: clean-test clean-pyc clean-build   ## remove all build, test, coverage, artifacts and wipe virtualenv
 
 clean-build: ## remove build artifacts
 	rm -fr build/
