@@ -46,6 +46,6 @@ setup(
     packages=find_packages(include=['zigzag']),
     setup_requires=setup_requirements,
     url='https://github.com/rcbops/zigzag',
-    version='0.6.0',
+    version='0.6.1',
     zip_safe=False,
 )
