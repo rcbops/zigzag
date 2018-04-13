@@ -59,7 +59,6 @@ clean-test: ## remove test and coverage artifacts
 
 clean-venv: check-venv ## remove all packages from current virtual environment
 	@pip uninstall -y swagger-client || echo "Skipping uninstall of swagger-client"
-	@pip uninstall -y pytest-rpc || echo "Skipping uninstall of pytest-rpc"
 	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
