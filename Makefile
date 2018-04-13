@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv help
+.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv install-venv develop-venv help
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash
@@ -58,11 +58,11 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache/
 
 clean-venv: check-venv ## remove all packages from current virtual environment
-	@pip uninstall -y swagger-client || echo "Skipping uninstall of swagger-client"
+	@pip uninstall -y swagger-client || echo "Skipping uninstall of swagger-client or already uninstalled"
 	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
-	flake8 zigzag tests
+	flake8 zigzag setup.py tests
 
 test: ## run tests quickly with the default Python
 	py.test
@@ -70,11 +70,12 @@ test: ## run tests quickly with the default Python
 test-all: ## run tests on every Python version with tox
 	tox
 
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source zigzag -m pytest
-	coverage report -m
-	coverage html
+coverage-html: ## check code coverage with an HTML report
+	py.test --cov-report html --cov=zigzag tests/
 	$(BROWSER) htmlcov/index.html
+
+coverage-term: ## check code coverage with a simple terminal report
+	py.test --cov-report term-missing --cov=zigzag tests/
 
 release: clean ## package and upload a release
 	python setup.py sdist upload
@@ -88,5 +89,9 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
+install-venv: clean-venv install ## install the package after wiping the vitual environment
+
 develop: clean ## install necessary packages to setup a dev environment
-	pip install -r requirements_dev.txt
+	pip install -r requirements.txt
+
+develop-venv: clean-venv develop ## setup a dev environment after wiping the virtual environment

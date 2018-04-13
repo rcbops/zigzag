@@ -4,9 +4,8 @@ click
 bumpversion
 flake8
 tox
-coverage
 pytest
-pytest-runner
+pytest-cov
 pytest-mock
 ipython
 pytest-rpc
