@@ -11,8 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-dependency_links = ['http://github.com/ryan-rs/qtest-swagger-client/tarball/master#egg=swagger-client-1.0.0',
-                    'http://github.com/rcbops/pytest-rpc/tarball/master#egg=pytest-rpc-0.4.0']
+dependency_links = ['git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0']
 requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc']
 setup_requirements = ['pytest-runner']
 
@@ -43,7 +42,7 @@ setup(
     long_description=readme + '\n\n' + history,
     include_package_data=True,
     keywords='zigzag',
-    name='zigzag',
+    name='rpc-zigzag',
     packages=find_packages(include=['zigzag']),
     setup_requires=setup_requirements,
     url='https://github.com/rcbops/zigzag',

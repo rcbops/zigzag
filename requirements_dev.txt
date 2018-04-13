@@ -1,3 +1,4 @@
+-c constraints.txt
 lxml
 click
 bumpversion
@@ -8,5 +9,5 @@ pytest
 pytest-runner
 pytest-mock
 ipython
+pytest-rpc
 -e git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0
--e git+https://github.com/rcbops/pytest-rpc.git@master#egg=pytest-rpc-0.4.0
