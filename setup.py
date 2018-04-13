@@ -3,7 +3,7 @@
 
 """The setup script."""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -12,14 +12,28 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 dependency_links = ['git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0']
-requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc']
-setup_requirements = ['pytest-runner']
+requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc<1.0.0']
+packages = ['zigzag']
+entry_points = {
+    'console_scripts': [
+        'zigzag=zigzag.cli:main',
+    ],
+}
 
 setup(
+    name='rpc-zigzag',
+    version='0.6.1',
     author="rcbops",
     author_email='rcb-deploy@lists.rackspace.com',
+    maintainer='rcbops',
+    maintainer_email='rcb-deploy@lists.rackspace.com',
+    license="Apache Software License 2.0",
+    url='https://github.com/rcbops/zigzag',
+    keywords='zigzag',
+    description="Parse JUnitXML and upload test results to qTest Manager.",
+    long_description=readme + '\n\n' + history,
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
@@ -29,23 +43,12 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Operating System :: OS Independent',
     ],
-    description="Parse JUnitXML and upload test results to qTest Manager.",
     dependency_links=dependency_links,
-    entry_points={
-        'console_scripts': [
-            'zigzag=zigzag.cli:main',
-        ],
-    },
     install_requires=requirements,
-    license="Apache Software License 2.0",
-    long_description=readme + '\n\n' + history,
+    packages=packages,
     include_package_data=True,
-    keywords='zigzag',
-    name='rpc-zigzag',
-    packages=find_packages(include=['zigzag']),
-    setup_requires=setup_requirements,
-    url='https://github.com/rcbops/zigzag',
-    version='0.6.1',
     zip_safe=False,
+    entry_points=entry_points,
 )

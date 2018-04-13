@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import os
 import sys
 import click
-import zigzag.zigzag as ptu
+import zigzag.zigzag as zz
 
 
 # ======================================================================================================================
@@ -39,10 +39,10 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle):
             raise RuntimeError('The "{}" environment variable is not defined! '
                                'See help for more details.'.format(api_token_env_var))
 
-        job_id = ptu.upload_test_results(junit_input_file,
-                                         os.environ[api_token_env_var],
-                                         qtest_project_id,
-                                         qtest_test_cycle)
+        job_id = zz.upload_test_results(junit_input_file,
+                                        os.environ[api_token_env_var],
+                                        qtest_project_id,
+                                        qtest_test_cycle)
 
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
         click.echo(click.style("\nSuccess!", fg='green'))

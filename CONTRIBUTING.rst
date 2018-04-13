@@ -43,7 +43,7 @@ Using Make Tasks for Development Environment Setup
 4. Setup develop environment::
 
     $ cd zigzag/
-    $ make develop
+    $ make develop-venv # OR 'make develop' if you're not using virtualenvwrapper
 
 5. Create a branch for local development::
 
@@ -63,13 +63,9 @@ Using Make Tasks for Development Environment Setup
     $ git push origin name-of-your-bugfix-or-feature
 
 8. Submit a pull request through the GitHub website.
-9. Clean-up your environment::
+9. If you're running virtualenvwrapper_ then you can clean your virtual environment using this task::
 
-    $ make clean
-
-10. If you're running virtualenvwrapper_ then you can clean your virtual environment using this task::
-
-    $ make clean-venv
+    $ make clean-venv # OR 'make clean' if you're not using virtualenvwrapper
 
 -----------------------
 Pull Request Guidelines
@@ -94,11 +90,7 @@ Get a list of available `make` tasks::
 
 Install `zigzag` into the active virtualenv::
 
-   $ make install
-
-Clean-up the `zigzag` build artifacts and wipe the active virtualenv::
-
-   $ make clean
+   $ make install-venv # OR 'make install' if you're not using virtualenvwrapper
 
 Run a subset of tests::
 
