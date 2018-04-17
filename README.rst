@@ -14,7 +14,8 @@ Quick Start Guide
 
 1. Install ``zigzag`` from PyPI with pip::
 
-    $ pip install --process-dependency-links rpc-zigzag
+    $ pip install -e git+git://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0
+    $ pip install rpc-zigzag
 
 2. For more information on using the Zigzag launch help by::
 
@@ -26,6 +27,13 @@ Quick Start Guide
     $ zigzag junit.xml 12345 TC-1
 
 4. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
+
+Choosing a Parent Test Cycle
+----------------------------
+
+The intended parent test cycle should be one that is named after the product release code name. (e.g. Queens) It is
+assumed that this test cycle was created beforehand. By using a test cycle with a product release code name the
+resulting execution result hierarchy will group results in a sensible manner.
 
 Contributing
 ------------
