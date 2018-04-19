@@ -17,6 +17,7 @@ from swagger_client.rest import ApiException
 # Globals
 # ======================================================================================================================
 TESTCASE_NAME_RGX = re.compile(r'(\w+)(\[.+\])')
+TESTCASE_GROUP_RGX = re.compile(r'tests\.(test_\w+)\.?(Test\w+)?$')
 MAX_FILE_SIZE = 52428800
 
 
@@ -63,6 +64,34 @@ def _load_input_file(file_path):
     return junit_xml
 
 
+def _generate_module_hierarchy(testcase_xml, testsuite_props):
+    """Construct a qTest swagger model for all the JUnitXML test cases.
+
+    Args:
+        testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
+        testsuite_props (dict): Global properties from the associated testsuite for the given testcase result.
+
+    Returns:
+        list(str): An ordered list of strings to use for the qTest results hierarchy.
+
+    Raises:
+        KeyError: missing property.
+    """
+
+    module_hierarchy = [testsuite_props['RPC_RELEASE'],             # RPC Release Version (e.g. 16.0.0)
+                        testsuite_props['JOB_NAME'],                # CI Job name (e.g. PM_rpc-openstack-pike-xenial_mnaio_no_artifacts-swift-system) # noqa
+                        testsuite_props['MOLECULE_TEST_REPO'],      # (e.g. molecule-validate-neutron-deploy)
+                        testsuite_props['MOLECULE_SCENARIO_NAME']]  # (e.g. "default")
+
+    testcase_groups = TESTCASE_GROUP_RGX.match(testcase_xml.attrib['classname']).groups()
+
+    module_hierarchy.append(testcase_groups[0])         # Always append at least the filename of the test grouping.
+    if testcase_groups[1]:
+        module_hierarchy.append(testcase_groups[1])     # Append the class name of tests if specified.
+
+    return module_hierarchy
+
+
 def _generate_test_logs(junit_xml):
     """Construct a qTest swagger model for all the JUnitXML test cases.
 
@@ -91,7 +120,7 @@ def _generate_test_logs(junit_xml):
         try:
             test_log.build_url = testsuite_props['BUILD_URL']
             test_log.build_number = testsuite_props['BUILD_NUMBER']
-            test_log.module_names = [testsuite_props['RPC_PRODUCT_RELEASE']]  # RPC Release Codename (e.g. Queens)
+            test_log.module_names = _generate_module_hierarchy(testcase_xml, testsuite_props)
         except KeyError as e:
             raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
 
@@ -142,7 +171,7 @@ def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, 
         junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
         qtest_api_token (str): Token to use for authorization to the qTest API.
         qtest_project_id (int): The target qTest project for the test results.
-        qtest_test_cycle (str): The parent qTest test cycle for test results.
+        qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
 
     Returns:
         int: The queue processing ID for the job.

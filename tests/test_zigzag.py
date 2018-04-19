@@ -10,7 +10,25 @@ from hashlib import md5
 from zigzag import zigzag
 from swagger_client.rest import ApiException
 
+# ======================================================================================================================
+# Globals
+# ======================================================================================================================
+# Shared expectations
+SHARED_TEST_LOG_EXP = {'build_url': 'BUILD_URL',
+                       'build_number': 'BUILD_NUMBER',
+                       'module_names': ['RPC_RELEASE',
+                                        'JOB_NAME',
+                                        'MOLECULE_TEST_REPO',
+                                        'MOLECULE_SCENARIO_NAME',
+                                        'test_default'],
+                       'automation_content': '1',
+                       'exe_start_date': '2018-04-10T21:38:18Z',
+                       'exe_end_date': '2018-04-10T21:38:19Z'}
 
+
+# ======================================================================================================================
+# Test Suites
+# ======================================================================================================================
 class TestLoadingInputJunitXMLFile(object):
     """Test cases for the '_load_input_file' function"""
 
@@ -86,6 +104,7 @@ class TestLoadingInputJunitXMLFile(object):
             zigzag._load_input_file(flat_all_passing_xml)
 
 
+# noinspection PyUnresolvedReferences
 class TestGenerateTestLogs(object):
     """Test cases for the '_generate_test_logs' function"""
 
@@ -101,14 +120,7 @@ class TestGenerateTestLogs(object):
 
         # Expectation
         test_name = 'test_pass'
-        test_log_exp = {'name': test_name,
-                        'status': 'PASSED',
-                        'build_url': 'Unknown',
-                        'build_number': 'Unknown',
-                        'module_names': ['Unknown'],
-                        'automation_content': '1',
-                        'exe_start_date': '2018-04-10T21:38:18Z',
-                        'exe_end_date': '2018-04-10T21:38:19Z'}
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name, 'status': 'PASSED'})
 
         # Test
         for exp in test_log_exp:
@@ -126,14 +138,7 @@ class TestGenerateTestLogs(object):
 
         # Expectation
         test_name = 'test_fail'
-        test_log_exp = {'name': test_name,
-                        'status': 'FAILED',
-                        'build_url': 'Unknown',
-                        'build_number': 'Unknown',
-                        'module_names': ['Unknown'],
-                        'automation_content': '1',
-                        'exe_start_date': '2018-04-10T21:38:18Z',
-                        'exe_end_date': '2018-04-10T21:38:19Z'}
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name, 'status': 'FAILED'})
 
         # Test
         for exp in test_log_exp:
@@ -151,14 +156,7 @@ class TestGenerateTestLogs(object):
 
         # Expectation
         test_name = 'test_error'
-        test_log_exp = {'name': test_name,
-                        'status': 'FAILED',
-                        'build_url': 'Unknown',
-                        'build_number': 'Unknown',
-                        'module_names': ['Unknown'],
-                        'automation_content': '1',
-                        'exe_start_date': '2018-04-10T21:38:18Z',
-                        'exe_end_date': '2018-04-10T21:38:19Z'}
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name, 'status': 'FAILED'})
 
         # Test
         for exp in test_log_exp:
@@ -176,18 +174,40 @@ class TestGenerateTestLogs(object):
 
         # Expectation
         test_name = 'test_skip'
-        test_log_exp = {'name': test_name,
-                        'status': 'SKIPPED',
-                        'build_url': 'Unknown',
-                        'build_number': 'Unknown',
-                        'module_names': ['Unknown'],
-                        'automation_content': '1',
-                        'exe_start_date': '2018-04-10T21:38:18Z',
-                        'exe_end_date': '2018-04-10T21:38:19Z'}
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name, 'status': 'SKIPPED'})
 
         # Test
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
+
+    def test_suite_with_tests(self, suite_all_passing_xml):
+        """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated from a JUnitXML file
+        that contains a multiple passing tests that were grouped within a Python class.
+        """
+
+        # Setup
+        junit_xml = zigzag._load_input_file(suite_all_passing_xml)
+        # noinspection PyUnresolvedReferences
+        test_logs = zigzag._generate_test_logs(junit_xml)
+
+        # Expectation
+        shared_test_log_suite_exp = {'status': 'PASSED',
+                                     'module_names': ['RPC_RELEASE',
+                                                      'JOB_NAME',
+                                                      'MOLECULE_TEST_REPO',
+                                                      'MOLECULE_SCENARIO_NAME',
+                                                      'test_default',
+                                                      'TestSuite']}
+
+        test_logs_exp = [pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP,
+                                                    shared_test_log_suite_exp,
+                                                    {'name': 'test_pass{}'.format(x)})
+                         for x in range(1, 6)]
+
+        # Test
+        for x in range(len(test_logs)):
+            for key in test_logs_exp[x]:
+                assert test_logs_exp[x][key] == test_logs[x].to_dict()[key]
 
     def test_junit_xml_attachment(self, single_passing_xml):
         """Verify that a valid qTest 'AutomationTestLogResource' swagger model is generated with the raw JUnitXML
@@ -202,7 +222,7 @@ class TestGenerateTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '2307a9603b0eb70c45058dc4fc44ad91'
+        attachment_exp_data_md5 = '17a3778912a8bf149eaf13311e82b85e'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
@@ -210,6 +230,7 @@ class TestGenerateTestLogs(object):
         assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
 
+# noinspection PyUnresolvedReferences
 class TestGenerateAutoRequest(object):
     """Test cases for the '_generate_auto_request' function"""
 
@@ -221,43 +242,13 @@ class TestGenerateAutoRequest(object):
         # Setup
         test_cycle = 'CL-1'
         junit_xml = zigzag._load_input_file(flat_mix_status_xml)
-        # noinspection PyUnresolvedReferences
         auto_req_dict = zigzag._generate_auto_request(junit_xml, test_cycle).to_dict()
 
         # Expectation
-        prop_value = 'Unknown'
-        test_logs_exp = [{'name': 'test_pass',
-                          'status': 'PASSED',
-                          'build_url': 'Unknown',
-                          'build_number': 'Unknown',
-                          'module_names': [prop_value],
-                          'automation_content': '1',
-                          'exe_start_date': '2018-04-10T21:38:18Z',
-                          'exe_end_date': '2018-04-10T21:38:19Z'},
-                         {'name': 'test_fail',
-                          'status': 'FAILED',
-                          'build_url': 'Unknown',
-                          'build_number': 'Unknown',
-                          'module_names': [prop_value],
-                          'automation_content': '1',
-                          'exe_start_date': '2018-04-10T21:38:18Z',
-                          'exe_end_date': '2018-04-10T21:38:19Z'},
-                         {'name': 'test_error',
-                          'status': 'FAILED',
-                          'build_url': 'Unknown',
-                          'build_number': 'Unknown',
-                          'module_names': [prop_value],
-                          'automation_content': '1',
-                          'exe_start_date': '2018-04-10T21:38:18Z',
-                          'exe_end_date': '2018-04-10T21:38:19Z'},
-                         {'name': 'test_skip',
-                          'status': 'SKIPPED',
-                          'build_url': 'Unknown',
-                          'build_number': 'Unknown',
-                          'module_names': [prop_value],
-                          'automation_content': '1',
-                          'exe_start_date': '2018-04-10T21:38:18Z',
-                          'exe_end_date': '2018-04-10T21:38:19Z'}]
+        test_logs_exp = [pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_pass', 'status': 'PASSED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_fail', 'status': 'FAILED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_error', 'status': 'FAILED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_skip', 'status': 'SKIPPED'})]
 
         # Test
         for x in range(len(auto_req_dict['test_logs'])):

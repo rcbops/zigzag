@@ -4,7 +4,7 @@
 # Imports
 # ======================================================================================================================
 import pytest
-
+pytest_plugins = ['helpers_namespace']
 
 # ======================================================================================================================
 # Globals
@@ -12,18 +12,21 @@ import pytest
 DEFAULT_GLOBAL_PROPERTIES = \
     """
             <properties>
-                <property name="BUILD_URL" value="Unknown"/>
-                <property name="BUILD_NUMBER" value="Unknown"/>
-                <property name="RE_JOB_ACTION" value="Unknown"/>
-                <property name="RE_JOB_IMAGE" value="Unknown"/>
-                <property name="RE_JOB_SCENARIO" value="Unknown"/>
-                <property name="RE_JOB_BRANCH" value="Unknown"/>
-                <property name="RPC_RELEASE" value="Unknown"/>
-                <property name="RPC_PRODUCT_RELEASE" value="Unknown"/>
-                <property name="OS_ARTIFACT_SHA" value="Unknown"/>
-                <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
-                <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="REPO_URL" value="Unknown"/>
+                <property name="BUILD_URL" value="BUILD_URL"/>
+                <property name="BUILD_NUMBER" value="BUILD_NUMBER"/>
+                <property name="RE_JOB_ACTION" value="RE_JOB_ACTION"/>
+                <property name="RE_JOB_IMAGE" value="RE_JOB_IMAGE"/>
+                <property name="RE_JOB_SCENARIO" value="RE_JOB_SCENARIO"/>
+                <property name="RE_JOB_BRANCH" value="RE_JOB_BRANCH"/>
+                <property name="RPC_RELEASE" value="RPC_RELEASE"/>
+                <property name="RPC_PRODUCT_RELEASE" value="RPC_PRODUCT_RELEASE"/>
+                <property name="OS_ARTIFACT_SHA" value="OS_ARTIFACT_SHA"/>
+                <property name="PYTHON_ARTIFACT_SHA" value="PYTHON_ARTIFACT_SHA"/>
+                <property name="APT_ARTIFACT_SHA" value="APT_ARTIFACT_SHA"/>
+                <property name="REPO_URL" value="REPO_URL"/>
+                <property name="JOB_NAME" value="JOB_NAME"/>
+                <property name="MOLECULE_TEST_REPO" value="MOLECULE_TEST_REPO"/>
+                <property name="MOLECULE_SCENARIO_NAME" value="MOLECULE_SCENARIO_NAME"/>
             </properties>
     """
 
@@ -35,6 +38,28 @@ DEFAULT_TESTCASE_PROPERTIES = \
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
     """
+
+
+# ======================================================================================================================
+# Helpers
+# ======================================================================================================================
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
+def merge_dicts(*args):
+    """Given any number of dicts, shallow copy and merge into a new dict, precedence goes to key value pairs in latter
+    dicts.
+
+    Args:
+        *args (list(dict)): A list of dictionaries to be merged.
+
+    Returns:
+        dict: A merged dictionary.
+    """
+
+    result = {}
+    for dictionary in args:
+        result.update(dictionary)
+    return result
 
 
 # ======================================================================================================================
@@ -185,6 +210,44 @@ def flat_all_passing_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
+def suite_all_passing_xml(tmpdir_factory):
+    """JUnitXML sample representing multiple passing test cases in a test suite. (Tests within a Python class)"""
+
+    filename = tmpdir_factory.mktemp('data').join('suite_all_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+            <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="8"
+            name="test_pass1[ansible://localhost]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="12"
+            name="test_pass2[ansible://localhost]" time="0.00341415405273">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="15"
+            name="test_pass3[ansible://localhost]" time="0.00363945960999">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="18"
+            name="test_pass4[ansible://localhost]" time="0.00314617156982">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="21"
+            name="test_pass5[ansible://localhost]" time="0.00332307815552">
+                {testcase_properties}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def flat_mix_status_xml(tmpdir_factory):
     """JUnitXML sample representing mixed status for multiple test cases."""
 
@@ -225,60 +288,6 @@ def flat_mix_status_xml(tmpdir_factory):
                 {testcase_properties}
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
-                </skipped>
-            </testcase>
-        </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
-
-    with open(filename, 'w') as f:
-        f.write(junit_xml)
-
-    return filename
-
-
-@pytest.fixture(scope='session')
-def suite_mix_status_xml(tmpdir_factory):
-    """JUnitXML sample representing mixed status for multiple test cases in a test suite."""
-
-    filename = tmpdir_factory.mktemp('data').join('suite_mix_status.xml').strpath
-    junit_xml = \
-        """<?xml version="1.0" encoding="utf-8"?>
-        <testsuite errors="1" failures="1" name="pytest" skips="1" tests="4" time="1.853">
-            {global_properties}
-            <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="35"
-            name="test_pass[ansible://localhost]" time="0.00357985496521">
-                {testcase_properties}
-            </testcase>
-            <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="38"
-            name="test_fail[ansible://localhost]" time="0.00310778617859">
-                {testcase_properties}
-                <failure message="assert False">self = &lt;test_default.TestClass object at 0x7fb9c7b9a790&gt;
-        host = &lt;testinfra.host.Host object at 0x7fb9c7c18d10&gt;
-
-            def test_fail(self, host):
-        &gt;       assert False
-        E       assert False
-
-        tests/test_default.py:40: AssertionError</failure>
-            </testcase>
-            <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="41"
-            name="test_error[ansible://localhost]" time="0.00223517417908">
-                {testcase_properties}
-                <error message="test setup failure">self = &lt;test_default.TestClass object at 0x7fb9cb5b7190&gt;
-        host = &lt;testinfra.host.Host object at 0x7fb9c7c18d10&gt;
-
-            @pytest.fixture
-            def error_fixture(self, host):
-        &gt;       raise RuntimeError(&apos;oops&apos;)
-        E       RuntimeError: oops
-
-        tests/test_default.py:34: RuntimeError</error>
-            </testcase>
-            <testcase classname="tests.test_default.TestClass" file="tests/test_default.py" line="44"
-            name="test_skip[ansible://localhost]" time="0.00199604034424">
-                {testcase_properties}
-                <skipped message="unconditional skip" type="pytest.skip">
-                    tests/test_default.py:44: &lt;py._xmlgen.raw object at 0x7fb9c904d190&gt;
                 </skipped>
             </testcase>
         </testsuite>
