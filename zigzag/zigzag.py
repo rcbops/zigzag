@@ -75,7 +75,8 @@ def _generate_module_hierarchy(testcase_xml, testsuite_props):
         list(str): An ordered list of strings to use for the qTest results hierarchy.
 
     Raises:
-        KeyError: missing property.
+        KeyError: missing test suite property.
+        AttributeError: the testcase 'classname' attribute is invalid
     """
 
     module_hierarchy = [testsuite_props['RPC_RELEASE'],             # RPC Release Version (e.g. 16.0.0)
@@ -83,7 +84,7 @@ def _generate_module_hierarchy(testcase_xml, testsuite_props):
                         testsuite_props['MOLECULE_TEST_REPO'],      # (e.g. molecule-validate-neutron-deploy)
                         testsuite_props['MOLECULE_SCENARIO_NAME']]  # (e.g. "default")
 
-    testcase_groups = TESTCASE_GROUP_RGX.match(testcase_xml.attrib['classname']).groups()
+    testcase_groups = TESTCASE_GROUP_RGX.search(testcase_xml.attrib['classname']).groups()
 
     module_hierarchy.append(testcase_groups[0])         # Always append at least the filename of the test grouping.
     if testcase_groups[1]:
@@ -123,6 +124,8 @@ def _generate_test_logs(junit_xml):
             test_log.module_names = _generate_module_hierarchy(testcase_xml, testsuite_props)
         except KeyError as e:
             raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
+        except AttributeError:
+            raise RuntimeError("Test case '{}' has an invalid 'classname' attribute!".format(test_log.name))
 
         try:
             test_log.name = TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
