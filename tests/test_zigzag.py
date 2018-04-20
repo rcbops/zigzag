@@ -229,6 +229,16 @@ class TestGenerateTestLogs(object):
         assert attachment_exp_content_type == test_log_dict['attachments'][0]['content_type']
         assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
+    def test_invalid_classname(self, invalid_classname_xml):
+        """Verify that JUnitXML that has an invalid 'classname' attribute for a testcase raises a RuntimeError."""
+
+        # Setup
+        junit_xml = zigzag._load_input_file(invalid_classname_xml)
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._generate_test_logs(junit_xml)
+
 
 # noinspection PyUnresolvedReferences
 class TestGenerateAutoRequest(object):
