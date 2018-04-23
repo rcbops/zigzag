@@ -15,10 +15,14 @@ import zigzag.zigzag as zz
 # Main
 # ======================================================================================================================
 @click.command()
+@click.option('--pprint-on-fail', '-p',
+              is_flag=True,
+              default=False,
+              help='Pretty print XML on schema violations to stdout')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
 @click.argument('qtest_test_cycle', type=click.STRING)
-def main(junit_input_file, qtest_project_id, qtest_test_cycle):
+def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
     """Upload JUnitXML results to qTest manager.
 
     \b
@@ -26,7 +30,6 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle):
         JUNIT_INPUT_FILE        A valid JUnit XML results file.
         QTEST_PROJECT_ID        The the target qTest Project ID for results
         QTEST_TEST_CYCLE        The qTest cycle to use as a parent for results
-
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization
@@ -42,7 +45,8 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle):
         job_id = zz.upload_test_results(junit_input_file,
                                         os.environ[api_token_env_var],
                                         qtest_project_id,
-                                        qtest_test_cycle)
+                                        qtest_test_cycle,
+                                        pprint_on_fail)
 
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
         click.echo(click.style("\nSuccess!", fg='green'))

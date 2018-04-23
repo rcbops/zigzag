@@ -103,6 +103,19 @@ class TestLoadingInputJunitXMLFile(object):
         with pytest.raises(RuntimeError):
             zigzag._load_input_file(flat_all_passing_xml)
 
+    def test_schema_violation_with_pprint_on_fail(self, missing_test_id_xml):
+        """Verify that JUnitXML that violates the schema with 'pprint_on_fail' enabled with emit an error message with
+        the XML pretty printed in the error message."""
+
+        # Expectations
+        error_msg_exp = '---DEBUG XML PRETTY PRINT---'
+
+        # Test
+        try:
+            zigzag._load_input_file(missing_test_id_xml, pprint_on_fail=True)
+        except RuntimeError as e:
+            assert error_msg_exp in str(e)
+
 
 # noinspection PyUnresolvedReferences
 class TestGenerateTestLogs(object):
