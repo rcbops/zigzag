@@ -24,11 +24,12 @@ MAX_FILE_SIZE = 52428800
 # ======================================================================================================================
 # Functions
 # ======================================================================================================================
-def _load_input_file(file_path):
+def _load_input_file(file_path, pprint_on_fail=False):
     """Read and validate the input file contents.
 
     Args:
         file_path (str): A string representing a valid file path.
+        pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
 
     Returns:
         ElementTree: An ET object already pointed at the root "testsuite" element.
@@ -37,29 +38,36 @@ def _load_input_file(file_path):
         RuntimeError: invalid path.
     """
 
-    root_element = "testsuite"
+    root_element = 'testsuite'
     junit_xsd = pytest_rpc.get_xsd()
 
     try:
         if os.path.getsize(file_path) > MAX_FILE_SIZE:
-            raise RuntimeError('Input file "{}" is larger than allowed max file size!'.format(file_path))
+            raise RuntimeError("Input file '{}' is larger than allowed max file size!".format(file_path))
 
         junit_xml_doc = etree.parse(file_path)
     except (IOError, OSError):
-        raise RuntimeError('Invalid path "{}" for JUnitXML results file!'.format(file_path))
+        raise RuntimeError("Invalid path '{}' for JUnitXML results file!".format(file_path))
     except etree.ParseError:
-        raise RuntimeError('The file "{}" does not contain valid XML!'.format(file_path))
+        raise RuntimeError("The file '{}' does not contain valid XML!".format(file_path))
 
     try:
         xmlschema = etree.XMLSchema(etree.parse(junit_xsd))
         xmlschema.assertValid(junit_xml_doc)
         junit_xml = junit_xml_doc.getroot()
     except etree.DocumentInvalid as e:
-        raise RuntimeError('The file "{}" does not conform to schema!'
-                           '\n\nSchema Violation:\n{}'.format(file_path, str(e)))
+        debug = "\n\n---DEBUG XML PRETTY PRINT---\n\n"
+        error_message = "The file '{}' does not conform to schema!" \
+                        "\n\nSchema Violation:\n{}".format(file_path, str(e))
+        if pprint_on_fail:
+            error_message = "{0}{1}{2}{1}".format(error_message,
+                                                  debug,
+                                                  etree.tostring(junit_xml_doc, pretty_print=True))
+        raise RuntimeError("The file '{}' does not conform to schema!"
+                           "\n\nSchema Violation:\n{}".format(file_path, error_message))
 
     if junit_xml.tag != root_element:
-        raise RuntimeError('The file "{}" does not have JUnitXML "{}" root element!'.format(file_path, root_element))
+        raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(file_path, root_element))
 
     return junit_xml
 
@@ -166,7 +174,7 @@ def _generate_auto_request(junit_xml, test_cycle):
     return auto_req
 
 
-def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, qtest_test_cycle):
+def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, qtest_test_cycle, pprint_on_fail=False):
     """Construct a 'AutomationRequest' qTest resource and upload the test results to the desired project in
     qTest Manager.
 
@@ -175,6 +183,7 @@ def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, 
         qtest_api_token (str): Token to use for authorization to the qTest API.
         qtest_project_id (int): The target qTest project for the test results.
         qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
+        pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
 
     Returns:
         int: The queue processing ID for the job.
@@ -183,7 +192,7 @@ def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, 
         RuntimeError: Failed to upload test results to qTest Manager.
     """
 
-    junit_xml = _load_input_file(junit_xml_file_path)
+    junit_xml = _load_input_file(junit_xml_file_path, pprint_on_fail)
 
     swagger_client.configuration.api_key['Authorization'] = qtest_api_token
     auto_api = swagger_client.TestlogApi()

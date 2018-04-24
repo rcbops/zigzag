@@ -301,7 +301,7 @@ def flat_mix_status_xml(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def bad_xml(tmpdir_factory):
-    """JUnitXML sample representing all passing tests."""
+    """JUnitXML sample representing invalid XML."""
 
     filename = tmpdir_factory.mktemp('data').join('bad.xml').strpath
     junit_xml = "Totally Bogus Content"
