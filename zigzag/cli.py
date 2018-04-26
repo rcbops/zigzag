@@ -19,9 +19,12 @@ import zigzag.zigzag as zz
               is_flag=True,
               default=False,
               help='Pretty print XML on schema violations to stdout')
+@click.option('--qtest-test-cycle', '-t',
+              type=click.STRING,
+              default=None,
+              help='Specify a test cycle to use as a parent for results.')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
-@click.argument('qtest_test_cycle', type=click.STRING)
 def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
     """Upload JUnitXML results to qTest manager.
 
@@ -29,7 +32,6 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
     Required Arguments:
         JUNIT_INPUT_FILE        A valid JUnit XML results file.
         QTEST_PROJECT_ID        The the target qTest Project ID for results
-        QTEST_TEST_CYCLE        The qTest cycle to use as a parent for results
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization
