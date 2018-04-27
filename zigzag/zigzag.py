@@ -17,7 +17,7 @@ from swagger_client.rest import ApiException
 # Globals
 # ======================================================================================================================
 TESTCASE_NAME_RGX = re.compile(r'(\w+)(\[.+\])')
-TESTCASE_GROUP_RGX = re.compile(r'tests\.(test_\w+)\.?(Test\w+)?$')
+TESTCASE_GROUP_RGX = re.compile(r'tests\.(test_[\w-]+)\.?(Test\w+)?$')
 MAX_FILE_SIZE = 52428800
 
 

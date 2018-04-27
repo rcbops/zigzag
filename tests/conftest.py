@@ -409,6 +409,30 @@ def missing_build_url_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
+def classname_with_dashes_xml(tmpdir_factory):
+    """JUnitXML sample representing a testcase that has a 'classname' attribute which contains dashes for the py.test
+    filename."""
+
+    filename = tmpdir_factory.mktemp('data').join('classname_with_dashes.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="test.tests.test_for_acs-150.TestForRPC10PlusPostDeploymentQCProcess"
+            file="tests/test_for_acs-150.py" line="140"
+            name="test_verify_kibana_horizon_access_with_no_ssh[_testinfra_host0]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def invalid_classname_xml(tmpdir_factory):
     """JUnitXML sample representing a testcase that has an invalid 'classname' attribute which is used to build the
     results hierarchy in the '_generate_module_hierarchy' function."""
