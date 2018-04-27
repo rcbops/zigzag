@@ -242,6 +242,32 @@ class TestGenerateTestLogs(object):
         assert attachment_exp_content_type == test_log_dict['attachments'][0]['content_type']
         assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
+    def test_classname_containing_dashes(self, classname_with_dashes_xml):
+        """Verify that JUnitXML that has a 'classname' containing dashes (captured from the py.test filename) is
+        validated correctly.
+        """
+
+        # Setup
+        junit_xml = zigzag._load_input_file(classname_with_dashes_xml)
+        # noinspection PyUnresolvedReferences
+        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+
+        # Expectation
+        test_name = 'test_verify_kibana_horizon_access_with_no_ssh'
+        module_names = ['RPC_RELEASE',
+                        'JOB_NAME',
+                        'MOLECULE_TEST_REPO',
+                        'MOLECULE_SCENARIO_NAME',
+                        'test_for_acs-150',
+                        'TestForRPC10PlusPostDeploymentQCProcess']
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name,
+                                                                        'status': 'PASSED',
+                                                                        'module_names': module_names})
+
+        # Test
+        for exp in test_log_exp:
+            assert test_log_exp[exp] == test_log_dict[exp]
+
     def test_invalid_classname(self, invalid_classname_xml):
         """Verify that JUnitXML that has an invalid 'classname' attribute for a testcase raises a RuntimeError."""
 
