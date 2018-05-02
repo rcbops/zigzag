@@ -101,6 +101,19 @@ def _generate_module_hierarchy(testcase_xml, testsuite_props):
     return module_hierarchy
 
 
+def _get_testsuite_props(junit_xml):
+    """Get a dictionary of testsuite properties from the JUnitXML results file.
+
+    Args:
+        junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
+
+    Returns:
+        dict: A dictionary of testsuite properties
+    """
+
+    return {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+
+
 def _generate_test_logs(junit_xml):
     """Construct a qTest swagger model for all the JUnitXML test cases.
 
@@ -112,7 +125,7 @@ def _generate_test_logs(junit_xml):
     """
 
     serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
-    testsuite_props = {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+    testsuite_props = _get_testsuite_props(junit_xml)
     date_time_now = datetime.utcnow()
     test_logs = []
 
@@ -154,21 +167,65 @@ def _generate_test_logs(junit_xml):
     return test_logs
 
 
-def _generate_auto_request(junit_xml, test_cycle):
+def _discover_parent_test_cycle(qtest_project_id, test_cycle_name):
+    """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
+    matching test cycle name is not found then a test cycle will be created with the given name.
+
+    Args:
+        qtest_project_id (int): The target qTest project for the test results.
+        test_cycle_name (str): The test cycle name (e.g. queens) to search for in an case insensitive fashion.
+
+    Returns:
+        str: A qTest test cycle PID. (e.g. CL-123)
+
+    Raises:
+        RuntimeError: Failed to retrieve/create qTest test cycle(s).
+    """
+
+    auto_api = swagger_client.TestcycleApi()
+
+    try:
+        test_cycles = {tc.to_dict()['name']: tc.to_dict()['pid'] for tc in auto_api.get_test_cycles(qtest_project_id)}
+
+        if test_cycle_name.lower() not in [tcn.lower() for tcn in test_cycles.keys()]:
+            test_cycle_pid = auto_api.create_cycle(
+                project_id=qtest_project_id,
+                parent_id=0,
+                parent_type='root',
+                body=swagger_client.TestCycleResource(
+                    name=test_cycle_name)).to_dict()['pid']
+        else:
+            try:
+                test_cycle_pid = test_cycles[test_cycle_name]
+            except KeyError:
+                test_cycle_pid = test_cycles[test_cycle_name.lower()]
+    except ApiException as e:
+        raise RuntimeError("The qTest API reported an error!\n"
+                           "Status code: {}\n"
+                           "Reason: {}\n"
+                           "Message: {}".format(e.status, e.reason, e.body))
+
+    return test_cycle_pid
+
+
+def _generate_auto_request(junit_xml, qtest_project_id, qtest_test_cycle):
     """Construct a qTest swagger model for a JUnitXML test run result. (Called an "automation request" in
     qTest parlance)
 
     Args:
         junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
-        test_cycle (str): The parent qTest test cycle for test results.
+        qtest_project_id (int): The target qTest project for the test results.
+        qtest_test_cycle (str): The parent qTest test cycle for test results. If test_cycle is None then the cycle
+            will be discovered automatically.
 
     Returns:
         AutomationRequest: A qTest swagger model for an automation request.
     """
 
     auto_req = swagger_client.AutomationRequest()
-    auto_req.test_cycle = test_cycle
     auto_req.test_logs = _generate_test_logs(junit_xml)
+    auto_req.test_cycle = qtest_test_cycle or \
+        _discover_parent_test_cycle(qtest_project_id, _get_testsuite_props(junit_xml)['RPC_PRODUCT_RELEASE'])
     auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
 
     return auto_req
@@ -183,6 +240,7 @@ def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, 
         qtest_api_token (str): Token to use for authorization to the qTest API.
         qtest_project_id (int): The target qTest project for the test results.
         qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
+            If test_cycle is None then the cycle will be discovered automatically.
         pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
 
     Returns:
@@ -196,7 +254,7 @@ def upload_test_results(junit_xml_file_path, qtest_api_token, qtest_project_id, 
 
     swagger_client.configuration.api_key['Authorization'] = qtest_api_token
     auto_api = swagger_client.TestlogApi()
-    auto_req = _generate_auto_request(junit_xml, qtest_test_cycle)
+    auto_req = _generate_auto_request(junit_xml, qtest_project_id, qtest_test_cycle)
 
     try:
         response = auto_api.submit_automation_test_logs_0(project_id=qtest_project_id,

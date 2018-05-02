@@ -6,6 +6,7 @@
 # ======================================================================================================================
 import re
 import pytest
+import swagger_client
 from hashlib import md5
 from zigzag import zigzag
 from swagger_client.rest import ApiException
@@ -289,9 +290,10 @@ class TestGenerateAutoRequest(object):
         """
 
         # Setup
+        project_id = 12345
         test_cycle = 'CL-1'
         junit_xml = zigzag._load_input_file(flat_mix_status_xml)
-        auto_req_dict = zigzag._generate_auto_request(junit_xml, test_cycle).to_dict()
+        auto_req_dict = zigzag._generate_auto_request(junit_xml, project_id, test_cycle).to_dict()
 
         # Expectation
         test_logs_exp = [pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_pass', 'status': 'PASSED'}),
@@ -303,6 +305,102 @@ class TestGenerateAutoRequest(object):
         for x in range(len(auto_req_dict['test_logs'])):
             for key in test_logs_exp[x]:
                 assert test_logs_exp[x][key] == auto_req_dict['test_logs'][x][key]
+
+
+class TestDiscoverParentTestCycle(object):
+    """Test cases for the '_discover_parent_test_cycle' function"""
+
+    def test_discover_existing_test_cycle(self, mocker):
+        """Verify that the PID for an existing test cycle can be discovered."""
+
+        # Setup
+        project_id = 12345
+        test_cycle_name = 'TestCycle1'
+
+        # Expectation
+        test_cycle_pid_exp = 'CL-1'
+
+        # Mock
+        mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid_exp}
+
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+
+        # Test
+        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+
+    def test_discover_existing_test_cycle_with_case_change(self, mocker):
+        """Verify that the PID for an existing test cycle can be discovered when using a different case for search."""
+
+        # Setup
+        project_id = 12345
+        test_cycle_name = 'Queens'
+
+        # Expectation
+        test_cycle_pid_exp = 'CL-2'
+
+        # Mock
+        mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': test_cycle_pid_exp}
+
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+
+        # Test
+        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+
+    def test_create_test_cycle(self, mocker):
+        """Verify that a new test cycle will be created when the desired cycle name cannot be found."""
+
+        # Setup
+        project_id = 12345
+        test_cycle_name = 'Buttons'
+
+        # Expectation
+        test_cycle_pid_exp = 'CL-3'
+
+        # Mock
+        mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_create_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_get_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': 'CL-2'}
+        mock_create_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid_exp}
+
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_get_tc_resp])
+        mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
+
+        # Test
+        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+
+    def test_failure_to_get_test_cycles(self, mocker):
+        """Verify that API failure when retrieving test cycles is caught."""
+
+        # Setup
+        project_id = 12345
+        test_cycle_name = 'TestCycle1'
+
+        # Mock
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', side_effect=ApiException('Super duper failure!'))
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+
+    def test_failure_to_create_test_cycle(self, mocker):
+        """Verify that API failure when creating a test cycle is caught."""
+
+        # Setup
+        project_id = 12345
+        test_cycle_name = 'TestCycle1'
+
+        # Mock
+        mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_get_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': 'CL-2'}
+
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_get_tc_resp])
+        mocker.patch('swagger_client.TestcycleApi.create_cycle', side_effect=ApiException('Super duper failure!'))
+
+        # Test
+        with pytest.raises(RuntimeError):
+            zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
 
 
 class TestUploadTestResults(object):
