@@ -8,7 +8,7 @@ import re
 import pytest
 import swagger_client
 from hashlib import md5
-from zigzag import zigzag
+from zigzag.zigzag import ZigZag
 from swagger_client.rest import ApiException
 
 # ======================================================================================================================
@@ -25,6 +25,11 @@ SHARED_TEST_LOG_EXP = {'build_url': 'BUILD_URL',
                        'automation_content': '1',
                        'exe_start_date': '2018-04-10T21:38:18Z',
                        'exe_end_date': '2018-04-10T21:38:19Z'}
+# Shared variables
+TOKEN = 'VALID_TOKEN'
+PROJECT_ID = 12345
+TEST_CYCLE = 'CL-1'
+
 
 
 # ======================================================================================================================
@@ -37,7 +42,8 @@ class TestLoadingInputJunitXMLFile(object):
         """Verify that a valid JUnitXML file can be loaded"""
 
         # Setup
-        junit_xml = zigzag._load_input_file(flat_all_passing_xml)
+        zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
 
         # Expectations
         root_tag_atribute_exp = {'errors': '0',
@@ -53,67 +59,89 @@ class TestLoadingInputJunitXMLFile(object):
     def test_invalid_file_path(self):
         """Verify that an invalid file path raises an exception"""
 
+        # Setup
+        zz = ZigZag('/path/does/not/exist', TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file('/path/does/not/exist')
+            zz._load_input_file()
 
     def test_invalid_xml_content(self, bad_xml):
         """Verify that invalid XML file content raises an exception"""
 
+        # Setup
+        zz = ZigZag(bad_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(bad_xml)
+            zz._load_input_file()
 
     def test_missing_junit_xml_root(self, bad_junit_root):
         """Verify that XML files missing the expected JUnitXML root element raises an exception"""
 
+        # Setup
+        zz = ZigZag(bad_junit_root, TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(bad_junit_root)
+            zz._load_input_file()
 
     def test_missing_build_url_xml(self, missing_build_url_xml):
         """Verify that JUnitXML that is missing the test suite 'BUILD_URL' property element causes a RuntimeError."""
 
+        # Setup
+        zz = ZigZag(missing_build_url_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(missing_build_url_xml)
+            zz._load_input_file()
 
     def test_missing_testcase_properties_xml(self, missing_testcase_properties_xml):
         """Verify that JUnitXML that is missing the test case 'properties' element causes a RuntimeError."""
 
+        # Setup
+        zz = ZigZag(missing_testcase_properties_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(missing_testcase_properties_xml)
+            zz._load_input_file()
 
     def test_missing_test_id_xml(self, missing_test_id_xml):
         """Verify that JUnitXML that is missing the 'test_id' test case property causes a RuntimeError."""
 
+        # Setup
+        zz = ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(missing_test_id_xml)
+            zz._load_input_file()
 
     def test_exceeds_max_file_size(self, flat_all_passing_xml, mocker):
         """Verify that XML files that exceed the max file size are rejected"""
         # Setup
         file_size = 52428801
+        zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Mock
         mocker.patch('os.path.getsize', return_value=file_size)
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._load_input_file(flat_all_passing_xml)
+            zz._load_input_file()
 
     def test_schema_violation_with_pprint_on_fail(self, missing_test_id_xml):
         """Verify that JUnitXML that violates the schema with 'pprint_on_fail' enabled with emit an error message with
         the XML pretty printed in the error message."""
+
+        # Setup
+        zz = ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE, pprint_on_fail=True)
 
         # Expectations
         error_msg_exp = '---DEBUG XML PRETTY PRINT---'
 
         # Test
         try:
-            zigzag._load_input_file(missing_test_id_xml, pprint_on_fail=True)
+            zz._load_input_file()
         except RuntimeError as e:
             assert error_msg_exp in str(e)
 
@@ -128,9 +156,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(single_passing_xml)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_pass'
@@ -146,9 +175,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(single_fail_xml)
+        zz = ZigZag(single_fail_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_fail'
@@ -164,9 +194,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(single_error_xml)
+        zz = ZigZag(single_error_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_error'
@@ -182,9 +213,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(single_skip_xml)
+        zz = ZigZag(single_skip_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_skip'
@@ -200,9 +232,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(suite_all_passing_xml)
+        zz = ZigZag(suite_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_logs = zigzag._generate_test_logs(junit_xml)
+        test_logs = zz._generate_test_logs(junit_xml)
 
         # Expectation
         shared_test_log_suite_exp = {'status': 'PASSED',
@@ -229,9 +262,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(single_passing_xml)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
@@ -249,9 +283,10 @@ class TestGenerateTestLogs(object):
         """
 
         # Setup
-        junit_xml = zigzag._load_input_file(classname_with_dashes_xml)
+        zz = ZigZag(classname_with_dashes_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
         # noinspection PyUnresolvedReferences
-        test_log_dict = zigzag._generate_test_logs(junit_xml)[0].to_dict()
+        test_log_dict = zz._generate_test_logs(junit_xml)[0].to_dict()
 
         # Expectation
         test_name = 'test_verify_kibana_horizon_access_with_no_ssh'
@@ -273,11 +308,12 @@ class TestGenerateTestLogs(object):
         """Verify that JUnitXML that has an invalid 'classname' attribute for a testcase raises a RuntimeError."""
 
         # Setup
-        junit_xml = zigzag._load_input_file(invalid_classname_xml)
+        zz = ZigZag(invalid_classname_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._generate_test_logs(junit_xml)
+            zz._generate_test_logs(junit_xml)
 
 
 # noinspection PyUnresolvedReferences
@@ -290,10 +326,9 @@ class TestGenerateAutoRequest(object):
         """
 
         # Setup
-        project_id = 12345
-        test_cycle = 'CL-1'
-        junit_xml = zigzag._load_input_file(flat_mix_status_xml)
-        auto_req_dict = zigzag._generate_auto_request(junit_xml, project_id, test_cycle).to_dict()
+        zz = ZigZag(flat_mix_status_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        junit_xml = zz._load_input_file()
+        auto_req_dict = zz._generate_auto_request(junit_xml).to_dict()
 
         # Expectation
         test_logs_exp = [pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_pass', 'status': 'PASSED'}),
@@ -310,12 +345,12 @@ class TestGenerateAutoRequest(object):
 class TestDiscoverParentTestCycle(object):
     """Test cases for the '_discover_parent_test_cycle' function"""
 
-    def test_discover_existing_test_cycle(self, mocker):
+    def test_discover_existing_test_cycle(self, single_passing_xml, mocker):
         """Verify that the PID for an existing test cycle can be discovered."""
 
         # Setup
-        project_id = 12345
         test_cycle_name = 'TestCycle1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Expectation
         test_cycle_pid_exp = 'CL-1'
@@ -327,14 +362,14 @@ class TestDiscoverParentTestCycle(object):
         mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
 
         # Test
-        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+        assert test_cycle_pid_exp == zz._discover_parent_test_cycle(test_cycle_name)
 
-    def test_discover_existing_test_cycle_with_case_change(self, mocker):
+    def test_discover_existing_test_cycle_with_case_change(self, single_passing_xml, mocker):
         """Verify that the PID for an existing test cycle can be discovered when using a different case for search."""
 
         # Setup
-        project_id = 12345
         test_cycle_name = 'Queens'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Expectation
         test_cycle_pid_exp = 'CL-2'
@@ -346,14 +381,14 @@ class TestDiscoverParentTestCycle(object):
         mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
 
         # Test
-        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+        assert test_cycle_pid_exp == zz._discover_parent_test_cycle( test_cycle_name)
 
-    def test_create_test_cycle(self, mocker):
+    def test_create_test_cycle(self, single_passing_xml, mocker):
         """Verify that a new test cycle will be created when the desired cycle name cannot be found."""
 
         # Setup
-        project_id = 12345
         test_cycle_name = 'Buttons'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Expectation
         test_cycle_pid_exp = 'CL-3'
@@ -368,28 +403,28 @@ class TestDiscoverParentTestCycle(object):
         mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
 
         # Test
-        assert test_cycle_pid_exp == zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+        assert test_cycle_pid_exp == zz._discover_parent_test_cycle(test_cycle_name)
 
-    def test_failure_to_get_test_cycles(self, mocker):
+    def test_failure_to_get_test_cycles(self, single_passing_xml, mocker):
         """Verify that API failure when retrieving test cycles is caught."""
 
         # Setup
-        project_id = 12345
         test_cycle_name = 'TestCycle1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Mock
         mocker.patch('swagger_client.TestcycleApi.get_test_cycles', side_effect=ApiException('Super duper failure!'))
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+            zz._discover_parent_test_cycle(test_cycle_name)
 
-    def test_failure_to_create_test_cycle(self, mocker):
+    def test_failure_to_create_test_cycle(self, single_passing_xml, mocker):
         """Verify that API failure when creating a test cycle is caught."""
 
         # Setup
-        project_id = 12345
         test_cycle_name = 'TestCycle1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Mock
         mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
@@ -400,7 +435,7 @@ class TestDiscoverParentTestCycle(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag._discover_parent_test_cycle(project_id, test_cycle_name)
+            zz._discover_parent_test_cycle(test_cycle_name)
 
 
 class TestUploadTestResults(object):
@@ -410,9 +445,7 @@ class TestUploadTestResults(object):
         """Verify that the function can upload results from a JUnitXML file that contains a single passing test"""
 
         # Setup
-        api_token = 'valid_token'
-        project_id = 12345
-        test_cycle = 'CL-1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Expectation
         job_id = '54321'
@@ -422,16 +455,14 @@ class TestUploadTestResults(object):
         mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
 
         # Test
-        response = zigzag.upload_test_results(single_passing_xml, api_token, project_id, test_cycle)
+        response = zz.upload_test_results()
         assert int(job_id) == response
 
     def test_api_exception(self, single_passing_xml, mocker):
         """Verify that the function fails gracefully if the API endpoint reports an API exception"""
 
         # Setup
-        api_token = 'valid_token'
-        project_id = 12345
-        test_cycle = 'CL-1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Mock
         mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0',
@@ -439,15 +470,13 @@ class TestUploadTestResults(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag.upload_test_results(single_passing_xml, api_token, project_id, test_cycle)
+            zz.upload_test_results()
 
     def test_job_queue_failure(self, single_passing_xml, mocker):
         """Verify that the function fails gracefully if the job queue reports a failure"""
 
         # Setup
-        api_token = 'valid_token'
-        project_id = 12345
-        test_cycle = 'CL-1'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Mock
         mock_queue_resp = mocker.Mock(state='FAILED')
@@ -455,4 +484,4 @@ class TestUploadTestResults(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            zigzag.upload_test_results(single_passing_xml, api_token, project_id, test_cycle)
+            zz.upload_test_results()
