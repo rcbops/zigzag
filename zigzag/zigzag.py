@@ -13,11 +13,11 @@ from datetime import datetime
 from swagger_client.rest import ApiException
 
 
-class ZigZag:
+class ZigZag(object):
 
-    _testcase_name_rgx = re.compile(r'(\w+)(\[.+\])')
-    _testcase_group_rgx = re.compile(r'tests\.(test_[\w-]+)\.?(Test\w+)?$')
-    _max_file_size = 52428800
+    _TESTCASE_NAME_RGX = re.compile(r'(\w+)(\[.+\])')
+    _TESTCASE_GROUP_RGX = re.compile(r'tests\.(test_[\w-]+)\.?(Test\w+)?$')
+    _MAX_FILE_SIZE = 52428800
 
     def __init__(self, junit_xml_file_path, qtest_api_token, qtest_project_id, qtest_test_cycle, pprint_on_fail=False):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
@@ -29,19 +29,43 @@ class ZigZag:
            qtest_project_id (int): The target qTest project for the test results.
            qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
            pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
-       """
+       """  # noqa
+
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
+        self._field_api = swagger_client.FieldApi()
         self._junit_xml_file_path = junit_xml_file_path
         self._qtest_project_id = qtest_project_id
         self._qtest_test_cycle = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
+        self._failure_output_field_id = self._find_custom_field_id_by_label('Failure Output', 'test-runs')
+        self._load_input_file()
+
+    def _find_custom_field_id_by_label(self, field_name, object_type):
+        """Find a custom field id by its label
+
+        Args:
+            field_name (str): The name of the custom field
+            object_type (str): The object type to search for the custom field on
+
+        Returns:
+            int: the id of the field that has the matching label
+
+        Raises:
+            RuntimeError: The qTest
+        """
+
+        try:
+            for field in self._field_api.get_fields(self._qtest_project_id, object_type):
+                if field.label == field_name:
+                    return field.id
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
 
     def _load_input_file(self):
         """Read and validate the input file contents.
-
-        Args:
-            file_path (str): A string representing a valid file path.
-            pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
 
         Returns:
             ElementTree: An ET object already pointed at the root "testsuite" element.
@@ -55,7 +79,7 @@ class ZigZag:
         file_path = self._junit_xml_file_path
 
         try:
-            if os.path.getsize(file_path) > self._max_file_size:
+            if os.path.getsize(file_path) > self._MAX_FILE_SIZE:
                 raise RuntimeError("Input file '{}' is larger than allowed max file size!".format(file_path))
 
             junit_xml_doc = etree.parse(file_path)
@@ -80,9 +104,9 @@ class ZigZag:
                                "\n\nSchema Violation:\n{}".format(file_path, error_message))
 
         if junit_xml.tag != root_element:
-            raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(file_path, root_element))
+            raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(file_path, root_element))  # noqa
 
-        return junit_xml
+        self._junit_xml = junit_xml
 
     def _generate_module_hierarchy(self, testcase_xml, testsuite_props):
         """Construct a qTest swagger model for all the JUnitXML test cases.
@@ -104,7 +128,7 @@ class ZigZag:
                             testsuite_props['MOLECULE_TEST_REPO'],      # (e.g. molecule-validate-neutron-deploy)
                             testsuite_props['MOLECULE_SCENARIO_NAME']]  # (e.g. "default")
 
-        testcase_groups = self._testcase_group_rgx.search(testcase_xml.attrib['classname']).groups()
+        testcase_groups = self._TESTCASE_GROUP_RGX.search(testcase_xml.attrib['classname']).groups()
 
         module_hierarchy.append(testcase_groups[0])         # Always append at least the filename of the test grouping.
         if testcase_groups[1]:
@@ -112,35 +136,43 @@ class ZigZag:
 
         return module_hierarchy
 
-    def _generate_test_logs(self, junit_xml):
+    def _generate_test_logs(self):
         """Construct a qTest swagger model for all the JUnitXML test cases.
-
-        Args:
-            junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
 
         Returns:
             list(AutomationTestLogResource): A list of qTest swagger model test logs.
         """
 
-        serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
-        testsuite_props = {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+        serialized_junit_xml = etree.tostring(self._junit_xml, encoding='UTF-8', xml_declaration=True)
+        testsuite_props = {p.attrib['name']: p.attrib['value']
+                           for p in self._junit_xml.findall('./properties/property')}
         date_time_now = datetime.utcnow()
         test_logs = []
 
-        for testcase_xml in junit_xml.findall('testcase'):
+        for testcase_xml in self._junit_xml.findall('testcase'):
             testcase_status = 'PASSED'
+
+            test_log = swagger_client.AutomationTestLogResource()
+            test_log.properties = []
 
             if testcase_xml.find('failure') is not None or testcase_xml.find('error') is not None:
                 testcase_status = 'FAILED'
+
+                if self._failure_output_field_id is not None:
+                    possible_messages = [testcase_xml.find('error'), testcase_xml.find('failure')]
+                    message = "\n".join([x.attrib['message'] for x in possible_messages if x is not None])
+                    test_log.properties.append(swagger_client.PropertyResource(field_id=self._failure_output_field_id,
+                                                                               field_value=message))
+
             elif testcase_xml.find('skipped') is not None:
                 testcase_status = 'SKIPPED'
 
-            test_log = swagger_client.AutomationTestLogResource()
-
             try:
-                test_log.name = self._testcase_name_rgx.match(testcase_xml.attrib['name']).group(1)
-                test_log.automation_content = testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
-                test_log.exe_start_date = testcase_xml.find("./properties/property/[@name='start_time']").attrib['value']
+                test_log.name = self._TESTCASE_NAME_RGX.match(testcase_xml.attrib['name']).group(1)
+                test_log.automation_content = \
+                    testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+                test_log.exe_start_date = \
+                    testcase_xml.find("./properties/property/[@name='start_time']").attrib['value']
                 test_log.exe_end_date = testcase_xml.find("./properties/property/[@name='end_time']").attrib['value']
             except AttributeError:
                 raise RuntimeError("Test case '{}' is missing the required property!".format(test_log.name))
@@ -164,24 +196,20 @@ class ZigZag:
 
         return test_logs
 
-    def _get_testsuite_props(self, junit_xml):
+    def _get_testsuite_props(self):
         """Get a dictionary of testsuite properties from the JUnitXML results file.
-
-        Args:
-            junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
 
         Returns:
             dict: A dictionary of testsuite properties
         """
 
-        return {p.attrib['name']: p.attrib['value'] for p in junit_xml.findall('./properties/property')}
+        return {p.attrib['name']: p.attrib['value'] for p in self._junit_xml.findall('./properties/property')}
 
     def _discover_parent_test_cycle(self, test_cycle_name):
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
         matching test cycle name is not found then a test cycle will be created with the given name.
 
         Args:
-            qtest_project_id (int): The target qTest project for the test results.
             test_cycle_name (str): The test cycle name (e.g. queens) to search for in an case insensitive fashion.
 
         Returns:
@@ -217,24 +245,18 @@ class ZigZag:
 
         return test_cycle_pid
 
-    def _generate_auto_request(self, junit_xml):
+    def _generate_auto_request(self):
         """Construct a qTest swagger model for a JUnitXML test run result. (Called an "automation request" in
         qTest parlance)
-
-        Args:
-            junit_xml (ElementTree): A XML element representing a JUnit style testsuite result.
-            qtest_project_id (int): The target qTest project for the test results.
-            qtest_test_cycle (str): The parent qTest test cycle for test results. If test_cycle is None then the cycle
-                will be discovered automatically.
 
         Returns:
             AutomationRequest: A qTest swagger model for an automation request.
         """
 
         auto_req = swagger_client.AutomationRequest()
-        auto_req.test_logs = self._generate_test_logs(junit_xml)
+        auto_req.test_logs = self._generate_test_logs()
         auto_req.test_cycle = self._qtest_test_cycle or \
-            self._discover_parent_test_cycle( self._get_testsuite_props(junit_xml)['RPC_PRODUCT_RELEASE'])
+            self._discover_parent_test_cycle(self._get_testsuite_props()['RPC_PRODUCT_RELEASE'])
         auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
 
         return auto_req
@@ -243,25 +265,15 @@ class ZigZag:
         """Construct a 'AutomationRequest' qTest resource and upload the test results to the desired project in
         qTest Manager.
 
-        Args:
-            junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
-            qtest_api_token (str): Token to use for authorization to the qTest API.
-            qtest_project_id (int): The target qTest project for the test results.
-            qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
-                If test_cycle is None then the cycle will be discovered automatically.
-            pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
-
         Returns:
             int: The queue processing ID for the job.
 
         Raises:
             RuntimeError: Failed to upload test results to qTest Manager.
-        """
-
-        junit_xml = self._load_input_file()
+        """  # noqa
 
         auto_api = swagger_client.TestlogApi()
-        auto_req = self._generate_auto_request(junit_xml)
+        auto_req = self._generate_auto_request()
 
         try:
             response = auto_api.submit_automation_test_logs_0(project_id=self._qtest_project_id,

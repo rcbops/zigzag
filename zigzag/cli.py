@@ -45,10 +45,10 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
                                'See help for more details.'.format(api_token_env_var))
 
         zz = ZigZag(junit_input_file,
-                                        os.environ[api_token_env_var],
-                                        qtest_project_id,
-                                        qtest_test_cycle,
-                                        pprint_on_fail)
+                    os.environ[api_token_env_var],
+                    qtest_project_id,
+                    qtest_test_cycle,
+                    pprint_on_fail)
 
         job_id = zz.upload_test_results()
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
