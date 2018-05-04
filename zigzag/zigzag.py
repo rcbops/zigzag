@@ -221,6 +221,7 @@ class ZigZag(object):
 
         auto_api = swagger_client.TestcycleApi()
         project_id = self._qtest_project_id
+        test_cycle_pid = None
 
         try:
             test_cycles = {tc.to_dict()['name']: tc.to_dict()['pid'] for tc in auto_api.get_test_cycles(project_id)}
@@ -236,7 +237,11 @@ class ZigZag(object):
                 try:
                     test_cycle_pid = test_cycles[test_cycle_name]
                 except KeyError:
-                    test_cycle_pid = test_cycles[test_cycle_name.lower()]
+                    for key in list(test_cycles.keys()):
+                        if key.lower() == test_cycle_name.lower():
+                            # this will take the last match found
+                            # once we can warn we should warn the user that we found duplicate cycles
+                            test_cycle_pid = test_cycles[key]
         except ApiException as e:
             raise RuntimeError("The qTest API reported an error!\n"
                                "Status code: {}\n"
