@@ -492,6 +492,29 @@ class TestDiscoverParentTestCycle(object):
         # Test
         assert test_cycle_pid_exp == zz._discover_parent_test_cycle(test_cycle_name)
 
+    def test_mismatched_test_cycle_name_case(self, single_passing_xml, mocker):
+        """Verify that a mismatch in case does not cause a failure"""
+
+        # Expectation
+        test_cycle_pid_exp = 'CL-2'
+
+        # Mock
+        mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+        mock_field_resp.id = 12345
+        mock_field_resp.label = 'Failure Output'
+        mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_tc_resp.to_dict.return_value = {'name': 'Queens', 'pid': test_cycle_pid_exp}
+
+        mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+
+        # Setup
+        test_cycle_name = 'queens'
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+
+        # Test
+        assert test_cycle_pid_exp == zz._discover_parent_test_cycle(test_cycle_name)
+
     def test_failure_to_get_test_cycles(self, single_passing_xml, mocker):
         """Verify that API failure when retrieving test cycles is caught."""
 
