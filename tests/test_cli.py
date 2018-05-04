@@ -26,10 +26,14 @@ def test_cli_happy_path(single_passing_xml, mocker):
     job_id = '54321'
 
     # Mock
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
     mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
     mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
 
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
     mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
 
@@ -56,10 +60,14 @@ def test_cli_missing_api_token(single_passing_xml, mocker):
     error_msg_exp = 'The "QTEST_API_TOKEN" environment variable is not defined!'
 
     # Mock
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
     mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
     mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
 
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
     mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
 
@@ -85,8 +93,12 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     job_id = '54321'
 
     # Mock
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
 
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
 
     # Test
@@ -113,10 +125,14 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     error_msg_exp = '---DEBUG XML PRETTY PRINT---'
 
     # Mock
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
     mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
     mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
 
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
     mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
 
