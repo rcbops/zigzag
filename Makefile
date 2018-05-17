@@ -89,9 +89,39 @@ dist: clean ## builds source and wheel package
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
+install-editable: ## install the package in editable mode
+	if pip list -e | grep 'flake8-pytest-mark'; then echo 'Editable package already installed'; else pip install -e .; fi
+
 install-venv: clean-venv install ## install the package after wiping the vitual environment
 
 develop: clean ## install necessary packages to setup a dev environment
 	pip install -r requirements.txt
 
 develop-venv: clean-venv develop ## setup a dev environment after wiping the virtual environment
+
+publish: ## publish package to PyPI
+	twine upload dist/*.whl
+
+build: ## build a wheel
+	python setup.py bdist_wheel
+
+bump-major: ## bumps the version of by major
+	bumpversion major
+
+bump-minor: ## bumps the version of by minor
+	bumpversion minor
+
+bump-patch: ## bumps the version of by patch
+	bumpversion patch
+
+release-major: clean-build build develop bump-major lint test publish ## package and upload a major release
+	echo 'Successfully released!'
+	echo 'Please push the newly created tag and commit to GitHub.'
+
+release-minor: clean-build build develop bump-minor lint test publish ## package and upload a minor release
+	echo 'Successfully released!'
+	echo 'Please push the newly created tag and commit to GitHub.'
+
+release-patch: clean-build build develop bump-patch lint test publish ## package and upload a patch release
+	echo 'Successfully released!'
+	echo 'Please push the newly created tag and commit to GitHub.'
