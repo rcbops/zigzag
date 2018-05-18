@@ -40,18 +40,12 @@ Contributing
 
 See `CONTRIBUTING.rst`_ for more details on developing for the Zigzag project.
 
-Release Process
----------------
-
-See `release_process.rst`_ for information on the release process for 'zigzag'
-
 Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
-.. _release_process.rst: docs/release_process.rst
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _qTest Manager API: https://support.qasymphony.com/hc/en-us/articles/115002958146-qTest-API-Specification
