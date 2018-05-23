@@ -24,16 +24,20 @@ Quick Start Guide
 3. Here is an example of uploading a results JUnitXML file from Molecule::
 
     $ export QTEST_API_TOKEN="SECRET"
-    $ zigzag junit.xml 12345 TC-1
+    $ zigzag junit.xml 12345
 
 4. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
 
 Choosing a Parent Test Cycle
 ----------------------------
 
-The intended parent test cycle should be one that is named after the product release code name. (e.g. Queens) It is
-assumed that this test cycle was created beforehand. By using a test cycle with a product release code name the
-resulting execution result hierarchy will group results in a sensible manner.
+By default, ``zigzag`` will discover the appropriate parent test cycle by inspecting the provided JUnitXML. However,
+a test cycle can be specified manually by using the ``--qtest-test-cycle`` command-line option. It should be noted that
+the intended parent test cycle should be named after the product release code name. (e.g. Queens)
+
+It is assumed that this test cycle was created beforehand if you're using the ``--qtest-test-cycle`` command-line
+option. By using a test cycle with a product release code name the resulting execution result hierarchy will group
+results ina sensible manner.
 
 Contributing
 ------------
