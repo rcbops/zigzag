@@ -20,7 +20,7 @@ def test_cli_happy_path(single_passing_xml, mocker):
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id]
+    cli_arguments = ['upload', single_passing_xml, project_id]
 
     # Expectation
     job_id = '54321'
@@ -44,7 +44,7 @@ def test_cli_happy_path(single_passing_xml, mocker):
     assert 'Success!' in result.output
 
 
-def test_cli_missing_api_token(single_passing_xml, mocker):
+def test_upload_cli_missing_api_token(single_passing_xml, mocker):
     """Verify that the CLI will gracefully fail if the expected API token env var is not set."""
 
     # Setup
@@ -53,7 +53,7 @@ def test_cli_missing_api_token(single_passing_xml, mocker):
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id]
+    cli_arguments = ['upload',single_passing_xml, project_id]
 
     # Expectation
     job_id = '54321'
@@ -87,7 +87,7 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id, '--qtest-test-cycle={}'.format(test_cycle_pid)]
+    cli_arguments = ['upload', single_passing_xml, project_id, '--qtest-test-cycle={}'.format(test_cycle_pid)]
 
     # Expectation
     job_id = '54321'
@@ -119,7 +119,7 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [missing_test_id_xml, project_id, '--pprint-on-fail']
+    cli_arguments = ['upload', missing_test_id_xml, project_id, '--pprint-on-fail']
 
     # Expectations
     error_msg_exp = '---DEBUG XML PRETTY PRINT---'
@@ -141,3 +141,27 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     assert 1 == result.exit_code
     assert error_msg_exp in result.output
     assert 'Failed!' in result.output
+
+
+def test_queue_happy_path(mocker):
+    """Verify that the CLI will process required arguments and environment variables. (All uploading of test
+    results has been mocked)"""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    queue_processing_id = '12345'
+
+    runner = CliRunner()
+    cli_arguments = ['queue', queue_processing_id]
+
+    # Mock
+    mock_queue_resp = mocker.Mock(spec=swagger_client.QueueProcessingResponse)
+    mock_queue_resp.state = 'SUCCESS'
+    mocker.patch('swagger_client.TestlogApi.track', return_value=mock_queue_resp)
+
+    # Test
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert 0 == result.exit_code
+    assert 'Queue Job ID: {}'.format(queue_processing_id) in result.output
+    assert 'Status: SUCCESS' in result.output
+    assert 'Success!' in result.output
