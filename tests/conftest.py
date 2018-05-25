@@ -33,6 +33,8 @@ DEFAULT_GLOBAL_PROPERTIES = \
 DEFAULT_TESTCASE_PROPERTIES = \
     """
                 <properties>
+                    <property name="jira" value="ASC-123"/>
+                    <property name="jira" value="ASC-456"/>
                     <property name="test_id" value="1"/>
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
@@ -444,6 +446,27 @@ def invalid_classname_xml(tmpdir_factory):
             {global_properties}
             <testcase classname="this is not a valid classname" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def single_test_with_jira_tickets_xml(tmpdir_factory):
+    """JUnitXML sample representing a testcase that has multiple test cases linked to it"""
+    filename = tmpdir_factory.mktemp('data').join('test_with_jira_marks.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+            <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="21"
+            name="test_pass5[ansible://localhost]" time="0.00332307815552">
                 {testcase_properties}
             </testcase>
         </testsuite>
