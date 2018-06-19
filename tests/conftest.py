@@ -33,6 +33,8 @@ DEFAULT_GLOBAL_PROPERTIES = \
 DEFAULT_TESTCASE_PROPERTIES = \
     """
                 <properties>
+                    <property name="jira" value="ASC-123"/>
+                    <property name="jira" value="ASC-456"/>
                     <property name="test_id" value="1"/>
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>

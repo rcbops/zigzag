@@ -12,7 +12,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 dependency_links = ['git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0']
-requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc<1.0.0']
+requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc<1.0.0', 'requests']
 packages = ['zigzag']
 entry_points = {
     'console_scripts': [

@@ -7,6 +7,8 @@
 import swagger_client
 from zigzag import cli
 from click.testing import CliRunner
+import requests
+import json
 
 
 def test_cli_happy_path(single_passing_xml, mocker):
@@ -26,16 +28,22 @@ def test_cli_happy_path(single_passing_xml, mocker):
     job_id = '54321'
 
     # Mock
+    response = {'items': [{'name': 'insert name here', 'id': 12345}], 'total': 1}
+    mock_post_response = mocker.Mock(spec=requests.Response)
+    mock_post_response.text = json.dumps(response)
     mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
     mock_field_resp.id = 12345
     mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
     mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
     mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
+    mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
 
     mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
     mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+    mocker.patch('requests.post', return_value=mock_post_response)
+    mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
 
     # Test
     result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
@@ -93,13 +101,19 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     job_id = '54321'
 
     # Mock
+    response = {'items': [{'name': 'insert name here', 'id': 12345}], 'total': 1}
+    mock_post_response = mocker.Mock(spec=requests.Response)
+    mock_post_response.text = json.dumps(response)
     mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
     mock_field_resp.id = 12345
     mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
+    mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
 
     mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
+    mocker.patch('requests.post', return_value=mock_post_response)
+    mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
 
     # Test
     result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
