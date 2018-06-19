@@ -400,7 +400,7 @@ class TestParseXMLtoTestLogs(object):
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zz.test_logs[0].qtest_test_log().to_dict()
+        test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
@@ -434,7 +434,7 @@ class TestParseXMLtoTestLogs(object):
         # Setup
         zz = ZigZag(classname_with_dashes_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
         # noinspection PyUnresolvedReferences
-        test_log_dict = zz.test_logs[0].qtest_test_log().to_dict()
+        test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
         # Expectation
         test_name = 'test_verify_kibana_horizon_access_with_no_ssh'
@@ -473,7 +473,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            zz.test_logs[0].qtest_test_log()
+            zz.test_logs[0].qtest_test_log
 
 
 # noinspection PyUnresolvedReferences

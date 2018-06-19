@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import os
 import pytest_rpc
 from lxml import etree
-from zigzag.test_log import TestLog
+from zigzag.zigzag_test_log import ZigZagTestLog
 
 
 class XmlParsingFacade(object):
@@ -26,11 +26,28 @@ class XmlParsingFacade(object):
         self._mediator = mediator
 
     def parse(self):
-        """Read and validate the input file contents.
-        sets the property 'junit_xml' on the mediator
-        sets the property 'test_suite_props' on the mediator
+        """Parse the xml that is attached to the mediator
+        All results are attached the mediator passed in on instantiation
         sets the property 'build_url' on the mediator
         sets the property 'build_number' on the mediator
+        """
+        self._read_and_validate()
+        self._mediator.testsuite_props = {
+            p.attrib['name']: p.attrib['value'] for p in self._mediator.junit_xml.findall('./properties/property')}
+        self._mediator.serialized_junit_xml = etree.tostring(
+            self._mediator.junit_xml, encoding='UTF-8', xml_declaration=True)
+        try:
+            self._mediator.build_url = self._mediator.testsuite_props['BUILD_URL']
+            self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
+        except KeyError as e:
+            raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
+        for testcase_xml in self._mediator.junit_xml.findall('testcase'):
+            ZigZagTestLog(testcase_xml, self._mediator)  # new test logs attach themselves to the mediator
+
+    def _read_and_validate(self):
+        """Read and validate the input file contents.
+        sets the property 'junit_xml' on the mediator
+        sets the property 'serialized_junit_xml' on the mediator
 
         Raises:
             RuntimeError: invalid path.
@@ -68,16 +85,7 @@ class XmlParsingFacade(object):
                                "\n\nSchema Violation:\n{}".format(file_path, error_message))
 
         if junit_xml.tag != root_element:
-            raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(file_path, root_element))  # noqa
-
+            raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(
+                file_path, root_element))
         self._mediator.junit_xml = junit_xml
-        self._mediator.testsuite_props = {
-            p.attrib['name']: p.attrib['value'] for p in self._mediator.junit_xml.findall('./properties/property')}
         self._mediator.serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
-        try:
-            self._mediator.build_url = self._mediator.testsuite_props['BUILD_URL']
-            self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
-        except KeyError as e:
-            raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
-        for testcase_xml in self._mediator.junit_xml.findall('testcase'):
-            TestLog(testcase_xml, self._mediator)  # new test logs attach themselves to the mediator

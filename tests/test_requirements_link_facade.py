@@ -67,7 +67,7 @@ SEARCH_REQUIRMENT_RESPONSE = {
 class TestRequirementsLinkFacade(object):
     """Tests for the link() function"""
 
-    def test_link(self, single_test_with_jira_tickets_xml, mocker):
+    def test_link(self, single_passing_xml, mocker):
         """The happy path"""
 
         id = 8675309
@@ -95,7 +95,7 @@ class TestRequirementsLinkFacade(object):
         mocker.patch('requests.post', return_value=mock_post_response)
 
         # Setup
-        zz = ZigZag(single_test_with_jira_tickets_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
         rlf = RequirementsLinkFacade(zz)
         log = zz.test_logs[0]
 
@@ -107,7 +107,7 @@ class TestRequirementsLinkFacade(object):
         assert [id, id] == log.qtest_requirements
         assert id == log.qtest_testcase_id
 
-    def test_link_test_case_not_created_yet(self, single_test_with_jira_tickets_xml, mocker):
+    def test_link_test_case_not_created_yet(self, single_passing_xml, mocker):
         """The happy path"""
 
         response_body = {
@@ -129,7 +129,7 @@ class TestRequirementsLinkFacade(object):
         mocker.patch('requests.post', return_value=mock_post_response)
 
         # Setup
-        zz = ZigZag(single_test_with_jira_tickets_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
         rlf = RequirementsLinkFacade(zz)
         log = zz.test_logs[0]
 

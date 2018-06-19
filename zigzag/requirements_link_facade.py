@@ -21,6 +21,9 @@ class RequirementsLinkFacade(object):
 
     def link(self):
         """links known test requirements(jira tickets) to known test cases in qTest
+
+        Raises:
+            RuntimeError: The qTest API reported an error!
         """
 
         # build data structure to control linking dict[str: list]
@@ -42,12 +45,15 @@ class RequirementsLinkFacade(object):
         """Links a test_case to a set of requirements in qTest
 
         Args:
-            requirement_id (str): the qTest test case id
+            requirement_id (int): the qTest test case id
             test_case_ids (list): the qTest requirement ids
+
+        Raises:
+            RuntimeError: The qTest API reported an error!
         """
         try:
             self._object_link_api.link_artifacts(self._mediator.qtest_project_id, 'requirements',
-                                                 'test-cases', list(test_case_ids), requirement_id)
+                                                 'test-cases', test_case_ids, requirement_id)
         except ApiException as e:
             raise RuntimeError("The qTest API reported an error!\n"
                                "Status code: {}\n"

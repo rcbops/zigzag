@@ -5,7 +5,7 @@
 # Imports
 # ======================================================================================================================
 import swagger_client
-from zigzag.test_log import TestLog
+from zigzag.zigzag_test_log import ZigZagTestLog
 import requests
 import json
 from lxml import etree
@@ -24,10 +24,10 @@ TEST_CYCLE = 'CL-1'
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
-class TestTestLog(object):
+class TestZigZagTestLog(object):
     """Tests for the TestLog class"""
 
-    def test_lookup_ids(self, single_test_with_jira_tickets_xml, mocker):
+    def test_lookup_ids(self, single_passing_xml, mocker):
         """Test for _lookup_ids happy path"""
         qtest_id = 123456789
         search_response = {
@@ -58,13 +58,13 @@ class TestTestLog(object):
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
 
         # create a new TestLog object with fixture xml and the zz object
-        junit_xml_doc = etree.parse(single_test_with_jira_tickets_xml)
+        junit_xml_doc = etree.parse(single_passing_xml)
         test_case_xml = junit_xml_doc.find('testcase')
-        tl = TestLog(test_case_xml, zz)
+        tl = ZigZagTestLog(test_case_xml, zz)
 
         assert tl.qtest_testcase_id == qtest_id
 
-    def test_lookup_ids_not_found(self, single_test_with_jira_tickets_xml, mocker):
+    def test_lookup_ids_not_found(self, single_passing_xml, mocker):
         """Test for _lookup_ids
         Ask for a test ID that does not exist yet
         """
@@ -91,13 +91,13 @@ class TestTestLog(object):
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
 
         # create a new TestLog object with fixture xml and the zz object
-        junit_xml_doc = etree.parse(single_test_with_jira_tickets_xml)
+        junit_xml_doc = etree.parse(single_passing_xml)
         test_case_xml = junit_xml_doc.find('testcase')
-        tl = TestLog(test_case_xml, zz)
+        tl = ZigZagTestLog(test_case_xml, zz)
 
         assert tl.qtest_testcase_id is None
 
-    def test_lookup_requirements_not_found(self, single_test_with_jira_tickets_xml, mocker):
+    def test_lookup_requirements_not_found(self, single_passing_xml, mocker):
         """Test for _lookup_requirements
         Ask for a requirements that have not been imported from jira yet
         """
@@ -124,14 +124,14 @@ class TestTestLog(object):
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
 
         # create a new TestLog object with fixture xml and the zz object
-        junit_xml_doc = etree.parse(single_test_with_jira_tickets_xml)
+        junit_xml_doc = etree.parse(single_passing_xml)
         test_case_xml = junit_xml_doc.find('testcase')
-        tl = TestLog(test_case_xml, zz)
+        tl = ZigZagTestLog(test_case_xml, zz)
 
         assert isinstance(tl.qtest_requirements, list)
         assert not len(tl.qtest_requirements)
 
-    def test_lookup_requirements(self, single_test_with_jira_tickets_xml, mocker):
+    def test_lookup_requirements(self, single_passing_xml, mocker):
         """Test for _lookup_requirements
         Ask for two requirements that correspond to jira ids
         """
@@ -164,9 +164,9 @@ class TestTestLog(object):
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
 
         # create a new TestLog object with fixture xml and the zz object
-        junit_xml_doc = etree.parse(single_test_with_jira_tickets_xml)
+        junit_xml_doc = etree.parse(single_passing_xml)
         test_case_xml = junit_xml_doc.find('testcase')
-        tl = TestLog(test_case_xml, zz)
+        tl = ZigZagTestLog(test_case_xml, zz)
 
         assert isinstance(tl.qtest_requirements, list)
         # there should be two requirements since xml has two jira marks

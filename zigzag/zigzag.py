@@ -18,13 +18,13 @@ class ZigZag(object):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
         subsystems and sub Facades.
 
-       Args:
+        Args:
            junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
            qtest_api_token (str): Token to use for authorization to the qTest API.
            qtest_project_id (int): The target qTest project for the test results.
            qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
            pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
-       """  # noqa
+        """  # noqa
 
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
         self._qtest_api_token = qtest_api_token
@@ -42,74 +42,137 @@ class ZigZag(object):
         self._junit_xml = None
 
         self._utility_facade = UtilityFacade(self)
-        parsing_facade = XmlParsingFacade(self)
+        parsing_facade = XmlParsingFacade(self)  # no need to attach this to self (mediator)
         parsing_facade.parse()
         self._requirement_link_facade = RequirementsLinkFacade(self)
 
     #  properties with only getters
     @property
     def qtest_api_token(self):
+        """Gets the qTest API token
+
+        Returns:
+            str: The qTest API token
+        """
         return self._qtest_api_token
 
     @property
     def junit_xml_file_path(self):
+        """Gets the junit XML file path
+
+        Returns:
+            str: The file path for the junit xml file
+        """
         return self._junit_xml_file_path
 
     @property
     def qtest_project_id(self):
+        """Gets the qTest project ID
+
+        Returns:
+             int: The qTest project ID
+        """
         return self._qtest_project_id
 
     @property
     def qtest_test_cycle(self):
+        """Gets the qTest test cycle
+
+        Returns:
+            str: The qTest test cycle
+        """
         return self._qtest_test_cycle
 
     @property
     def pprint_on_fail(self):
+        """Get the pprint value
+
+        Returns:
+            bool: If zigzag should pprint
+        """
         return self._pprint_on_fail
 
     @property
     def test_logs(self):
+        """Gets the test log objects
+
+        Returns:
+            list(TestLog): A list of TestLog objects
+        """
         return self._test_logs
 
     #  properties with setters and getters
     @property
     def build_url(self):
+        """Gets the build_url
+
+        Returns:
+            str: The url for the build
+        """
         return self._build_url
 
     @build_url.setter
     def build_url(self, value):
+        """Sets the value for build_url
+        """
         self._build_url = value
 
     @property
     def build_number(self):
+        """Gets the value for build_number
+
+        Returns:
+            int: the number of the build
+        """
         return self._build_number
 
     @build_number.setter
     def build_number(self, value):
+        """Sets the number of the build
+        """
         self._build_number = value
 
     @property
     def testsuite_props(self):
+        """Gets the value for testsuite_props
+
+        Returns:
+            dict: the properties of the testsuite
+        """
         return self._testsuite_props
 
     @testsuite_props.setter
     def testsuite_props(self, value):
+        """Sets the properties of the testsuite"""
         self._testsuite_props = value
 
     @property
     def junit_xml(self):
+        """Gets the junit xml
+
+        Returns:
+            ElementTree: The junit xml element tree
+        """
         return self._junit_xml
 
     @junit_xml.setter
     def junit_xml(self, value):
+        """Sets the junit xml
+        """
         self._junit_xml = value
 
     @property
     def serialized_junit_xml(self):
+        """Gets the serialized junit xml
+
+        Returns:
+            str: The serialized junit xml
+        """
         return self._serialized_junit_xml
 
     @serialized_junit_xml.setter
     def serialized_junit_xml(self, value):
+        """Sets the serialized junit xml"""
         self._serialized_junit_xml = value
 
     def _generate_auto_request(self):
@@ -121,7 +184,7 @@ class ZigZag(object):
         """
 
         auto_req = swagger_client.AutomationRequest()
-        auto_req.test_logs = [log.qtest_test_log() for log in self._test_logs]
+        auto_req.test_logs = [log.qtest_test_log for log in self._test_logs]
         auto_req.test_cycle = self._qtest_test_cycle or \
             self._utility_facade.discover_parent_test_cycle(self.testsuite_props['RPC_PRODUCT_RELEASE'])
         auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
