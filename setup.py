@@ -11,8 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-dependency_links = ['git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0']
-requirements = ['Click>=6.0', 'lxml', 'swagger-client', 'pytest-rpc<1.0.0', 'requests']
+requirements = ['Click>=6.0', 'lxml', 'rpc-qtest-swagger-client<10.0.0', 'pytest-rpc<1.0.0', 'requests']
 packages = ['zigzag']
 entry_points = {
     'console_scripts': [
@@ -45,7 +44,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Operating System :: OS Independent',
     ],
-    dependency_links=dependency_links,
     install_requires=requirements,
     packages=packages,
     include_package_data=True,

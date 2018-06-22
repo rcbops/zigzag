@@ -10,6 +10,6 @@ pytest-mock
 pytest-helpers-namespace
 ipython
 pytest-rpc
--e git+https://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0
+rpc-qtest-swagger-client
 twine
 requests

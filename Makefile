@@ -58,7 +58,6 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache/
 
 clean-venv: check-venv ## remove all packages from current virtual environment
-	@pip uninstall -y swagger-client || echo "Skipping uninstall of swagger-client or already uninstalled"
 	@source virtualenvwrapper.sh && wipeenv || echo "Skipping wipe of environment"
 
 lint: ## check style with flake8
@@ -90,7 +89,7 @@ install: clean ## install the package to the active Python's site-packages
 	python setup.py install
 
 install-editable: ## install the package in editable mode
-	if pip list -e | grep 'flake8-pytest-mark'; then echo 'Editable package already installed'; else pip install -e .; fi
+	if pip list -e | grep 'zigzag'; then echo 'Editable package already installed'; else pip install -e .; fi
 
 install-venv: clean-venv install ## install the package after wiping the vitual environment
 
