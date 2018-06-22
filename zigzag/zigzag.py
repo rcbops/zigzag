@@ -35,11 +35,13 @@ class ZigZag(object):
         self._test_logs = []
 
         # properties that will be written to an instance of this class as a mediator
+        self._ci_environment = None
         self._build_number = None
         self._build_url = None
         self._testsuite_props = None
         self._serialized_junit_xml = None
         self._junit_xml = None
+        self._junit_xml_doc = None
 
         self._utility_facade = UtilityFacade(self)
         parsing_facade = XmlParsingFacade(self)  # no need to attach this to self (mediator)
@@ -82,6 +84,12 @@ class ZigZag(object):
             str: The qTest test cycle
         """
         return self._qtest_test_cycle
+
+    @qtest_test_cycle.setter
+    def qtest_test_cycle(self, value):
+        """Sets the qTest test cycle
+        """
+        self._qtest_test_cycle = value
 
     @property
     def pprint_on_fail(self):
@@ -162,6 +170,21 @@ class ZigZag(object):
         self._junit_xml = value
 
     @property
+    def junit_xml_doc(self):
+        """Gets the junit_xml_doc
+
+        Returns:
+            ElementTree: The junit xml element tree
+        """
+        return self._junit_xml_doc
+
+    @junit_xml_doc.setter
+    def junit_xml_doc(self, value):
+        """Sets the junit_xml_doc
+        """
+        self._junit_xml_doc = value
+
+    @property
     def serialized_junit_xml(self):
         """Gets the serialized junit xml
 
@@ -175,6 +198,20 @@ class ZigZag(object):
         """Sets the serialized junit xml"""
         self._serialized_junit_xml = value
 
+    @property
+    def ci_environment(self):
+        """Gets the configured test_runner
+
+        Returns:
+            str: the configured ci_environment
+        """
+        return self._ci_environment
+
+    @ci_environment.setter
+    def ci_environment(self, value):
+        """Sets the configured ci_environment"""
+        self._ci_environment = value
+
     def _generate_auto_request(self):
         """Construct a qTest swagger model for a JUnitXML test run result. (Called an "automation request" in
         qTest parlance)
@@ -185,8 +222,8 @@ class ZigZag(object):
 
         auto_req = swagger_client.AutomationRequest()
         auto_req.test_logs = [log.qtest_test_log for log in self._test_logs]
-        auto_req.test_cycle = self._qtest_test_cycle or \
-            self._utility_facade.discover_parent_test_cycle(self.testsuite_props['RPC_PRODUCT_RELEASE'])
+        auto_req.test_cycle = \
+            self._utility_facade.discover_parent_test_cycle(self.qtest_test_cycle)
         auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
 
         return auto_req

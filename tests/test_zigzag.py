@@ -406,7 +406,7 @@ class TestParseXMLtoTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '0551d174d82fd095c518f6230ec99c8e'
+        attachment_exp_data_md5 = '89802b6e1cd28757c10360a060255c23'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
@@ -489,6 +489,12 @@ class TestGenerateAutoRequest(object):
         """
 
         # Mock
+        test_cycle_name = 'queens'
+        test_cycle_pid = 'CL-1'
+        mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_create_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_get_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': 'CL-2'}
+        mock_create_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
         mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
         mock_field_resp.id = 12345
         mock_field_resp.label = 'Failure Output'
@@ -499,6 +505,8 @@ class TestGenerateAutoRequest(object):
         mocker.patch('requests.post', return_value=mock_post_response)
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_get_tc_resp])
+        mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
 
         # Setup
         zz = ZigZag(flat_mix_status_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
@@ -528,6 +536,12 @@ class TestUploadTestResults(object):
         job_id = '54321'
 
         # Mock
+        test_cycle_name = 'queens'
+        test_cycle_pid = 'CL-1'
+        mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_create_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+        mock_get_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': 'CL-2'}
+        mock_create_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
         mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
         mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
         mock_field_resp.id = 12345
@@ -540,6 +554,8 @@ class TestUploadTestResults(object):
         mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
+        mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_get_tc_resp])
+        mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)

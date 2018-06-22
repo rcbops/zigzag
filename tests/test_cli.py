@@ -93,6 +93,7 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
     project_id = '12345'
     test_cycle_pid = 'CL-1'
+    test_cycle_name = 'foo'
 
     runner = CliRunner()
     cli_arguments = [single_passing_xml, project_id, '--qtest-test-cycle={}'.format(test_cycle_pid)]
@@ -109,13 +110,18 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     mock_field_resp.label = 'Failure Output'
     mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
     mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
+    mock_get_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+    mock_create_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+    mock_get_tc_resp.to_dict.return_value = {'name': 'queens', 'pid': 'CL-2'}
+    mock_create_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
 
     mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
     mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
     mocker.patch('requests.post', return_value=mock_post_response)
     mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
-
-    # Test
+    mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_get_tc_resp])
+    mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
+# Test
     result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
     assert 0 == result.exit_code
     assert 'Queue Job ID: {}'.format(job_id) in result.output

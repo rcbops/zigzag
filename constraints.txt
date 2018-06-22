@@ -1,3 +1,2 @@
 rpc-qtest-swagger-client<10.0.0
-pytest-rpc<1.0.0
 pip<10.0.0
