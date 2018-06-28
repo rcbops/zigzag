@@ -192,8 +192,8 @@ class ZigZagTestLog(object):
         return log
 
     def _parse(self):
-        """Parse the _testcase_xml
-        """
+        """Parse the _testcase_xml"""
+
         self._status = 'PASSED'
 
         if self._testcase_xml.find('failure') is not None or self._testcase_xml.find('error') is not None:
@@ -201,7 +201,7 @@ class ZigZagTestLog(object):
 
             if self.test_run_failure_output_field_id is not None:
                 possible_messages = [self._testcase_xml.find('error'), self._testcase_xml.find('failure')]
-                message = "\n".join([x.attrib['message'] for x in possible_messages if x is not None])
+                message = "\n".join([element.text for element in possible_messages if element is not None])
                 self._failure_output = message
 
         elif self._testcase_xml.find('skipped') is not None:

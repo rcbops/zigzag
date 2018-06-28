@@ -277,7 +277,7 @@ class TestParseXMLtoTestLogs(object):
 
         assert test_log.name == 'test_fail'
         assert test_log.status == 'FAILED'
-        assert test_log.failure_output == 'assert False'
+        assert 'def test_fail(host):' in test_log.failure_output
         assert test_log.start_date == '2018-04-10T21:38:18Z'
         assert test_log.end_date == '2018-04-10T21:38:19Z'
         assert test_log.jira_issues == ['ASC-123', 'ASC-456']
@@ -310,7 +310,7 @@ class TestParseXMLtoTestLogs(object):
 
         assert test_log.name == 'test_error'
         assert test_log.status == 'FAILED'
-        assert test_log.failure_output == 'test setup failure'
+        assert 'def error_fixture(host):' in test_log.failure_output
         assert test_log.start_date == '2018-04-10T21:38:18Z'
         assert test_log.end_date == '2018-04-10T21:38:19Z'
         assert test_log.jira_issues == ['ASC-123', 'ASC-456']
