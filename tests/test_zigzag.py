@@ -58,12 +58,12 @@ class TestZigZag(object):
         zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
 
         # Test
-        assert zz.qtest_project_id == 12345
+        assert 12345 == zz.qtest_project_id
         assert len(zz.test_logs)
-        assert zz.build_url == 'BUILD_URL'
+        assert 'BUILD_URL' == zz.build_url
         assert zz.junit_xml is not None
-        assert zz.build_number == 'BUILD_NUMBER'
-        assert zz.pprint_on_fail is False
+        assert 'BUILD_NUMBER' == zz.build_number
+        assert False is zz.pprint_on_fail
         assert zz.testsuite_props
 
 
@@ -97,6 +97,7 @@ class TestLoadingInputJunitXMLFile(object):
                                  'time': '1.664'}
 
         # Test
+        # noinspection PyProtectedMember
         assert root_tag_atribute_exp == zz._junit_xml.attrib
 
     def test_invalid_file_path(self, mocker):
@@ -242,15 +243,15 @@ class TestParseXMLtoTestLogs(object):
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
-        assert test_log.name == 'test_pass'
-        assert test_log.status == 'PASSED'
-        assert test_log.failure_output == ''
-        assert test_log.start_date == '2018-04-10T21:38:18Z'
-        assert test_log.end_date == '2018-04-10T21:38:19Z'
-        assert test_log.jira_issues == ['ASC-123', 'ASC-456']
-        assert test_log.automation_content == '1'
-        assert test_log.qtest_requirements == [object_id, object_id]
-        assert test_log.qtest_testcase_id == object_id  # We look this up on instantiation of a TestLog
+        assert 'test_pass' == test_log.name
+        assert 'PASSED' == test_log.status
+        assert '' == test_log.failure_output
+        assert '2018-04-10T21:38:18Z' == test_log.start_date
+        assert '2018-04-10T21:38:19Z' == test_log.end_date
+        assert ['ASC-123', 'ASC-456'] == test_log.jira_issues
+        assert '1' == test_log.automation_content
+        assert [object_id, object_id] == test_log.qtest_requirements
+        assert object_id == test_log.qtest_testcase_id  # We look this up on instantiation of a TestLog
 
     def test_fail(self, single_fail_xml, mocker):
         """Verify that a JUnitXML failing test will parse into a TestLog.
@@ -275,15 +276,15 @@ class TestParseXMLtoTestLogs(object):
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
-        assert test_log.name == 'test_fail'
-        assert test_log.status == 'FAILED'
+        assert 'test_fail' == test_log.name
+        assert 'FAILED' == test_log.status
         assert 'def test_fail(host):' in test_log.failure_output
-        assert test_log.start_date == '2018-04-10T21:38:18Z'
-        assert test_log.end_date == '2018-04-10T21:38:19Z'
-        assert test_log.jira_issues == ['ASC-123', 'ASC-456']
-        assert test_log.automation_content == '1'
-        assert test_log.qtest_requirements == [object_id, object_id]
-        assert test_log.qtest_testcase_id == object_id
+        assert '2018-04-10T21:38:18Z' == test_log.start_date
+        assert '2018-04-10T21:38:19Z' == test_log.end_date
+        assert ['ASC-123', 'ASC-456'] == test_log.jira_issues
+        assert '1' == test_log.automation_content
+        assert [object_id, object_id] == test_log.qtest_requirements
+        assert object_id == test_log.qtest_testcase_id
 
     def test_error(self, single_error_xml, mocker):
         """Verify that a JUnitXML error test will parse into a single TestLog.
@@ -308,15 +309,15 @@ class TestParseXMLtoTestLogs(object):
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
-        assert test_log.name == 'test_error'
-        assert test_log.status == 'FAILED'
+        assert 'test_error' == test_log.name
+        assert 'FAILED' == test_log.status
         assert 'def error_fixture(host):' in test_log.failure_output
-        assert test_log.start_date == '2018-04-10T21:38:18Z'
-        assert test_log.end_date == '2018-04-10T21:38:19Z'
-        assert test_log.jira_issues == ['ASC-123', 'ASC-456']
-        assert test_log.automation_content == '1'
-        assert test_log.qtest_requirements == [object_id, object_id]
-        assert test_log.qtest_testcase_id == object_id
+        assert '2018-04-10T21:38:18Z' == test_log.start_date
+        assert '2018-04-10T21:38:19Z' == test_log.end_date
+        assert ['ASC-123', 'ASC-456'] == test_log.jira_issues
+        assert '1' == test_log.automation_content
+        assert [object_id, object_id] == test_log.qtest_requirements
+        assert object_id == test_log.qtest_testcase_id
 
     def test_skip(self, single_skip_xml, mocker):
         """Verify that a JUnitXML skipped test will parse into a single TestLog.
@@ -341,15 +342,15 @@ class TestParseXMLtoTestLogs(object):
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
-        assert test_log.name == 'test_skip'
-        assert test_log.status == 'SKIPPED'
-        assert test_log.failure_output == ''
-        assert test_log.start_date == '2018-04-10T21:38:18Z'
-        assert test_log.end_date == '2018-04-10T21:38:19Z'
-        assert test_log.jira_issues == ['ASC-123', 'ASC-456']
-        assert test_log.automation_content == '1'
-        assert test_log.qtest_requirements == [object_id, object_id]
-        assert test_log.qtest_testcase_id == object_id
+        assert 'test_skip' == test_log.name
+        assert 'SKIPPED' == test_log.status
+        assert '' == test_log.failure_output
+        assert '2018-04-10T21:38:18Z' == test_log.start_date
+        assert '2018-04-10T21:38:19Z' == test_log.end_date
+        assert ['ASC-123', 'ASC-456'] == test_log.jira_issues
+        assert '1' == test_log.automation_content
+        assert [object_id, object_id] == test_log.qtest_requirements
+        assert object_id == test_log.qtest_testcase_id
 
     def test_suite_with_tests(self, suite_all_passing_xml, mocker):
         """Verify that a JUnitXML test suite will parse into multiple TestLogs.
@@ -473,6 +474,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Test
         with pytest.raises(RuntimeError):
+            # noinspection PyStatementEffect
             zz.test_logs[0].qtest_test_log
 
 
@@ -480,6 +482,7 @@ class TestParseXMLtoTestLogs(object):
 class TestGenerateAutoRequest(object):
     """Test cases for the '_generate_auto_request' function"""
 
+    # noinspection PyProtectedMember
     def test_mix_status(self, flat_mix_status_xml, mocker):
         """Verify that a valid qTest 'AutomationRequest' swagger model is generated from a JUnitXML file
         that contains multiple tests with different status results
