@@ -12,13 +12,14 @@ import re
 from zigzag.utility_facade import UtilityFacade
 import requests
 import json
+from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 
 class ZigZagTestLog(object):
 
-    _TESTCASE_NAME_RGX = re.compile(r'(\w+)(\[.+\])')
-    _TESTCASE_GROUP_RGX = re.compile(r'tests\.(test_[\w-]+)\.?(Test\w+)?$')
+    _TESTCASE_NAME_RGX = re.compile(r'(^\w+)')
     _test_run_failure_output_field_id = 0
+    _fields = 0
 
     def __init__(self, testcase_xml, mediator):
         """Create a TestLog object
@@ -28,8 +29,12 @@ class ZigZagTestLog(object):
             mediator (ZigZag): the mediator that stores shared data
         """
 
+        self._exe_end_date = None
+        self._exe_start_date = None
+
         self._testcase_xml = testcase_xml
         self._mediator = mediator
+        self._module_hierarchy_facade = ModuleHierarchyFacade(testcase_xml, mediator)
 
         # this is data that will be collected from qTest
         self._qtest_requirements = []
@@ -136,6 +141,15 @@ class ZigZagTestLog(object):
         return self._get_test_run_failure_output_field_id(self._mediator)
 
     @property
+    def fields(self):
+        """Gets the fields dict of ZigZagTestLogFields
+
+        Returns:
+            dict(str: ZigZagTestLogField) all the configured fields for a testlog object
+        """
+        return self._get_fields(self._mediator)
+
+    @property
     def module_hierarchy(self):
         """Gets the module hierarchy to be used by qtest.
 
@@ -145,24 +159,7 @@ class ZigZagTestLog(object):
         Raises:
             RuntimeError: the testcase 'classname' attribute is invalid
         """
-        testsuite_props = self._mediator.testsuite_props
-        module_hierarchy = [testsuite_props['RPC_RELEASE'],             # RPC Release Version (e.g. 16.0.0)
-                            testsuite_props['JOB_NAME'],                # CI Job name (e.g. PM_rpc-openstack-pike-xenial_mnaio_no_artifacts-swift-system) # noqa
-                            testsuite_props['MOLECULE_TEST_REPO'],      # (e.g. molecule-validate-neutron-deploy)
-                            testsuite_props['MOLECULE_SCENARIO_NAME']]  # (e.g. "default")
-
-        try:
-            testcase_groups = ZigZagTestLog._TESTCASE_GROUP_RGX.search(
-                self._testcase_xml.attrib['classname']).groups()
-        except AttributeError:
-            raise RuntimeError("Test case '{}' has an invalid 'classname' attribute!".format(
-                self._testcase_xml.attrib['classname']))
-
-        module_hierarchy.append(testcase_groups[0])         # Always append at least the filename of the test grouping.
-        if testcase_groups[1]:
-            module_hierarchy.append(testcase_groups[1])     # Append the class name of tests if specified.
-
-        return module_hierarchy
+        return self._module_hierarchy_facade.get_module_hierarchy()
 
     @property
     def qtest_test_log(self):
@@ -176,10 +173,22 @@ class ZigZagTestLog(object):
         log.properties = [
             swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
                                             field_value=self._failure_output)]
+        # Attach all test suite properties to the log
+        for name, field in list(self.fields.items()):
+            log.properties.append(swagger_client.PropertyResource(field_id=field['id'],
+                                                                  field_value=field['value']
+                                                                  ))
         log.name = self._name
         log.automation_content = self._automation_content
-        log.exe_start_date = self._exe_start_date
-        log.exe_end_date = self._exe_end_date
+
+        if self._exe_start_date:
+            log.exe_start_date = self._exe_start_date
+        else:
+            log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        if self._exe_end_date:
+            log.exe_end_date = self._exe_end_date
+        else:
+            log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
         log.build_url = self._mediator.build_url
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
@@ -196,11 +205,14 @@ class ZigZagTestLog(object):
 
         self._status = 'PASSED'
 
-        if self._testcase_xml.find('failure') is not None or self._testcase_xml.find('error') is not None:
+        all_failures = self._testcase_xml.findall('failure') + self._testcase_xml.findall('error')
+        if len(all_failures):
             self._status = 'FAILED'
 
             if self.test_run_failure_output_field_id is not None:
-                possible_messages = [self._testcase_xml.find('error'), self._testcase_xml.find('failure')]
+                errors = self._testcase_xml.findall('error')
+                failures = self._testcase_xml.findall('failure')
+                possible_messages = errors + failures
                 message = "\n".join([element.text for element in possible_messages if element is not None])
                 self._failure_output = message
 
@@ -208,16 +220,20 @@ class ZigZagTestLog(object):
             self._status = 'SKIPPED'
 
         try:
-            self._name = ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(1)
+            self._name = ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
             self._automation_content = \
                 self._testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
             self._jira_issues = \
                 [jira.get('value') for jira in self._testcase_xml.findall("./properties/property/[@name='jira']")]
             self._exe_start_date = \
                 self._testcase_xml.find("./properties/property/[@name='start_time']").attrib['value']
-            self._exe_end_date = self._testcase_xml.find("./properties/property/[@name='end_time']").attrib['value']
         except AttributeError:
             raise RuntimeError("Test case '{}' is missing the required property!".format(self.name))
+
+        try:
+            self._exe_end_date = self._testcase_xml.find("./properties/property/[@name='end_time']").attrib['value']
+        except AttributeError:
+            pass  # Its possible for a cas to not have an end date
 
     def _lookup_ids(self):
         """Search for testcase id by automation content
@@ -303,3 +319,27 @@ class ZigZagTestLog(object):
             cls._test_run_failure_output_field_id = \
                 UtilityFacade(mediator).find_custom_field_id_by_label('Failure Output', 'test-runs')
         return cls._test_run_failure_output_field_id
+
+    @classmethod
+    def _get_fields(cls, mediator):
+        """Gets the fields from this class
+
+        Args:
+            mediator (ZigZag): The ZigZag mediator
+
+        Returns:
+            dict(str: ZigZagTestLogField)
+        """
+
+        if cls._fields == 0:
+            cls._fields = {}
+            for prop, value in list(mediator.testsuite_props.items()):
+                f = {
+                    'id': UtilityFacade(mediator).find_custom_field_id_by_label(prop, 'test-runs'),
+                    'name': prop,
+                    'value': value
+                }
+                if f['id']:
+                    cls._fields[prop] = f
+
+        return cls._fields

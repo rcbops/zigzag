@@ -31,7 +31,9 @@ class XmlParsingFacade(object):
         sets the property 'build_url' on the mediator
         sets the property 'build_number' on the mediator
         """
-        self._read_and_validate()
+        self._read()
+        self._determine_ci_environment()
+        self._validate()
         self._mediator.testsuite_props = {
             p.attrib['name']: p.attrib['value'] for p in self._mediator.junit_xml.findall('./properties/property')}
         self._mediator.serialized_junit_xml = etree.tostring(
@@ -44,10 +46,18 @@ class XmlParsingFacade(object):
         for testcase_xml in self._mediator.junit_xml.findall('testcase'):
             ZigZagTestLog(testcase_xml, self._mediator)  # new test logs attach themselves to the mediator
 
-    def _read_and_validate(self):
-        """Read and validate the input file contents.
-        sets the property 'junit_xml' on the mediator
-        sets the property 'serialized_junit_xml' on the mediator
+    def _determine_ci_environment(self):
+        """Determines the ci-environment that was used to create the junit xml file"""
+        try:
+            ci_environment = self._mediator.junit_xml.find(
+                "./properties/property/[@name='ci-environment']").attrib['value']
+            self._mediator.ci_environment = ci_environment
+        except AttributeError:
+            self._mediator.ci_environment = 'asc'  # hard code this here
+
+    def _read(self):
+        """Read the input file contents
+        sets the property 'serialized_junit_xml' & 'junit_xml'on the mediator
 
         Raises:
             RuntimeError: invalid path.
@@ -55,24 +65,36 @@ class XmlParsingFacade(object):
             RuntimeError: Test suite is missing the required property!
         """
 
-        root_element = 'testsuite'
-        junit_xsd = pytest_rpc.get_xsd()
         file_path = self._mediator.junit_xml_file_path
-
         try:
+            junit_xml_doc = etree.parse(file_path)
+            junit_xml = junit_xml_doc.getroot()
             if os.path.getsize(file_path) > self._MAX_FILE_SIZE:
                 raise RuntimeError("Input file '{}' is larger than allowed max file size!".format(file_path))
-
-            junit_xml_doc = etree.parse(file_path)
         except (IOError, OSError):
             raise RuntimeError("Invalid path '{}' for JUnitXML results file!".format(file_path))
         except etree.ParseError:
             raise RuntimeError("The file '{}' does not contain valid XML!".format(file_path))
 
+        self._mediator.junit_xml = junit_xml
+        self._mediator.serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)
+        self._mediator.junit_xml_doc = junit_xml_doc
+
+    def _validate(self):
+        """Validate the input file contents.
+
+        Raises:
+            RuntimeError: "The file does not conform to schema!"
+            RuntimeError: The file does not have JUnitXML root element!
+        """
+
+        root_element = 'testsuite'
+        junit_xsd = pytest_rpc.get_xsd(self._mediator.ci_environment)
+        file_path = self._mediator.junit_xml_file_path
+
         try:
             xmlschema = etree.XMLSchema(etree.parse(junit_xsd))
-            xmlschema.assertValid(junit_xml_doc)
-            junit_xml = junit_xml_doc.getroot()
+            xmlschema.assertValid(self._mediator.junit_xml_doc)
         except etree.DocumentInvalid as e:
             debug = "\n\n---DEBUG XML PRETTY PRINT---\n\n"
             error_message = "The file '{}' does not conform to schema!" \
@@ -80,12 +102,10 @@ class XmlParsingFacade(object):
             if self._mediator.pprint_on_fail:
                 error_message = "{0}{1}{2}{1}".format(error_message,
                                                       debug,
-                                                      etree.tostring(junit_xml_doc, pretty_print=True))
+                                                      etree.tostring(self._mediator.junit_xml_doc, pretty_print=True))
             raise RuntimeError("The file '{}' does not conform to schema!"
                                "\n\nSchema Violation:\n{}".format(file_path, error_message))
 
-        if junit_xml.tag != root_element:
+        if self._mediator.junit_xml.tag != root_element:
             raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(
                 file_path, root_element))
-        self._mediator.junit_xml = junit_xml
-        self._mediator.serialized_junit_xml = etree.tostring(junit_xml, encoding='UTF-8', xml_declaration=True)

@@ -44,7 +44,7 @@ class UtilityFacade(object):
                                "Reason: {}\n"
                                "Message: {}".format(e.status, e.reason, e.body))
 
-    def discover_parent_test_cycle(self, test_cycle_name):
+    def discover_parent_test_cycle(self, test_cycle_name):  # consider moving this to module hierarchy facade in future
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
         matching test cycle name is not found then a test cycle will be created with the given name.
 

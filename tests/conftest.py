@@ -27,6 +27,7 @@ DEFAULT_GLOBAL_PROPERTIES = \
                 <property name="JOB_NAME" value="JOB_NAME"/>
                 <property name="MOLECULE_TEST_REPO" value="MOLECULE_TEST_REPO"/>
                 <property name="MOLECULE_SCENARIO_NAME" value="MOLECULE_SCENARIO_NAME"/>
+                <property name="ci-environment" value="asc"/>
             </properties>
     """
 
