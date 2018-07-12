@@ -42,7 +42,7 @@ results ina sensible manner.
 Contributing
 ------------
 
-See `CONTRIBUTING.rst`_ for more details on developing for the Zigzag project.
+See `CONTRIBUTING.rst`_  and `developer_docs.rst`_ for more details on developing for the Zigzag project.
 
 Release Process
 ---------------
@@ -55,6 +55,7 @@ Credits
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
+.. _developer_docs.rst: docs/developer_docs.rst
 .. _release_process.rst: docs/release_process.rst
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
