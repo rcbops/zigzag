@@ -7,7 +7,6 @@
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from lxml import etree
 
-
 ASC_TESTSUITE_PROPS = {
     'RPC_RELEASE': 'foo',
     'JOB_NAME': 'bar',
