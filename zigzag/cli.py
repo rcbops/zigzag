@@ -9,11 +9,17 @@ import os
 import sys
 import click
 from zigzag.zigzag import ZigZag
+from zigzag.queqe_facade import QueueFacade
 
 
 # ======================================================================================================================
 # Main
 # ======================================================================================================================
+@click.group()
+def main():
+    pass
+
+
 @click.command()
 @click.option('--pprint-on-fail', '-p',
               is_flag=True,
@@ -25,7 +31,7 @@ from zigzag.zigzag import ZigZag
               help='Specify a test cycle to use as a parent for results.')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
-def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
+def upload(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
     """Upload JUnitXML results to qTest manager.
 
     \b
@@ -59,6 +65,30 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
 
         sys.exit(1)
 
+
+@click.command()
+@click.argument('queue_processing_id', type=click.INT)
+def queue(queue_processing_id):
+
+    api_token_env_var = 'QTEST_API_TOKEN'
+    try:
+        if not os.environ.get(api_token_env_var):
+            raise RuntimeError('The "{}" environment variable is not defined! '
+                               'See help for more details.'.format(api_token_env_var))
+        queue_facade = QueueFacade()
+        status = queue_facade.check_status(queue_processing_id)
+        click.echo(click.style("\nQueue Job ID: {}".format(str(queue_processing_id))))
+        click.echo(click.style("\nStatus: {}".format(str(status))))
+        click.echo(click.style("\nSuccess!", fg='green'))
+    except RuntimeError as e:
+        click.echo(click.style(str(e), fg='red'))
+        click.echo(click.style("\nFailed!", fg='red'))
+
+        sys.exit(1)
+
+
+main.add_command(upload)
+main.add_command(queue)
 
 if __name__ == "__main__":
     main()  # pragma: no cover
