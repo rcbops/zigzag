@@ -498,17 +498,22 @@ class TestSuiteInfo(Sequence):
 
         start = start if start else self._start_time
         duration = duration if duration else choice(range(1, 11))
-        test_case = TestCaseInfo(self._qtest_api_token,
-                                 self._qtest_project_id,
-                                 state,
-                                 name,
-                                 class_name,
-                                 file_path,
-                                 line,
-                                 start,
-                                 duration,
-                                 message,
-                                 jira_tickets)
+
+        try:
+            test_case = TestCaseInfo(self._qtest_api_token,
+                                     self._qtest_project_id,
+                                     state,
+                                     name,
+                                     class_name,
+                                     file_path,
+                                     line,
+                                     start,
+                                     duration,
+                                     message,
+                                     jira_tickets)
+        except RuntimeError:
+            raise
+
         self._tests.append(test_case)
 
         if test_case.state == 'skipped':
