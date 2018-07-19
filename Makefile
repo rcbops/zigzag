@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv install-venv develop-venv help
+.PHONY: clean clean-test clean-pyc clean-build clean-venv check-venv check-integration check-unit install-venv develop-venv help
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash
@@ -36,6 +36,13 @@ check-venv: ## verify that the user is running in a Python virtual environment
 	@if [ -z "$(VIRTUALENVWRAPPER_SCRIPT)" ]; then echo 'Python virtualenvwrapper not installed!' && exit 1; fi
 	@if [ -z "$(VIRTUAL_ENV)" ]; then echo 'Not running within a virtual environment!' && exit 1; fi
 
+check-integration: ## verify that the environment is configured to run integration tests
+	@if [ -z "$(QTEST_API_TOKEN)" ]; then echo 'The QTEST_API_TOKEN environment variable is not present or set!' && exit 1; fi
+	@if [ -z "$(QTEST_SANDBOX_PROJECT_ID)" ]; then echo 'The QTEST_SANDBOX_PROJECT_ID environment variable is not present or set!' && exit 1; fi
+
+check-unit: ## verify that the environment is configured to run unit tests
+	@if [ -n "$(QTEST_API_TOKEN)" ]; then echo 'The QTEST_API_TOKEN environment variable is set which breaks the unit tests!' && exit 1; fi
+
 clean: clean-test clean-pyc clean-build   ## remove all build, test, coverage, artifacts and wipe virtualenv
 
 clean-build: ## remove build artifacts
@@ -63,10 +70,13 @@ clean-venv: check-venv ## remove all packages from current virtual environment
 lint: ## check style with flake8
 	flake8 zigzag setup.py tests
 
-test: ## run tests quickly with the default Python
-	py.test tests
+test: check-unit ## run unit tests quickly with the default Python
+	py.test tests/unit
 
-test-all: ## run tests on every Python version with tox
+test-integration: check-integration ## run integration tests with the default Python
+	py.test tests/integration
+
+test-all: ## run unit tests on every Python version with tox
 	tox
 
 coverage-html: ## check code coverage with an HTML report

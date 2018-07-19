@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite
+errors="{{ tests.error_count }}"
+failures="{{ tests.failure_count }}"
+name="pytest"
+skips="{{ tests.skip_count }}"
+tests="{{ tests.total_count }}"
+time="{{ tests.total_duration }}">
+    <properties>
+    {% for key, value in global_props.iteritems() %}
+        <property name="{{ key }}" value="{{ value }}"/>
+    {% endfor %}
+    </properties>
+{% for test in tests %}
+    <testcase
+    classname="{{ test.class_name or 'tests.test_default' }}"
+    file="{{ test.file_path or 'tests/test_default.py' }}"
+    line="{{ test.line or '1' }}"
+    name="{{ test.name }}"
+    time="{{ test.duration }}">
+        <properties>
+        {% for jira_ticket in test.jira_tickets %}
+            <property name="jira" value="{{ jira_ticket }}"/>
+        {% endfor %}
+            <property name="test_id" value="{{ test.test_id }}"/>
+            <property name="start_time" value="{{ test.start_time }}"/>
+            <property name="end_time" value="{{ test.end_time }}"/>
+        </properties>
+    {% if test.state != 'passed' %}
+        <{{ test.state }}
+        message="{{ test.short_msg }}"
+        {% if test.state == 'skipped' %}type="pytest.skip"{% endif %}>
+            {{ test.long_msg }}
+        </{{ test.state }}>
+    {% endif %}
+    </testcase>
+{% endfor %}
+</testsuite>

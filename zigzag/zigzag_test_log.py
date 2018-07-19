@@ -17,7 +17,7 @@ from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 class ZigZagTestLog(object):
 
-    _TESTCASE_NAME_RGX = re.compile(r'(^\w+)')
+    _TESTCASE_NAME_RGX = re.compile(r'(^[\w-]+)')
     _test_run_failure_output_field_id = 0
     _fields = 0
 
@@ -174,6 +174,7 @@ class ZigZagTestLog(object):
             swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
                                             field_value=self._failure_output)]
         # Attach all test suite properties to the log
+        # noinspection PyUnresolvedReferences
         for name, field in list(self.fields.items()):
             log.properties.append(swagger_client.PropertyResource(field_id=field['id'],
                                                                   field_value=field['value']
@@ -293,6 +294,7 @@ class ZigZagTestLog(object):
                 r.raise_for_status()
                 parsed = json.loads(r.text)
             except requests.exceptions.RequestException as e:
+                # noinspection PyUnresolvedReferences
                 raise RuntimeError("The qTest API reported an error!\n"
                                    "Status code: {}\n"
                                    "Reason: {}\n"
