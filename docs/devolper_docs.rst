@@ -40,7 +40,7 @@ init function example::
     def __init__(self, xml, mediator):
 
 Use of class methods
--------------------
+--------------------
 There are a few places where we make use of class methods to lazily load and store contextual data for future use.  The best example of this is the method _get_fields inside `ZigZagTestLog`_.  The data is stored on the class but accessed through a property by the name of fields.
 
 Returning vs Writing data to the Mediator
@@ -53,9 +53,22 @@ when a `ZigZagTestLog`_ finishes with its init it attaches itself to the mediato
 
 If you are writing a private method that is used to decompose you logic returning is fine.  However many methods may write multiple bits of data to the mediator rather than return.
 
+Testing
+-------
+This repository implements the following test layers:
+
+- `Unit`_
+    The unit layer contains tests that cover functionality of the classes and functions using mocked fixtures.
+- `Integration`_
+    The integration layer contains tests that validate user facing functionality using a real test instance of qTest.
+    For more information on implementing integration test cases refer to the `integration_testing.rst`_ documentation.
+
 .. _qTest Manager API: https://support.qasymphony.com/hc/en-us/articles/115002958146-qTest-API-Specification
 .. _ZigZagTestLog: ../zigzag/zigzag_test_log.py
 .. _ZigZag: ../zigzag/zigzag.py
+.. _Unit: ../tests/unit/conftest.py
+.. _Integration: ../tests/integration/conftest.py
+.. _integration_testing.rst: integration_testing.rst
 .. _swagger_client: https://github.com/rcbops/qtest-swagger-client
 .. _Facade Pattern: https://sourcemaking.com/design_patterns/facade
 .. _Mediator Pattern: https://sourcemaking.com/design_patterns/mediator
