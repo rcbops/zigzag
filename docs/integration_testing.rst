@@ -39,7 +39,7 @@ Fixtures
     Retrieve a dictionary of required environment variables for running integration tests. If the required environment
     variables are not present then this fixture will force all tests to fail. (Be aware that the failure message from
     this fixture is obtuse! Just remember that you need "QTEST_API_TOKEN" and "QTEST_SANDBOX_PROJECT_ID" environment
-    variables populate if this fixture fails)
+    variables populated if this fixture fails.)
 - ``_zigzag_runner_factory``
     This private fixture factory is used as the basis for representing JUnitXML test result files produced by the
     `pytest-rpc`_ plug-in. This fixture is responsible for doing the final clean-up of test module artifacts after the
@@ -50,7 +50,7 @@ Helpers
 
 - ``_search_qtest``
     Search qTest for objects matching a given query. (This helper exists because the swagger_client search API
-    returns a really useless model)
+    returns a really useless model.)
 
 Workflow for Writing a Test Case
 --------------------------------
@@ -61,7 +61,7 @@ the developer is already familiar with how to write high quality `pytest`_ test 
 Selecting a Starting Fixture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since ``ZigZag`` is all about consuming JUnitXML result files to publish to qTest the first step is to select/create a
+Since ``ZigZag`` is all about consuming JUnitXML result files to publish to qTest, the first step is to select/create a
 fixture that represents the desired test run session results you're trying to validate. The ``Public Fixtures`` section
 of `conftest.py`_ contains all the shared fixtures meant to be used by test cases. Developers are encouraged to first
 scour the available fixtures to discover if one exists that covers the scenario that is under development for a given
@@ -96,7 +96,7 @@ one!
 Building a Test Case with a Fixture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a fixture has been selected/created then you need to inherit the fixture for you::
+Once a fixture has been selected/created, then you need to inherit the fixture for your test case::
 
     def test_a_bunch_of_failures(a_bunch_of_failures):
         # code
@@ -130,7 +130,7 @@ Validation
 
 The ``TestCaseInfo``, ``TestSuiteInfo`` and ``ZigZagRunner`` classes all provide some basic ``assert`` methods for
 state validation. For complex test scenarios the state of artifacts in the qTest project under test will need to be
-done using the `qTest swagger client`_ by the develop. FYI the ``ZigZagRunner`` class provides properties that can
+done using the `qTest swagger client`_ by the developer. FYI, the ``ZigZagRunner`` class provides properties that can
 be quite helpful in assisting with validation using the `qTest swagger client`_ Python package.
 
 Executing Integration Tests
@@ -139,13 +139,13 @@ Executing Integration Tests
 As a prerequisite to running the integration tests the following environment variables must be set:
 
 - ``QTEST_API_TOKEN``
-    Your *personal* API token. (**DO NOT EVER USE THE SHARED AUTOMATION TOKEN!!!!!** You will be griefed endlessly
+    Your *personal* API token. (**DO NOT EVER USE THE SHARED AUTOMATION TOKEN!!!!!** You will be ridiculed endlessly
     if you do so!)
 - ``QTEST_SANDBOX_PROJECT_ID``
     The qTest project ID for the sandbox project. (**DO NOT USE A PRODUCTION PROJECT ID!!!!!** May the computer gods
     show you no mercy if you ever do this.)
 
-Once the appropriate environment variables are set you can execute the integration tests using the handy-dandy ``make``
+Once the appropriate environment variables are set, you can execute the integration tests using the handy-dandy ``make``
 task::
 
     $ make test-integration
