@@ -83,7 +83,7 @@ class TestCaseInfo(object):
         Args:
             qtest_api_token (str): The API token for the target qTest project.
             qtest_project_id (int): The target qTest project under test.
-            state (str): The state of the test. (Valid values: 'passed', 'skipped', 'failed', 'errored')
+            state (str): The state of the test. (Valid values: 'passed', 'skipped', 'failure', 'error')
             name (str): The desired name of the test. (Automatically generated if value is None)
             class_name (str): The desired classname of the test. (Automatically generated if value is None)
             file_path (str): The desired file path of the test. (Automatically generated if value is None)
@@ -91,7 +91,7 @@ class TestCaseInfo(object):
                 (Automatically generated if value is None)
             start (datetime.datetime): Execution start time. (Automatically generated if value is None)
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
-            message (str): The desired message for the test which is only used for 'skipped', 'failed', 'errored'
+            message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
             jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
@@ -100,7 +100,7 @@ class TestCaseInfo(object):
             RuntimeError: Invalid value provided for the 'state' argument.
         """
 
-        if state not in ('passed', 'skipped', 'failed', 'errored'):
+        if state not in ('passed', 'skipped', 'failure', 'error'):
             raise RuntimeError("Invalid value provided for the 'state' argument!")
 
         self._state = state
@@ -322,20 +322,54 @@ class TestCaseInfo(object):
         return self._qtest_testcase_id
 
     @property
-    def qtest_test_run_ids(self):
-        """The test run IDs associated with test case.
+    def qtest_test_case_info(self):
+        """The qTest swagger_client model with detailed information for the given test case.
 
         Returns:
-            list(int): A list of test run IDs associated with test case.
+            swagger_client.TestCaseWithCustomFieldResource
 
         Raises:
             AssertionError: Test case does not exist.
+            RuntimeError: General qTest API failure.
+        """
+
+        if not self._qtest_testcase_id:
+            self.assert_exists()
+
+        testcase_api = swagger_client.TestcaseApi()
+
+        try:
+            return testcase_api.get_test_case(self._qtest_project_id, self.qtest_test_case_id)
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
+
+    @property
+    def qtest_test_runs(self):
+        """A list of qTest swagger_client detailed test run models associated with the given test case.
+
+        Returns:
+            list(swagger_client.TestRunWithCustomFieldResource)
+
+        Raises:
+            AssertionError: Associated test runs do not exist.
+            RuntimeError: General qTest API failure.
         """
 
         if not self._qtest_test_run_ids:
             self.assert_executed()
 
-        return self._qtest_test_run_ids
+        test_run_api = swagger_client.TestrunApi()
+
+        try:
+            return [test_run_api.get(self._qtest_project_id, tr_id) for tr_id in self._qtest_test_run_ids]
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
 
     def clean_up(self):
         """Delete the test case and associated test runs from the qTest project under test.
@@ -346,6 +380,7 @@ class TestCaseInfo(object):
 
         Raises:
             RuntimeError: Failed to clean-up.
+            RuntimeError: General qTest API failure.
         """
 
         testcase_api = swagger_client.TestcaseApi()
@@ -377,7 +412,7 @@ class TestCaseInfo(object):
         """Verify that the given test case has been executed at least once.
 
         Raises:
-            AssertionError: Test case does not exist.
+            AssertionError: Test run does not exist.
         """
 
         query = "'name' ~ '{}'".format(self.name)
@@ -479,7 +514,7 @@ class TestSuiteInfo(Sequence):
         """Add a test case to the collection of test cases.
 
         Args:
-            state (str): The state of the test. ('passed', 'skipped', 'failed', 'errored')
+            state (str): The state of the test. (Valid values: 'passed', 'skipped', 'failure', 'error')
             name (str): The desired name of the test. (Automatically generated if value is None)
             class_name (str): The desired classname of the test. (Automatically generated if value is None)
             file_path (str): The desired file path of the test. (Automatically generated if value is None)
@@ -487,7 +522,7 @@ class TestSuiteInfo(Sequence):
                 (Automatically generated if value is None)
             start (datetime.datetime): Execution start time. (Automatically generated if value is None)
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
-            message (str): The desired message for the test which is only used for 'skipped', 'failed', 'errored'
+            message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
             jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
@@ -760,7 +795,7 @@ class ZigZagRunner(object):
         """Add a test case to the collection of test cases.
 
         Args:
-            state (str): The state of the test. ('passed', 'skipped', 'failed', 'errored')
+            state (str): The state of the test. (Valid values: 'passed', 'skipped', 'failure', 'error')
             name (str): The desired name of the test. (Automatically generated if value is None)
             class_name (str): The desired classname of the test. (Automatically generated if value is None)
             file_path (str): The desired file path of the test. (Automatically generated if value is None)
@@ -768,7 +803,7 @@ class ZigZagRunner(object):
                 (Automatically generated if value is None)
             start (datetime.datetime): Execution start time. (Automatically generated if value is None)
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
-            message (str): The desired message for the test which is only used for 'skipped', 'failed', 'errored'
+            message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
             jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
@@ -913,6 +948,47 @@ def search_qtest(qtest_api_token, qtest_project_id, object_type, query, fields=N
                            "Message: {}".format(e.status, e.reason, e.body))
 
     return parsed
+
+
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
+def assert_qtest_property(model, prop_name, exp_prop_value, promiscuous=True):
+    """Assert that a qTest swagger_client model has a property that matches the expected value. This assert will
+    intelligently search both standard qTest swagger_client model attributes as well as custom fields set by the
+    qTest admin of the qTest project under test.
+
+    Enabling 'promiscuous' mode (default) will attempt to match the property value against either the 'field_value' or
+    'field_value_name' attributes of the model. If 'promiscuous' mode is disabled then validation of the expected
+    property value will only be made against the 'field_value' attribute of the model.
+
+    Args:
+        model (object): Any model from the 'swagger_client.models' namespace.
+        prop_name (str): Target property name to use for value validation.
+        exp_prop_value (str): Expected value for the given property name.
+        promiscuous (bool): Flag for indicating whether to run assertion in 'promiscuous' mode or not. (See above)
+
+    Raises:
+        AssertionError: Property name does not exist or property value does not match expected value.
+    """
+
+    actual_values = []
+    model_dict = model.to_dict()
+    try:
+        custom_props = {p['field_name']: (p['field_value'], p['field_value_name']) for p in model_dict['properties']}
+    except KeyError:
+        custom_props = {}
+
+    if prop_name in model_dict:
+        actual_values.append(model[prop_name])
+    elif prop_name in custom_props:
+        actual_values = custom_props[prop_name]
+    else:
+        raise AssertionError("The '{}' property not found in the provided swagger_client model!".format(prop_name))
+
+    if promiscuous:
+        assert exp_prop_value in actual_values
+    else:
+        assert actual_values[0] == exp_prop_value
 
 
 # ======================================================================================================================
@@ -1065,5 +1141,157 @@ def single_passing_test_for_mk8s(_zigzag_runner_factory):
 
     zz_runner = _zigzag_runner_factory('single_passing_mk8s.xml', 'mk8s')
     zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_passing_tests_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with 3 passing tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_passing_asc.xml', 'asc')
+    for i in range(3):
+        zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_passing_tests_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with 3 passing tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_passing_mk8s.xml', 'mk8s')
+    for i in range(3):
+        zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_failing_tests_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with 3 failing tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_failing_asc.xml', 'asc')
+    for i in range(3):
+        zz_runner.add_test_case('failure')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_failing_tests_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with 3 failing tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_failing_mk8s.xml', 'mk8s')
+    for i in range(3):
+        zz_runner.add_test_case('failure')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_erroring_tests_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with 3 erroring tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_erroring_asc.xml', 'asc')
+    for i in range(3):
+        zz_runner.add_test_case('error')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_erroring_tests_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with 3 erroring tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_erroring_mk8s.xml', 'mk8s')
+    for i in range(3):
+        zz_runner.add_test_case('error')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_skipping_tests_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with 3 skipping tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_skipping_asc.xml', 'asc')
+    for i in range(3):
+        zz_runner.add_test_case('skipped')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def multiple_skipping_tests_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with 3 skipping tests in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_skipping_mk8s.xml', 'mk8s')
+    for i in range(3):
+        zz_runner.add_test_case('skipped')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def mixed_status_tests_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with 4 tests covering the various test execution
+     states in the JUnitXML file
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_mixed_asc.xml', 'asc')
+    for state in ('passed', 'failure', 'error', 'skipped'):
+        zz_runner.add_test_case(state)
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def mixed_status_tests_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with 4 tests covering the various test execution
+     states in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('multiple_mixed_mk8s.xml', 'mk8s')
+    for state in ('passed', 'failure', 'error', 'skipped'):
+        zz_runner.add_test_case(state)
 
     return zz_runner
