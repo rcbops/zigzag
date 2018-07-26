@@ -40,7 +40,7 @@ init function example::
     def __init__(self, xml, mediator):
 
 Use of class methods
--------------------
+--------------------
 There are a few places where we make use of class methods to lazily load and store contextual data for future use.  The best example of this is the method _get_fields inside `ZigZagTestLog`_.  The data is stored on the class but accessed through a property by the name of fields.
 
 Returning vs Writing data to the Mediator

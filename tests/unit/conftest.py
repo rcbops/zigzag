@@ -12,24 +12,24 @@ pytest_plugins = ['helpers_namespace']
 DEFAULT_GLOBAL_PROPERTIES = \
     """
             <properties>
-                <property name="BUILD_URL" value="BUILD_URL"/>
-                <property name="BUILD_NUMBER" value="BUILD_NUMBER"/>
-                <property name="RE_JOB_ACTION" value="RE_JOB_ACTION"/>
-                <property name="RE_JOB_IMAGE" value="RE_JOB_IMAGE"/>
-                <property name="RE_JOB_SCENARIO" value="RE_JOB_SCENARIO"/>
-                <property name="RE_JOB_BRANCH" value="RE_JOB_BRANCH"/>
-                <property name="RPC_RELEASE" value="RPC_RELEASE"/>
-                <property name="RPC_PRODUCT_RELEASE" value="RPC_PRODUCT_RELEASE"/>
-                <property name="OS_ARTIFACT_SHA" value="OS_ARTIFACT_SHA"/>
-                <property name="PYTHON_ARTIFACT_SHA" value="PYTHON_ARTIFACT_SHA"/>
-                <property name="APT_ARTIFACT_SHA" value="APT_ARTIFACT_SHA"/>
-                <property name="REPO_URL" value="REPO_URL"/>
-                <property name="JOB_NAME" value="JOB_NAME"/>
-                <property name="MOLECULE_TEST_REPO" value="MOLECULE_TEST_REPO"/>
-                <property name="MOLECULE_SCENARIO_NAME" value="MOLECULE_SCENARIO_NAME"/>
+                <property name="BUILD_URL" value="https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/"/>
+                <property name="BUILD_NUMBER" value="78"/>
+                <property name="RE_JOB_ACTION" value="system"/>
+                <property name="RE_JOB_IMAGE" value="xenial_mnaio_no_artifacts"/>
+                <property name="RE_JOB_SCENARIO" value="swift"/>
+                <property name="RE_JOB_BRANCH" value="pike-rc"/>
+                <property name="RPC_RELEASE" value="r16.2.0"/>
+                <property name="RPC_PRODUCT_RELEASE" value="pike"/>
+                <property name="OS_ARTIFACT_SHA" value="Unknown"/>
+                <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
+                <property name="APT_ARTIFACT_SHA" value="Unknown"/>
+                <property name="REPO_URL" value="https://github.com/rcbops/rpc-openstack"/>
+                <property name="JOB_NAME" value="PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system"/>
+                <property name="MOLECULE_TEST_REPO" value="molecule-validate-neutron-deploy"/>
+                <property name="MOLECULE_SCENARIO_NAME" value="default"/>
                 <property name="ci-environment" value="asc"/>
             </properties>
-    """
+    """  # noqa
 
 DEFAULT_TESTCASE_PROPERTIES = \
     """

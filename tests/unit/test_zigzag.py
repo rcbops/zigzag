@@ -17,12 +17,12 @@ import json
 # Globals
 # ======================================================================================================================
 # Shared expectations
-SHARED_TEST_LOG_EXP = {'build_url': 'BUILD_URL',
-                       'build_number': 'BUILD_NUMBER',
-                       'module_names': ['RPC_RELEASE',
-                                        'JOB_NAME',
-                                        'MOLECULE_TEST_REPO',
-                                        'MOLECULE_SCENARIO_NAME',
+SHARED_TEST_LOG_EXP = {'build_url': 'https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/',  # noqa
+                       'build_number': '78',
+                       'module_names': ['r16.2.0',
+                                        'PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system',
+                                        'molecule-validate-neutron-deploy',
+                                        'default',
                                         'test_default'],
                        'automation_content': '1',
                        'exe_start_date': '2018-04-10T21:38:18Z',
@@ -60,9 +60,9 @@ class TestZigZag(object):
         # Test
         assert 12345 == zz.qtest_project_id
         assert len(zz.test_logs)
-        assert 'BUILD_URL' == zz.build_url
+        assert 'https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/' == zz.build_url  # noqa
         assert zz.junit_xml is not None
-        assert 'BUILD_NUMBER' == zz.build_number
+        assert '78' == zz.build_number
         assert False is zz.pprint_on_fail
         assert zz.testsuite_props
 
@@ -406,7 +406,7 @@ class TestParseXMLtoTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = '89802b6e1cd28757c10360a060255c23'
+        attachment_exp_data_md5 = 'a8edcd76851bcaab8ad3546cacd8d1ff'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None
@@ -439,10 +439,10 @@ class TestParseXMLtoTestLogs(object):
 
         # Expectation
         test_name = 'test_verify_kibana_horizon_access_with_no_ssh'
-        module_names = ['RPC_RELEASE',
-                        'JOB_NAME',
-                        'MOLECULE_TEST_REPO',
-                        'MOLECULE_SCENARIO_NAME',
+        module_names = ['r16.2.0',
+                        'PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system',
+                        'molecule-validate-neutron-deploy',
+                        'default',
                         'test_for_acs-150',
                         'TestForRPC10PlusPostDeploymentQCProcess']
         test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name,
