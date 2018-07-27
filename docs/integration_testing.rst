@@ -48,9 +48,13 @@ Fixtures
 Helpers
 ^^^^^^^
 
-- ``_search_qtest``
+- ``search_qtest``
     Search qTest for objects matching a given query. (This helper exists because the swagger_client search API
     returns a really useless model.)
+- ``assert_qtest_property``
+    Assert that a property on a given qTest swagger_client model matches an expectation. This helper is very handy
+    for dealing with models that contain custom field data configured by the qTest project under test. It is highly
+    recommended that developers use the helper for property assertion in most cases.
 
 Workflow for Writing a Test Case
 --------------------------------
