@@ -9,7 +9,6 @@ from zigzag.zigzag_test_log import ZigZagTestLog
 import requests
 import json
 from lxml import etree
-import pdb
 
 
 # ======================================================================================================================
@@ -173,7 +172,7 @@ class TestZigZagTestLog(object):
         # there should be two requirements since xml has two jira marks
         assert tl.qtest_requirements == [qtest_id, qtest_id]
 
-    def test_failure_attachments(self, single_passing_xml, mocker):
+    def test_failed_test_case_attachments(self, single_fail_xml, mocker):
         """Test to ensure that test artifacts are being correctly attached
         Ensure that there are two attachments, one of type xml and one of type
         text.
@@ -205,22 +204,12 @@ class TestZigZagTestLog(object):
         mock_field_resp.id = 12345
         mock_field_resp.label = 'Failure Output'
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
-        mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
 
         # create a new TestLog object with fixture xml and the zz object
-        junit_xml_doc = etree.parse(single_passing_xml)
+        junit_xml_doc = etree.parse(single_fail_xml)
         test_case_xml = junit_xml_doc.find('testcase')
         tl = ZigZagTestLog(test_case_xml, zz)
         tl._mediator.serialized_junit_xml = etree.tostring(junit_xml_doc)
-#        tl._mediator._failure_output = """Failure:  Success consists of going
-#                                          from failure to failure without loss
-#                                          of enthusiasm."""
-        tl._mediator._failure_output = "foo"
-
-
-        len(tl.qtest_test_log.attachments)
-
-        pdb.set_trace()
 
         # there should be a list of two attachments: the junit xml
         # file and a text log
@@ -228,3 +217,47 @@ class TestZigZagTestLog(object):
         assert len(tl.qtest_test_log.attachments) == 2
         assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
         assert tl.qtest_test_log.attachments[1].content_type == 'text/plain'
+
+    def test_successful_test_case_attachments(self, single_passing_xml, mocker):
+        """Test to ensure that test artifacts are being correctly attached
+        Ensure that there is only one attachment (junit.xml) in the passing case.
+        """
+        qtest_id = 123456789
+        search_response = {
+            "links": [],
+            "page": 1,
+            "page_size": 100,
+            "total": 1,
+            "items": [
+                {
+                    "id": qtest_id,
+                    "name": "PRO-18405 Fake!"
+                }
+            ]
+        }
+
+        # a mock for a ZigZag object
+        zz = mocker.MagicMock()
+        zz._qtest_api_token = 'totally real'
+        zz._qtest_project_id = '54321'
+
+        # patch the API calls
+        mock_post_response = mocker.Mock(spec=requests.Response)
+        mock_post_response.text = json.dumps(search_response)
+        mocker.patch('requests.post', return_value=mock_post_response)
+        mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+        mock_field_resp.id = 12345
+        mock_field_resp.label = 'Failure Output'
+        mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
+
+        # create a new TestLog object with fixture xml and the zz object
+        junit_xml_doc = etree.parse(single_passing_xml)
+        test_case_xml = junit_xml_doc.find('testcase')
+        tl = ZigZagTestLog(test_case_xml, zz)
+        tl._mediator.serialized_junit_xml = etree.tostring(junit_xml_doc)
+
+        # there should be a list of two attachments: the junit xml
+        # file and a text log
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 1
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'

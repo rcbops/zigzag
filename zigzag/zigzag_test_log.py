@@ -13,7 +13,6 @@ from zigzag.utility_facade import UtilityFacade
 import requests
 import json
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
-#import pdb
 
 
 class ZigZagTestLog(object):
@@ -203,11 +202,11 @@ class ZigZagTestLog(object):
                                                data=b64encode(self._mediator.serialized_junit_xml).decode('UTF-8'),
                                                author={})]
         if log.fail_log_text:
-            log.attachments.append(swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
-                                               content_type='text/plain',
-                                               data=b64encode(log.fail_log_text.encode('UTF-8')),
-                                               author={}))
-#        pdb.set_trace()
+            log.attachments.append(
+                swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
+                                                  content_type='text/plain',
+                                                  data=b64encode(log.fail_log_text.encode('UTF-8')),
+                                                  author={}))
         return log
 
     def _parse(self):
