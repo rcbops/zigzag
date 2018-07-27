@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """Basic functionality tests for proving that ZigZag can publish results to qTest accurately."""

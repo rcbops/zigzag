@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # ======================================================================================================================
@@ -18,7 +17,7 @@ def test_cli_happy_path(single_passing_xml, mocker):
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
     project_id = '12345'
-    test_cycle_name = 'RPC_PRODUCT_RELEASE'
+    test_cycle_name = 'pike'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()

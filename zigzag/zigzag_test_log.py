@@ -13,6 +13,7 @@ from zigzag.utility_facade import UtilityFacade
 import requests
 import json
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
+from zigzag.link_generation_facade import LinkGenerationFacade
 
 
 class ZigZagTestLog(object):
@@ -20,6 +21,7 @@ class ZigZagTestLog(object):
     _TESTCASE_NAME_RGX = re.compile(r'(^[\w-]+)')
     _test_run_failure_output_field_id = 0
     _fields = 0
+    _failure_link_field_id = 0
 
     def __init__(self, testcase_xml, mediator):
         """Create a TestLog object
@@ -41,6 +43,7 @@ class ZigZagTestLog(object):
         self._jira_issues = []
         self._qtest_testcase_id = None
         self._failure_output = ''  # hard code this to empty string
+        self._def_line_number = ''
         self._parse()
         self._lookup_ids()
         self._mediator.test_logs.append(self)
@@ -179,6 +182,9 @@ class ZigZagTestLog(object):
             log.properties.append(swagger_client.PropertyResource(field_id=field['id'],
                                                                   field_value=field['value']
                                                                   ))
+        if self.status == 'FAILED' and self.failure_link_field_id:
+            log.properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
+                                                                  field_value=self.github_failure_link))
         log.name = self._name
         log.automation_content = self._automation_content
 
@@ -201,6 +207,53 @@ class ZigZagTestLog(object):
                                                author={})]
         return log
 
+    @property
+    def github_failure_link(self):
+        """Gets the Link to the testcase failure if one exists
+
+        Returns:
+            str: The link to the failure
+            None
+        """
+        return self.link_generation_facade.github_testlog_failure_link(self)
+
+    @property
+    def link_generation_facade(self):
+        """Gets the instance attached to the class of
+        LinkGenerationFacade
+
+        Returns:
+            LinkGenerationFacade
+        """
+        return self._get_link_generation_facade(self._mediator)
+
+    @property
+    def test_file(self):
+        """Gets the file that contains the test that generated this log
+
+        Returns:
+            str: the path to this file
+        """
+        return self._test_file
+
+    @property
+    def failure_link_field_id(self):
+        """Gets the failure output field id
+
+        Returns:
+            int: The id of the 'Failure Link' field for test-run objects
+        """
+        return self._get_failure_link_field_id(self._mediator)
+
+    @property
+    def def_line_number(self):
+        """Gets the line number of the test def
+
+        Returns:
+            str: The line number of the test definition
+        """
+        return self._def_line_number
+
     def _parse(self):
         """Parse the _testcase_xml"""
 
@@ -220,21 +273,32 @@ class ZigZagTestLog(object):
         elif self._testcase_xml.find('skipped') is not None:
             self._status = 'SKIPPED'
 
-        try:
+        try:  # Required
             self._name = ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
-            self._automation_content = \
-                self._testcase_xml.find("./properties/property/[@name='test_id']").attrib['value']
+            self._automation_content = self._find_property('test_id')
             self._jira_issues = \
                 [jira.get('value') for jira in self._testcase_xml.findall("./properties/property/[@name='jira']")]
-            self._exe_start_date = \
-                self._testcase_xml.find("./properties/property/[@name='start_time']").attrib['value']
+            self._exe_start_date = self._find_property('start_time')
         except AttributeError:
             raise RuntimeError("Test case '{}' is missing the required property!".format(self.name))
 
-        try:
-            self._exe_end_date = self._testcase_xml.find("./properties/property/[@name='end_time']").attrib['value']
+        try:  # Optional
+            self._exe_end_date = self._find_property('end_time')  # Its possible for a case to not have an end date
+            self._test_file = self._testcase_xml.attrib['file']
+            self._def_line_number = self._testcase_xml.attrib['line']
         except AttributeError:
-            pass  # Its possible for a cas to not have an end date
+            pass
+
+    def _find_property(self, name):
+        """A helper to find a property by name
+
+        Args:
+            name (str): The name of the property you want to fin
+
+        Returns:
+            str: The value of the property
+        """
+        return self._testcase_xml.find("./properties/property/[@name='{}']".format(name)).attrib['value']
 
     def _lookup_ids(self):
         """Search for testcase id by automation content
@@ -345,3 +409,30 @@ class ZigZagTestLog(object):
                     cls._fields[prop] = f
 
         return cls._fields
+
+    @classmethod
+    def _get_link_generation_facade(cls, mediator):
+        """Get The instance of LinkGenerationFacade
+
+        Args:
+            mediator (ZigZag): The ZigZag mediator
+
+        Returns:
+            LinkGenerationFacade
+        """
+        return LinkGenerationFacade(mediator)
+
+    @classmethod
+    def _get_failure_link_field_id(cls, mediator):
+        """Gets the failure_link_field_id from this class
+
+        Args:
+            mediator (ZigZag): The ZigZag mediator
+
+        Returns:
+            int: The ID for failure_link_field_id
+        """
+        if cls._failure_link_field_id == 0:
+            cls._failure_link_field_id = \
+                UtilityFacade(mediator).find_custom_field_id_by_label('Failure Link', 'test-runs')
+        return cls._failure_link_field_id

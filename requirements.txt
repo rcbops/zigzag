@@ -15,3 +15,4 @@ pytest-rpc
 twine
 requests
 jinja2
+future
