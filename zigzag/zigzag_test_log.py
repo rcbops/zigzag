@@ -199,12 +199,20 @@ class ZigZagTestLog(object):
         log.build_url = self._mediator.build_url
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
+        log.fail_log_text = self._failure_output
+        log.attachment_suffix = date_time_now.strftime('%Y-%m-%dT%H-%M')
         log.status = self._status
         log.attachments = \
-            [swagger_client.AttachmentResource(name="junit_{}.xml".format(date_time_now.strftime('%Y-%m-%dT%H-%M')),
+            [swagger_client.AttachmentResource(name="junit_{}.xml".format(log.attachment_suffix),
                                                content_type='application/xml',
                                                data=b64encode(self._mediator.serialized_junit_xml).decode('UTF-8'),
                                                author={})]
+        if log.fail_log_text:
+            log.attachments.append(
+                swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
+                                                  content_type='text/plain',
+                                                  data=b64encode(log.fail_log_text.encode('UTF-8')),
+                                                  author={}))
         return log
 
     @property
