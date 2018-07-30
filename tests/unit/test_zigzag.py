@@ -310,7 +310,8 @@ class TestParseXMLtoTestLogs(object):
 
         assert 'test_error' == test_log.name
         assert 'FAILED' == test_log.status
-        assert 'def error_fixture(host):' in test_log.failure_output
+        assert 'def error_fixture(host):' in test_log.failure_output \
+            or 'log truncated. Please see attached log file.' in test_log.failure_output
         assert '2018-04-10T21:38:18Z' == test_log.start_date
         assert '2018-04-10T21:38:19Z' == test_log.end_date
         assert ['ASC-123', 'ASC-456'] == test_log.jira_issues

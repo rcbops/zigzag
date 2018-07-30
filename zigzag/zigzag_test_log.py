@@ -31,6 +31,9 @@ class ZigZagTestLog(object):
             mediator (ZigZag): the mediator that stores shared data
         """
 
+        self._max_log_message_length = 100
+        self._max_log_message_length_notification = "... log truncated. Please see attached log file."
+
         self._exe_end_date = None
         self._exe_start_date = None
 
@@ -272,11 +275,16 @@ class ZigZagTestLog(object):
             self._status = 'FAILED'
 
             if self.test_run_failure_output_field_id is not None:
+                max_log_message_length = self._max_log_message_length
                 errors = self._testcase_xml.findall('error')
                 failures = self._testcase_xml.findall('failure')
                 possible_messages = errors + failures
                 message = "\n".join([element.text for element in possible_messages if element is not None])
-                self._failure_output = message
+                if len(message) > max_log_message_length:
+                    self._failure_output = message[:max_log_message_length] + \
+                        self._max_log_message_length_notification
+                else:
+                    self._failure_output = message
 
         elif self._testcase_xml.find('skipped') is not None:
             self._status = 'SKIPPED'
