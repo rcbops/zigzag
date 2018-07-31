@@ -17,20 +17,19 @@ class LinkGenerationFacade(object):
         Args:
             mediator (ZigZag): the mediator that stores shared data
         """
-        # mk8s: GIT_URL value="https://github.com/rcbops/mk8s.git", GIT_BRANCH value="master"
-        # molecule style: REPO_URL="https://github.com/rcbops/rpc-openstack", RE_JOB_BRANCH value="pike-rc"
 
         self._mediator = mediator
         try:
             if mediator.ci_environment == 'asc':
                 split = urlsplit(self._get_testsuite_prop('REPO_URL'))
                 path = self._strip_git_ending(split.path)
-                self._branch = self._get_testsuite_prop('RE_JOB_BRANCH')
+                self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
                 self._molecule_name = self._get_testsuite_prop('MOLECULE_TEST_REPO')
                 self._molecule_scenario = self._get_testsuite_prop('MOLECULE_SCENARIO_NAME')
                 self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
             elif mediator.ci_environment == 'mk8s':
                 split = urlsplit(self._get_testsuite_prop('GIT_URL'))
+                self._git_sha = self._get_testsuite_prop('GIT_COMMIT')
                 path = self._strip_git_ending(split.path)
 
                 pr_testing = None  # Assume we are not testing a PR
@@ -40,10 +39,8 @@ class LinkGenerationFacade(object):
 
                 if pr_testing:
                     self._repo_fork = self._get_testsuite_prop('CHANGE_FORK')
-                    self._branch = self._get_testsuite_prop('CHANGE_BRANCH')
                     self._repo_name = list(filter(None, path.split('/')))[1]
                 else:  # Branch testing on a set cadence
-                    self._branch = self._get_testsuite_prop('GIT_BRANCH')
                     self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
             self._scheme = split.scheme
             self._netloc = split.netloc
@@ -63,16 +60,16 @@ class LinkGenerationFacade(object):
         try:
             if self._mediator.ci_environment == 'asc':
                 # for Molecule repo of repos pattern
-                path = "/{}/{}/blob/{}/molecule/{}/{}".format(self._repo_fork,
+                path = "/{}/{}/tree/{}/molecule/{}/{}".format(self._repo_fork,
                                                               self._molecule_name,
-                                                              self._branch,
+                                                              self._git_sha,
                                                               self._molecule_scenario,
                                                               test_log.test_file)
             elif self._mediator.ci_environment == 'mk8s':
                 base_dir = 'tools/installer'  # this value is specific to mk8s and can not be derived from the XML
-                path = "/{}/{}/blob/{}/{}/{}".format(self._repo_fork,
+                path = "/{}/{}/tree/{}/{}/{}".format(self._repo_fork,
                                                      self._repo_name,
-                                                     self._branch,
+                                                     self._git_sha,
                                                      base_dir,
                                                      test_log.test_file)
             failure_line_number = self._get_line_number_from_failure_output(test_log)
@@ -93,7 +90,8 @@ class LinkGenerationFacade(object):
             str: the line number if found otherwise emptystring
         """
 
-        match = re.search(r'\.py:(\d+)', test_log.failure_output)
+        regex = re.escape(test_log.test_file) + r':(\d+)'
+        match = re.search(regex, test_log.full_failure_output)
         if match:
             return match.group(1)
         else:
