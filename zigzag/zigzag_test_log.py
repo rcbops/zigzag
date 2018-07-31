@@ -45,7 +45,9 @@ class ZigZagTestLog(object):
         self._qtest_requirements = []
         self._jira_issues = []
         self._qtest_testcase_id = None
+
         self._failure_output = ''  # hard code this to empty string
+        self._full_failure_output = ''
         self._def_line_number = ''
         self._parse()
         self._lookup_ids()
@@ -202,7 +204,7 @@ class ZigZagTestLog(object):
         log.build_url = self._mediator.build_url
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
-        log.fail_log_text = self._failure_output
+        log.full_fail_log_text = self._full_failure_output
         log.attachment_suffix = date_time_now.strftime('%Y-%m-%dT%H-%M')
         log.status = self._status
         log.attachments = \
@@ -210,11 +212,11 @@ class ZigZagTestLog(object):
                                                content_type='application/xml',
                                                data=b64encode(self._mediator.serialized_junit_xml).decode('UTF-8'),
                                                author={})]
-        if log.fail_log_text:
+        if log.full_fail_log_text:
             log.attachments.append(
                 swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
                                                   content_type='text/plain',
-                                                  data=b64encode(log.fail_log_text.encode('UTF-8')),
+                                                  data=b64encode(log.full_fail_log_text.encode('UTF-8')),
                                                   author={}))
         return log
 
@@ -280,6 +282,7 @@ class ZigZagTestLog(object):
                 failures = self._testcase_xml.findall('failure')
                 possible_messages = errors + failures
                 message = "\n".join([element.text for element in possible_messages if element is not None])
+                self._full_failure_output = message
                 if len(message) > max_log_message_length:
                     self._failure_output = message[:max_log_message_length] + \
                         self._max_log_message_length_notification
