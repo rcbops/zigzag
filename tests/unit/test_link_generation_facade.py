@@ -120,7 +120,7 @@ class TestLinkGenerationFacade(object):
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = 'I dont contain an assert message'
-        zztl.def_line_number = '88'
+        zztl.def_line_number = def_line_num
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
