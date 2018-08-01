@@ -113,6 +113,15 @@ class ZigZagTestLog(object):
         return self._failure_output
 
     @property
+    def full_failure_output(self):
+        """Gets the full failure output of this test log
+
+        Returns:
+            str: The output from failure or error of this test execution
+        """
+        return self._full_failure_output
+
+    @property
     def start_date(self):
         """Gets the start date of this test log
 

@@ -6,22 +6,61 @@
 from zigzag.link_generation_facade import LinkGenerationFacade
 
 LINE_NUMBER = '42'
-
-FAILURE_OUTPUT = """
-    @pytest.mark.test_id('d7fc646b-432a-11e8-b858-6a00035510c0')
-    @pytest.mark.jira('asc-239')
-    def test_verify_network_list(host):
-        \"\"\"Verify the neutron network was created\"\"\"
-        cmd = pre_cmd + "openstack network list\""
-        output = host.run(cmd)
-&gt;       assert ("GATEWAY_NET" in output.stdout)
-E       assert 'GATEWAY_NET' in ''
-E        +  where '' = CommandResult(command='bash -c "source /root/openrc; openstack network list"', exit_status=0, stdout=u'', stderr=u'').stdout
-
-tests/test_verify_networks_created.py:{}: AssertionError
-""".format(LINE_NUMBER)  # noqa
-
+SHA = '36d8d764f9bac665b21837259247bd4cbaf0c674'
 TEST_FILE = 'tests/totally_real/verify_I_am_good_link.py'
+
+# This failure output contains two different line numbers
+# We want the first one
+FAILURE_OUTPUT = """
+k8sclient = <tests.kubernetes.deploy.K8sClient object at 0x7f48f8c0a7f0>
+persistent_volume_claim = <function persistent_volume_claim at 0x7f48f8c00158>
+deployment = <function deployment at 0x7f48f91482f0>
+
+@pytest.mark.test_id('d8e153fc-74d7-11e8-b0cf-0025227c8120')
+@pytest.mark.jira('K8S-838')
+def test_cinder_integration_same_node(
+k8sclient, persistent_volume_claim, deployment):
+log.info("test cinder integration pod rescheduled on same node")
+testname = "test-cinder-integration-same-node"
+# verify pod is running and attached to the persistent volume successfully
+> podname = pod(k8sclient, testname)
+
+{}:{}: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+k8sclient = <tests.kubernetes.deploy.K8sClient object at 0x7f48f8c0a7f0>
+testname = 'test-cinder-integration-same-node'
+
+def pod(k8sclient, testname):
+# get the pod corresponding to the given deployment
+podlist = k8sclient.get_pod_list(
+namespace=KubeConstants.NAMESPACE,
+for pod in podlist.items:
+if (testname in pod.metadata.name) \
+and (pod.status.phase == KubeStatus.STATUS_PENDING):
+podname = pod.metadata.name
+log.info("Pod name is %s" % podname)
+
+# Wait for the pod to be ready
+status = ""
+end_time = time.time() + KubeConstants.TIMEOUT
+while status != KubeStatus.STATUS_RUNNING and time.time() <= end_time:
+response = k8sclient.read_pod_status(
+name=podname,
+namespace=KubeConstants.NAMESPACE)
+log.info(response.status.phase)
+if response.status.phase == KubeStatus.STATUS_RUNNING:
+log.info("Pod created successfully")
+status = KubeStatus.STATUS_RUNNING
+else:
+time.sleep(KubeConstants.WAIT_INTERVAL)
+continue
+> assert status == KubeStatus.STATUS_RUNNING
+E AssertionError: assert '' == 'Running'
+E + Running
+
+tests/test-cases/test-k8s/test_cinder_integration.py:94: AssertionError
+""".format(TEST_FILE, LINE_NUMBER)  # noqa
 
 
 # ======================================================================================================================
@@ -32,7 +71,6 @@ class TestLinkGenerationFacade(object):
 
     def test_asc_failure_link(self, mocker):
         """Validate when configured with asc as ci-environment"""
-        re_job_branch = 'pike-rc'
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
 
@@ -40,24 +78,25 @@ class TestLinkGenerationFacade(object):
         zz.ci_environment = 'asc'
         zz.testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
-            'RE_JOB_BRANCH': re_job_branch,
+            'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = FAILURE_OUTPUT
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = FAILURE_OUTPUT
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 'rcbops/'
                                 '{}/'
-                                'blob/{}/'
+                                'tree/{}/'
                                 'molecule/{}/'
                                 '{}#L{}'.format(molecule_test_repo,
-                                                re_job_branch,
+                                                SHA,
                                                 molecule_scenario_name,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
@@ -65,7 +104,6 @@ class TestLinkGenerationFacade(object):
     def test_asc_def_link(self, mocker):
         """Validate fallback to def line number"""
         molecule_test_repo = 'molecule-validate-neutron-deploy'
-        re_job_branch = 'pike-rc'
         molecule_scenario_name = 'default'
         def_line_num = '88'
 
@@ -73,32 +111,32 @@ class TestLinkGenerationFacade(object):
         zz.ci_environment = 'asc'
         zz.testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
-            'RE_JOB_BRANCH': re_job_branch,
+            'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = 'I dont contain an assert message'
-        zztl.def_line_number = '88'
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = 'I dont contain an assert message'
+        zztl.def_line_number = def_line_num
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 'rcbops/'
                                 '{}/'
-                                'blob/{}/'
+                                'tree/{}/'
                                 'molecule/{}/'
                                 '{}#L{}'.format(molecule_test_repo,
-                                                re_job_branch,
+                                                SHA,
                                                 molecule_scenario_name,
                                                 TEST_FILE,
                                                 def_line_num))
 
     def test_asc_file_link(self, mocker):
         """Validate fallback to file with no line number"""
-        re_job_branch = 'pike-rc'
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
 
@@ -106,14 +144,15 @@ class TestLinkGenerationFacade(object):
         zz.ci_environment = 'asc'
         zz.testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
-            'RE_JOB_BRANCH': re_job_branch,
+            'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = 'I dont contain an assert message'
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = 'I dont contain an assert message'
         zztl.def_line_number = ''
 
         lgf = LinkGenerationFacade(zz)
@@ -121,36 +160,36 @@ class TestLinkGenerationFacade(object):
         assert failure_link == ('https://github.com/'
                                 'rcbops/'
                                 '{}/'
-                                'blob/{}/'
+                                'tree/{}/'
                                 'molecule/{}/'
                                 '{}'.format(molecule_test_repo,
-                                            re_job_branch,
+                                            SHA,
                                             molecule_scenario_name,
                                             TEST_FILE))
 
     def test_mk8s_master_branch(self, mocker):
         """Validate when configured with mk8s as ci-environment"""
-        git_branch = 'master'
 
         zz = mocker.MagicMock()
         zz.ci_environment = 'mk8s'
         zz.testsuite_props = {
             'GIT_URL': 'https://github.com/rcbops/mk8s.git',
-            'GIT_BRANCH': git_branch,
+            'GIT_COMMIT': SHA,
         }
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = FAILURE_OUTPUT
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = FAILURE_OUTPUT
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 'rcbops/'
                                 'mk8s/'
-                                'blob/{}/'
+                                'tree/{}/'
                                 'tools/installer/'
-                                '{}#L{}'.format(git_branch,
+                                '{}#L{}'.format(SHA,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
 
@@ -162,7 +201,8 @@ class TestLinkGenerationFacade(object):
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = FAILURE_OUTPUT
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = FAILURE_OUTPUT
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
@@ -176,7 +216,8 @@ class TestLinkGenerationFacade(object):
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = FAILURE_OUTPUT
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = FAILURE_OUTPUT
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
@@ -184,7 +225,6 @@ class TestLinkGenerationFacade(object):
 
     def test_mk8s_pr_testing(self, mocker):
         """Validate when configured with mk8s as ci-environment testing a PR"""
-        git_branch = 'master'
         change_branch = 'asc-123/master/this_is_my_feature'
         change_fork = 'zreichert'
 
@@ -192,23 +232,24 @@ class TestLinkGenerationFacade(object):
         zz.ci_environment = 'mk8s'
         zz.testsuite_props = {
             'GIT_URL': 'https://github.com/rcbops/mk8s.git',
-            'GIT_BRANCH': git_branch,
+            'GIT_COMMIT': SHA,
             'CHANGE_BRANCH': change_branch,
             'CHANGE_FORK': change_fork,
         }
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
-        zztl.failure_output = FAILURE_OUTPUT
+        zztl.failure_output = 'This property contains truncated content......'
+        zztl.full_failure_output = FAILURE_OUTPUT
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 '{}/'
                                 'mk8s/'
-                                'blob/{}/'
+                                'tree/{}/'
                                 'tools/installer/'
                                 '{}#L{}'.format(change_fork,
-                                                change_branch,
+                                                SHA,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
