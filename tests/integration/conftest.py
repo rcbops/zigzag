@@ -32,13 +32,13 @@ DEFAULT_ASC_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
                                  "RE_JOB_ACTION": "RE_JOB_ACTION",
                                  "RE_JOB_IMAGE": "RE_JOB_IMAGE",
                                  "RE_JOB_SCENARIO": "RE_JOB_SCENARIO",
-                                 "RE_JOB_BRANCH": "RE_JOB_BRANCH",
+                                 "RE_JOB_BRANCH": "pike-rc",
                                  "RPC_RELEASE": "RPC_RELEASE",
                                  "RPC_PRODUCT_RELEASE": "RPC_PRODUCT_RELEASE",
                                  "OS_ARTIFACT_SHA": "OS_ARTIFACT_SHA",
                                  "PYTHON_ARTIFACT_SHA": "PYTHON_ARTIFACT_SHA",
                                  "APT_ARTIFACT_SHA": "APT_ARTIFACT_SHA",
-                                 "REPO_URL": "REPO_URL",
+                                 "REPO_URL": "https://github.com/rcbops/rpc-openstack",
                                  "JOB_NAME": "JOB_NAME",
                                  "MOLECULE_TEST_REPO": "MOLECULE_TEST_REPO",
                                  "MOLECULE_SCENARIO_NAME": "MOLECULE_SCENARIO_NAME",
@@ -46,20 +46,34 @@ DEFAULT_ASC_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
 
 DEFAULT_MK8S_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
                                   "BUILD_NUMBER": "BUILD_NUMBER",
-                                  "RE_JOB_ACTION": "RE_JOB_ACTION",
-                                  "RE_JOB_IMAGE": "RE_JOB_IMAGE",
-                                  "RE_JOB_SCENARIO": "RE_JOB_SCENARIO",
-                                  "RE_JOB_BRANCH": "RE_JOB_BRANCH",
-                                  "RPC_RELEASE": "RPC_RELEASE",
-                                  "RPC_PRODUCT_RELEASE": "RPC_PRODUCT_RELEASE",
-                                  "OS_ARTIFACT_SHA": "OS_ARTIFACT_SHA",
-                                  "PYTHON_ARTIFACT_SHA": "PYTHON_ARTIFACT_SHA",
-                                  "APT_ARTIFACT_SHA": "APT_ARTIFACT_SHA",
-                                  "REPO_URL": "REPO_URL",
+                                  "BUILD_ID": "BUILD_ID",
                                   "JOB_NAME": "JOB_NAME",
-                                  "MOLECULE_TEST_REPO": "MOLECULE_TEST_REPO",
-                                  "MOLECULE_SCENARIO_NAME": "MOLECULE_SCENARIO_NAME",
-                                  "ci-environment": "asc"}
+                                  "BUILD_TAG": "BUILD_TAG",
+                                  "JENKINS_URL": "JENKINS_URL",
+                                  "EXECUTOR_NUMBER": "EXECUTOR_NUMBER",
+                                  "WORKSPACE": "WORKSPACE",
+                                  "CVS_BRANCH": "CVS_BRANCH",
+                                  "GIT_COMMIT": "GIT_COMMIT",
+                                  "GIT_URL": "https://github.com/rcbops/mk8s.git",
+                                  "GIT_BRANCH": "master",
+                                  "GIT_LOCAL_BRANCH": "GIT_LOCAL_BRANCH",
+                                  "GIT_AUTHOR_NAME": "GIT_AUTHOR_NAME",
+                                  "GIT_AUTHOR_EMAIL": "GIT_AUTHOR_EMAIL",
+                                  "BRANCH_NAME": "BRANCH_NAME",
+                                  "CHANGE_AUTHOR_DISPLAY_NAME": "CHANGE_AUTHOR_DISPLAY_NAME",
+                                  "CHANGE_AUTHOR": "CHANGE_AUTHOR",
+                                  "CHANGE_BRANCH": "CHANGE_BRANCH",
+                                  "CHANGE_FORK": "CHANGE_FORK",
+                                  "CHANGE_ID": "CHANGE_ID",
+                                  "CHANGE_TARGET": "CHANGE_TARGET",
+                                  "CHANGE_TITLE": "CHANGE_TITLE",
+                                  "CHANGE_URL": "CHANGE_URL",
+                                  "JOB_URL": "JOB_URL",
+                                  "NODE_LABELS": "NODE_LABELS",
+                                  "NODE_NAME": "NODE_NAME",
+                                  "PWD": "PWD",
+                                  "STAGE_NAME": "STAGE_NAME",
+                                  "ci-environment": "mk8s"}
 
 
 # ======================================================================================================================
@@ -111,7 +125,7 @@ class TestCaseInfo(object):
         self._file_path = file_path
         self._line = line
         self._duration = duration if duration else 1
-        self._message = message
+        self._message = message if message else "Test execution state: {}".format(self._state)
         self._jira_tickets = jira_tickets if jira_tickets \
             else ["JIRA-{}".format(''.join(choice(string.digits) for _ in range(4)))]
 
@@ -125,13 +139,29 @@ class TestCaseInfo(object):
 
     @property
     def state(self):
-        """The execution state of the test case. ('passed', 'skipped', 'failed', 'errored')
+        """The execution state of the test case. ('passed', 'skipped', 'failure', 'error')
 
         Returns:
-            str: Execution state of the test case. ('passed', 'skipped', 'failed', 'errored')
+            str: Execution state of the test case. ('passed', 'skipped', 'failure', 'error')
         """
 
         return self._state
+
+    @state.setter
+    def state(self, value):
+        """Sets the execution state of the test case. ('passed', 'skipped', 'failure', 'error')
+
+        Args:
+            value (str): A valid state. ('passed', 'skipped', 'failure', 'error')
+
+        Raises:
+            RuntimeError: Invalid state provided for the 'value' argument.
+        """
+
+        if value not in ('passed', 'skipped', 'failure', 'error'):
+            raise RuntimeError("Invalid state provided for the 'value' argument!")
+
+        self._state = value
 
     @property
     def name(self):
@@ -274,36 +304,39 @@ class TestCaseInfo(object):
         """The qTest root module ID of the "Test Design" module hierarchy for the given test case.
 
         Returns:
-            int: The qTest parent module ID for the given test case.
+            int: The qTest parent module ID for the given test case. (Returns 0 if test case already cleaned-up or
+                reset)
 
         Raises:
-            AssertionError: Test case does not exist.
             RuntimeError: General qTest API failure.
         """
 
-        def _find_root_module(module_id, last_id=None):
-            module_api = swagger_client.ModuleApi()
+        if self._qtest_testcase_id:
+            def _find_root_module(module_id, last_id=None):
+                module_api = swagger_client.ModuleApi()
 
-            try:
-                parent_module_id = module_api.get_module(self._qtest_project_id, module_id).parent_id
-            except ApiException as e:
-                if e.status == 404 and 'Module does not exist' in e.body:
-                    parent_module_id = None
+                try:
+                    parent_module_id = module_api.get_module(self._qtest_project_id, module_id).parent_id
+                except ApiException as e:
+                    if e.status == 404 and 'Module does not exist' in e.body:
+                        parent_module_id = None
+                    else:
+                        raise RuntimeError("The qTest API reported an error!\n"
+                                           "Status code: {}\n"
+                                           "Reason: {}\n"
+                                           "Message: {}".format(e.status, e.reason, e.body))
+
+                if parent_module_id:
+                    return _find_root_module(parent_module_id, last_id=module_id)
                 else:
-                    raise RuntimeError("The qTest API reported an error!\n"
-                                       "Status code: {}\n"
-                                       "Reason: {}\n"
-                                       "Message: {}".format(e.status, e.reason, e.body))
+                    return last_id
 
-            if parent_module_id:
-                return _find_root_module(parent_module_id, last_id=module_id)
-            else:
-                return last_id
+            if not self._qtest_root_module_id:
+                self._qtest_root_module_id = _find_root_module(self.qtest_parent_module_id)
 
-        if not self._qtest_root_module_id:
-            self._qtest_root_module_id = _find_root_module(self.qtest_parent_module_id)
-
-        return self._qtest_root_module_id
+            return self._qtest_root_module_id
+        else:
+            return 0
 
     @property
     def qtest_test_case_id(self):
@@ -383,15 +416,16 @@ class TestCaseInfo(object):
             RuntimeError: General qTest API failure.
         """
 
-        testcase_api = swagger_client.TestcaseApi()
+        if self._qtest_testcase_id:
+            testcase_api = swagger_client.TestcaseApi()
 
-        try:
-            testcase_api.delete_test_case(self._qtest_project_id, self.qtest_test_case_id)
-        except ApiException as e:
-            raise RuntimeError("The qTest API reported an error!\n"
-                               "Status code: {}\n"
-                               "Reason: {}\n"
-                               "Message: {}".format(e.status, e.reason, e.body))
+            try:
+                testcase_api.delete_test_case(self._qtest_project_id, self.qtest_test_case_id)
+            except ApiException as e:
+                raise RuntimeError("The qTest API reported an error!\n"
+                                   "Status code: {}\n"
+                                   "Reason: {}\n"
+                                   "Message: {}".format(e.status, e.reason, e.body))
 
     def assert_exists(self):
         """Verify that the given test case is present in the "Test Design" view.
@@ -562,9 +596,11 @@ class TestSuiteInfo(Sequence):
         self._total_duration += duration
         self._start_time = self._start_time + timedelta(duration)
 
-    def clean_up(self):
-        """Delete all test cases and associated test runs from the qTest project under test. This will also clean-up
-        the "Test Design" module hierarchy.
+    def clean_up(self, clean_up_modules=False):
+        """Delete all test cases and optionally the test module hierarchy if "clean_up_modules" is enabled.
+
+        Args:
+            clean_up_modules (bool): Clean-up the module hierarchy in the qTest "Test Design" view. (Default is False)
 
         Raises:
             RuntimeError: Failed to clean-up.
@@ -573,21 +609,23 @@ class TestSuiteInfo(Sequence):
         root_module_ids = []
         module_api = swagger_client.ModuleApi()
 
-        for test in self._tests:
-            if test.qtest_root_module_id not in root_module_ids:
-                root_module_ids.append(test.qtest_root_module_id)
+        if clean_up_modules:
+            for test in self._tests:
+                if test.qtest_root_module_id not in root_module_ids:
+                    root_module_ids.append(test.qtest_root_module_id)
 
-        for root_module_id in root_module_ids:
-            try:
-                module_api.delete_module(qtest_env_vars['QTEST_SANDBOX_PROJECT_ID'], root_module_id, force=True)
-            except ApiException as e:
-                if not (e.status == 404 and 'Module does not exist' in e.body):
-                    raise RuntimeError("The qTest API reported an error!\n"
-                                       "Status code: {}\n"
-                                       "Reason: {}\n"
-                                       "Message: {}".format(e.status, e.reason, e.body))
-
-        self.reset()
+            for root_module_id in [rmid for rmid in root_module_ids if rmid != 0]:
+                try:
+                    module_api.delete_module(self._qtest_project_id, root_module_id, force=True)
+                except ApiException as e:
+                    if not (e.status == 404 and 'Module does not exist' in e.body):
+                        raise RuntimeError("The qTest API reported an error!\n"
+                                           "Status code: {}\n"
+                                           "Reason: {}\n"
+                                           "Message: {}".format(e.status, e.reason, e.body))
+        else:
+            for test in self._tests:
+                test.clean_up()
 
     def count(self, value):
         """Return the number of times x appears in the list.
@@ -693,7 +731,7 @@ class ZigZagRunner(object):
         self._root_test_cycle = root_test_cycle
         self._junit_xml_file_path = junit_xml_file_path
 
-        self._last_invocation_queue_job_id = None
+        self._last_invocation_queue_job_id = None   # Also used to indicate if runner has ran before
         self._tests = TestSuiteInfo(self.qtest_api_token, self.project_id)
         self._last_line = 0
         self._last_time = 1
@@ -814,10 +852,18 @@ class ZigZagRunner(object):
 
         self._tests.add_test_case(state, name, class_name, file_path, line, start, duration, message, jira_tickets)
 
-    def invoke_zigzag(self):
-        """Execute the ZigZag CLI."""
+    def invoke_zigzag(self, force_clean_up=True):
+        """Execute the ZigZag CLI.
 
-        self.tests.reset()
+        Args:
+            force_clean_up (bool): Flag indicating whether previous test data should be cleaned up first before
+                execution. (Default: True)
+
+        """
+
+        if force_clean_up:
+            self.clean_up()
+        self.tests.reset()  # This is for super safety in case a developer was being tricky with execution
 
         with open(self._junit_xml_file_path, 'wb') as f:
             f.write(self._junit_template.render(tests=self._tests, global_props=self._global_props))
@@ -837,18 +883,21 @@ class ZigZagRunner(object):
             RuntimeError: Failed to cleanup all qTest elements.
         """
 
-        test_cycle_api = swagger_client.TestcycleApi()
+        if self._last_invocation_queue_job_id:
+            test_cycle_api = swagger_client.TestcycleApi()
 
-        self.tests.clean_up()
+            self.tests.clean_up()
 
-        try:
-            for test_cycle in self.root_test_cycle.test_cycles:
-                test_cycle_api.delete_cycle(project_id=self.project_id, test_cycle_id=test_cycle.id, force=True)
-        except ApiException as e:
-            raise RuntimeError("The qTest API reported an error!\n"
-                               "Status code: {}\n"
-                               "Reason: {}\n"
-                               "Message: {}".format(e.status, e.reason, e.body))
+            try:
+                for test_cycle in self.root_test_cycle.test_cycles:
+                    test_cycle_api.delete_cycle(project_id=self.project_id, test_cycle_id=test_cycle.id, force=True)
+            except ApiException as e:
+                raise RuntimeError("The qTest API reported an error!\n"
+                                   "Status code: {}\n"
+                                   "Reason: {}\n"
+                                   "Message: {}".format(e.status, e.reason, e.body))
+
+            self._last_invocation_queue_job_id = None
 
     def assert_queue_job_complete(self):
         """Verify that the queue job for the last call to "invoke_zigzag" completed successfully.
@@ -952,6 +1001,46 @@ def search_qtest(qtest_api_token, qtest_project_id, object_type, query, fields=N
 
 # noinspection PyUnresolvedReferences
 @pytest.helpers.register
+def get_qtest_property(model, prop_name):
+    """Get the value for a qTest swagger_client model property. This helper will intelligently search both standard
+    qTest swagger_client model attributes as well as custom fields set by the qTest admin of the qTest project under
+    test.
+
+    Enabling 'promiscuous' mode (default) will attempt to retrieve the property value against either the 'field_value'
+    or 'field_value_name' attributes of the model. If 'promiscuous' mode is disabled then retrieval of the expected
+    property value will only be made against the 'field_value' attribute of the model.
+
+    Args:
+        model (object): Any model from the 'swagger_client.models' namespace.
+        prop_name (str): Target property name to use for value validation.
+
+    Returns:
+        [obj]: list of values for desired property. Data type could be anything depending on what the model specifies.
+            Also, multiple values will be returned if the requested property is a custom qTest field.
+
+    Raises:
+        AssertionError: Property name does not exist.
+    """
+
+    actual_values = []
+    model_dict = model.to_dict()
+    try:
+        custom_props = {p['field_name']: (p['field_value'], p['field_value_name']) for p in model_dict['properties']}
+    except KeyError:
+        custom_props = {}
+
+    if prop_name in model_dict:
+        actual_values.append(model[prop_name])
+    elif prop_name in custom_props:
+        actual_values = custom_props[prop_name]
+    else:
+        raise AssertionError("The '{}' property not found in the provided swagger_client model!".format(prop_name))
+
+    return actual_values
+
+
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
 def assert_qtest_property(model, prop_name, exp_prop_value, promiscuous=True):
     """Assert that a qTest swagger_client model has a property that matches the expected value. This assert will
     intelligently search both standard qTest swagger_client model attributes as well as custom fields set by the
@@ -971,24 +1060,76 @@ def assert_qtest_property(model, prop_name, exp_prop_value, promiscuous=True):
         AssertionError: Property name does not exist or property value does not match expected value.
     """
 
-    actual_values = []
-    model_dict = model.to_dict()
-    try:
-        custom_props = {p['field_name']: (p['field_value'], p['field_value_name']) for p in model_dict['properties']}
-    except KeyError:
-        custom_props = {}
-
-    if prop_name in model_dict:
-        actual_values.append(model[prop_name])
-    elif prop_name in custom_props:
-        actual_values = custom_props[prop_name]
-    else:
-        raise AssertionError("The '{}' property not found in the provided swagger_client model!".format(prop_name))
+    actual_values = get_qtest_property(model, prop_name)
 
     if promiscuous:
         assert exp_prop_value in actual_values
     else:
         assert actual_values[0] == exp_prop_value
+
+
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
+def assert_qtest_property_match(model, prop_name, exp_prop_regex, regex_flags=0, promiscuous=True):
+    """Assert that a qTest swagger_client model has a property that matches a given regular expression. This assert will
+    intelligently search both standard qTest swagger_client model attributes as well as custom fields set by the
+    qTest admin of the qTest project under test.
+
+    NOTE: Regex is run in 'match' mode with this helper!
+
+    Enabling 'promiscuous' mode (default) will attempt to match the property value against either the 'field_value' or
+    'field_value_name' attributes of the model. If 'promiscuous' mode is disabled then validation of the expected
+    property value will only be made against the 'field_value' attribute of the model.
+
+    Args:
+        model (object): Any model from the 'swagger_client.models' namespace.
+        prop_name (str): Target property name to use for value validation.
+        exp_prop_regex (str): Regular expression pattern that property value is expected to match.
+        regex_flags (int): Flags to pass to the regex evaluator to alter pattern matching behavior.
+        promiscuous (bool): Flag for indicating whether to run assertion in 'promiscuous' mode or not. (See above)
+
+    Raises:
+        AssertionError: Property name does not exist or property value failed regular expression match.
+    """
+
+    actual_values = get_qtest_property(model, prop_name)
+
+    if promiscuous:
+        assert any([re.match(exp_prop_regex, value, regex_flags) for value in actual_values if type(value) is str])
+    else:
+        assert re.match(exp_prop_regex, actual_values[0], regex_flags)
+
+
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
+def assert_qtest_property_search(model, prop_name, exp_prop_regex, regex_flags=0, promiscuous=True):
+    """Assert that a qTest swagger_client model has a property that matches a given regular expression. This assert will
+    intelligently search both standard qTest swagger_client model attributes as well as custom fields set by the
+    qTest admin of the qTest project under test.
+
+    NOTE: Regex is run in 'search' mode with this helper!
+
+    Enabling 'promiscuous' mode (default) will attempt to match the property value against either the 'field_value' or
+    'field_value_name' attributes of the model. If 'promiscuous' mode is disabled then validation of the expected
+    property value will only be made against the 'field_value' attribute of the model.
+
+    Args:
+        model (object): Any model from the 'swagger_client.models' namespace.
+        prop_name (str): Target property name to use for value validation.
+        exp_prop_regex (str): Regular expression pattern that property value is expected to match.
+        regex_flags (int): Flags to pass to the regex evaluator to alter pattern matching behavior.
+        promiscuous (bool): Flag for indicating whether to run assertion in 'promiscuous' mode or not. (See above)
+
+    Raises:
+        AssertionError: Property name does not exist or property value failed regular expression match.
+    """
+
+    actual_values = get_qtest_property(model, prop_name)
+
+    if promiscuous:
+        assert any([re.search(exp_prop_regex, value, regex_flags) for value in actual_values if type(value) is str])
+    else:
+        assert re.search(exp_prop_regex, actual_values[0], regex_flags)
 
 
 # ======================================================================================================================
@@ -1079,7 +1220,7 @@ def _zigzag_runner_factory(qtest_env_vars, _configure_test_environment, tmpdir_f
 
     for zz_runner in zz_runners:
         for test in zz_runner.tests:
-            if test.qtest_root_module_id not in root_module_ids:
+            if (test.qtest_root_module_id != 0) and (test.qtest_root_module_id not in root_module_ids):
                 root_module_ids.append(test.qtest_root_module_id)
 
     for root_module_id in root_module_ids:
@@ -1141,6 +1282,34 @@ def single_passing_test_for_mk8s(_zigzag_runner_factory):
 
     zz_runner = _zigzag_runner_factory('single_passing_mk8s.xml', 'mk8s')
     zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def single_failing_test_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with one failing test in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_failing_asc.xml', 'asc')
+    zz_runner.add_test_case('failure')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def single_failing_test_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with one failing test in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_failing_mk8s.xml', 'mk8s')
+    zz_runner.add_test_case('failure')
 
     return zz_runner
 
