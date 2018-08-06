@@ -773,20 +773,20 @@ class TestSuiteInfo(Sequence):
 
     @property
     def failure_count(self):
-        """The total number of test cases with 'failed' state in this collection.
+        """The total number of test cases with 'failure' state in this collection.
 
         Returns:
-            int:  The total number of test cases with 'failed' state in this collection.
+            int:  The total number of test cases with 'failure' state in this collection.
         """
 
         return self._failure_count
 
     @property
     def error_count(self):
-        """The total number of test cases with 'errored' state in this collection.
+        """The total number of test cases with 'error' state in this collection.
 
         Returns:
-            int:  The total number of test cases with 'errored' state in this collection.
+            int:  The total number of test cases with 'error' state in this collection.
         """
 
         return self._error_count
@@ -886,7 +886,7 @@ class TestSuiteInfo(Sequence):
     def clean_up(self, clean_up_modules=False):
         """Delete all test cases and optionally the test module hierarchy if "clean_up_modules" is enabled.
 
-        Args:s
+        Args:
             clean_up_modules (bool): Clean-up the module hierarchy in the qTest "Test Design" view. (Default is False)
 
         Raises:
