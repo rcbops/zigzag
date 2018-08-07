@@ -22,6 +22,7 @@ class ZigZagTestLog(object):
     _test_run_failure_output_field_id = 0
     _fields = 0
     _failure_link_field_id = 0
+    _test_sha_field_id = 0
 
     def __init__(self, testcase_xml, mediator):
         """Create a TestLog object
@@ -199,6 +200,10 @@ class ZigZagTestLog(object):
         if self.status == 'FAILED' and self.failure_link_field_id:
             log.properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
                                                                   field_value=self.github_failure_link))
+        # Attach SHA
+        if self.test_sha_field_id and self.link_generation_facade.git_sha:
+            log.properties.append(swagger_client.PropertyResource(field_id=self.test_sha_field_id,
+                                                                  field_value=self.link_generation_facade.git_sha))
         log.name = self._name
         log.automation_content = self._automation_content
 
@@ -275,6 +280,15 @@ class ZigZagTestLog(object):
             str: The line number of the test definition
         """
         return self._def_line_number
+
+    @property
+    def test_sha_field_id(self):
+        """Gets the Test SHA field id
+
+        Returns:
+            int: The id of the 'Test SHA' field for test-run objects
+        """
+        return self._get_test_sha_field_id(self._mediator)
 
     def _parse(self):
         """Parse the _testcase_xml"""
@@ -464,3 +478,18 @@ class ZigZagTestLog(object):
             cls._failure_link_field_id = \
                 UtilityFacade(mediator).find_custom_field_id_by_label('Failure Link', 'test-runs')
         return cls._failure_link_field_id
+
+    @classmethod
+    def _get_test_sha_field_id(cls, mediator):
+        """Gets the test_sha_field_id from this class
+
+        Args:
+            mediator (ZigZag): The ZigZag mediator
+
+        Returns:
+            int: The ID for test_sha_field_id
+        """
+        if cls._test_sha_field_id == 0:
+            cls._test_sha_field_id = \
+                UtilityFacade(mediator).find_custom_field_id_by_label('Test SHA', 'test-runs')
+        return cls._test_sha_field_id

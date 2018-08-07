@@ -17,19 +17,19 @@ class LinkGenerationFacade(object):
         Args:
             mediator (ZigZag): the mediator that stores shared data
         """
-
+        self._git_sha = None
         self._mediator = mediator
         try:
             if mediator.ci_environment == 'asc':
+                self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
                 split = urlsplit(self._get_testsuite_prop('REPO_URL'))
                 path = self._strip_git_ending(split.path)
-                self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
                 self._molecule_scenario = self._get_testsuite_prop('MOLECULE_SCENARIO_NAME')
                 self._repo_fork = list(filter(None, path.split('/')))[0]
                 self._repo_name = self._get_testsuite_prop('MOLECULE_TEST_REPO')
             elif mediator.ci_environment == 'mk8s':
-                split = urlsplit(self._get_testsuite_prop('GIT_URL'))
                 self._git_sha = self._get_testsuite_prop('GIT_COMMIT')
+                split = urlsplit(self._get_testsuite_prop('GIT_URL'))
                 path = self._strip_git_ending(split.path)
 
                 pr_testing = None  # Assume we are not testing a PR
@@ -158,3 +158,12 @@ class LinkGenerationFacade(object):
         if re.match(r'unknown', value, re.IGNORECASE):
             raise KeyError
         return value
+
+    @property
+    def git_sha(self):
+        """Gets the git_sha found by this facade
+
+        Returns:
+            str: the git_sha discovered by this facade
+        """
+        return self._git_sha
