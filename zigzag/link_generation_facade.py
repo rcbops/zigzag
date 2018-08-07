@@ -80,15 +80,18 @@ class LinkGenerationFacade(object):
         except AttributeError:
             return 'Unknown'  # If we ask for the failure link and can't determine it we will supply 'Unknown'
 
-    def github_diff_link(self, pass_fork, pass_base):
+    def github_diff_link(self, upstream_fork, upstream_base):
         """Generates a GitHub compare link based on the attributes of this facade
         This method would be used when we have a last known pass of a given test
         We are making an assumption that the attributes of this facade are children of
-        pass_fork and pass_base
+        upstream_fork and upstream_base
+
+        GitHub docs describing the compare view
+        https://help.github.com/articles/comparing-commits-across-time/
 
         Args:
-            pass_fork (str): the fork you wish to compare against
-            pass_base (str): the branch or SHA you want to compare against
+            upstream_fork (str): the fork you wish to compare against
+            upstream_base (str): the branch or SHA you want to compare against
 
         Returns:
             str: The string containing the link to the relevant github compare view
@@ -97,8 +100,8 @@ class LinkGenerationFacade(object):
             # These variable names are the language used by GitHub
             base_fork = self._repo_fork
             base = self._git_sha
-            head_fork = pass_fork
-            compare = pass_base
+            head_fork = upstream_fork
+            compare = upstream_base
             path = "/{}/{}/compare/{}...{}:{}".format(base_fork,
                                                       self._repo_name,
                                                       base,
