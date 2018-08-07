@@ -41,6 +41,7 @@ class TestRequirementLinking(object):
         # Re-run ZigZag because requirement linking is eventually consistent and a second run guarantees ZigZag will
         # link all the test cases.
         single_passing_test_for_asc.assert_invoke_zigzag(force_clean_up=False)
+        single_passing_test_for_asc.tests.assert_requirements_exist()   # Ensure requirements exist AFTER running ZigZag
 
         with pytest.raises(AssertionError):
             single_passing_test_for_asc.tests.assert_requirements_linked()
@@ -72,6 +73,7 @@ class TestRequirementLinking(object):
         # Re-run ZigZag because requirement linking is eventually consistent and a second run guarantees ZigZag will
         # link all the test cases.
         single_passing_test_for_mk8s.assert_invoke_zigzag(force_clean_up=False)
+        single_passing_test_for_mk8s.tests.assert_requirements_exist()  # Ensure requirements exist AFTER running ZigZag
 
         with pytest.raises(AssertionError):
             single_passing_test_for_mk8s.tests.assert_requirements_linked()

@@ -173,7 +173,9 @@ class JiraRequirementInfo(object):
             AssertionError: Requirement does not exist or could not be created!
         """
 
-        if self._jira_id in self._jira_req_id_cache:
+        if self._qtest_req_id:
+            pass
+        elif self._jira_id in self._jira_req_id_cache:
             self._qtest_req_id = self._jira_req_id_cache[self._jira_id]
         else:
             try:
@@ -1315,8 +1317,7 @@ def search_qtest(qtest_api_token, qtest_project_id, object_type, query, fields=N
     except requests.exceptions.RequestException as e:
         raise RuntimeError("The qTest API reported an error!\n"
                            "Status code: {}\n"
-                           "Reason: {}\n"
-                           "Message: {}".format(e.status, e.reason, e.body))
+                           "Reason: {}\n".format(e.response.status_code, e.response.reason))
 
     return parsed
 
