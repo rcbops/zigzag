@@ -8,7 +8,6 @@ import re
 import uuid
 import json
 import pytest
-import string
 import requests
 import swagger_client
 from time import sleep
@@ -79,10 +78,213 @@ DEFAULT_MK8S_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
 # ======================================================================================================================
 # Classes
 # ======================================================================================================================
+class JiraRequirementInfo(object):
+    # Class variables
+    _jira_req_id_cache = {}     # { str(<JIRA-ID>): int(<qTest Resource ID>) }
+
+    def __init__(self,
+                 qtest_api_token,
+                 qtest_project_id,
+                 qtest_req_module_id,
+                 jira_id=None):
+        """Create a qTest requirement that represent a Jira tickets Provide methods for validating state and
+        association with qTest test cases.
+
+        Args:
+            qtest_api_token (str): The API token for the target qTest project.
+            qtest_project_id (int): The target qTest project under test.
+            qtest_req_module_id (int): The module to use as the parent for this requirement in the qTest
+                'Requirements' view.
+            jira_id (str): The state of the test. (Automatically generated if value is None)
+
+        Raises:
+            RuntimeError: Invalid value provided for the 'state' argument.
+        """
+
+        self._qtest_api_token = qtest_api_token
+        self._qtest_project_id = qtest_project_id
+        self._qtest_req_module_id = qtest_req_module_id
+        self._jira_id = jira_id if jira_id else "JIRA-{}".format(choice(range(1, 100000)))
+        self._name = "{} {}".format(self._jira_id, 'Requirement')
+
+        self._qtest_req_id = None
+
+    @property
+    def name(self):
+        """The name of the requirement. (Jira ID + 'Requirement')
+
+        Returns:
+            str
+        """
+
+        return self._name
+
+    @property
+    def jira_id(self):
+        """The Jira ID associated with this requirement.
+
+        Returns:
+            str
+        """
+
+        return self._jira_id
+
+    @property
+    def qtest_req_id(self):
+        """The qTest requirement ID for the given requirement.
+
+        Returns:
+            int
+
+        Raises:
+            AssertionError: Test case does not exist.
+        """
+
+        if not self._qtest_req_id:
+            self.assert_exists()
+
+        return self._qtest_req_id
+
+    @property
+    def qtest_req_info(self):
+        """The qTest swagger_client model with detailed information for the given requirement.
+
+        Returns:
+            swagger_client.RequirementResource
+
+        Raises:
+            RuntimeError: General qTest API failure.
+        """
+
+        req_api = swagger_client.RequirementApi()
+
+        try:
+            return req_api.get_requirement(self._qtest_project_id, self.qtest_req_id)
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
+
+    def assert_exists(self):
+        """Verify that the given requirement is present in the "Requirements" view.
+
+        Raises:
+            AssertionError: Requirement does not exist or could not be created!
+        """
+
+        if self._qtest_req_id:
+            pass
+        elif self._jira_id in self._jira_req_id_cache:
+            self._qtest_req_id = self._jira_req_id_cache[self._jira_id]
+        else:
+            try:
+                self._create_req()
+            except RuntimeError as e:
+                raise AssertionError("Requirement could not be created for '{}'\n{}!".format(self._jira_id, str(e)))
+
+    def assert_linked(self, qtest_test_case_id):
+        """Verify that a given qTest test case ID is linked to this requirement.
+
+        Args:
+            qtest_test_case_id (int): The qTest test case ID to validate if linked to the current Jira requirement.
+
+        Raises:
+            AssertionError: Requirement does not exist or could not be created!
+            RuntimeError: General qTest API failure.
+        """
+
+        link_api = swagger_client.ObjectlinkApi()
+
+        try:
+            links = link_api.find(self._qtest_project_id, 'requirements', ids=[self.qtest_req_id])
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
+
+        if links:
+            qtest_obj_ids = []
+            for resource_objects in [link.objects for link in links]:
+                for resource_object in resource_objects:
+                    qtest_obj_ids.append(resource_object.id)
+            assert qtest_test_case_id in qtest_obj_ids
+        else:
+            raise AssertionError('Requirement is not linked to any other qTest resources!')
+
+    def clean_up(self):
+        """Delete the requirement from the qTest project under test.
+
+        Use with caution because if a requirement is deleted that is shared among multiple test cases
+
+        Raises:
+            RuntimeError: General qTest API failure.
+        """
+
+        if self._qtest_req_id:
+            self._qtest_req_id = None
+            req_api = swagger_client.RequirementApi()
+
+            try:
+                req_api.delete(self._qtest_project_id, self.qtest_req_id)
+            except ApiException as e:
+                raise RuntimeError("The qTest API reported an error!\n"
+                                   "Status code: {}\n"
+                                   "Reason: {}\n"
+                                   "Message: {}".format(e.status, e.reason, e.body))
+
+            self._purge_req_id_cache(self._jira_id)
+
+    def _create_req(self):
+        """Create a qTest requirement for the qTest project under test.
+
+        Raises:
+            RuntimeError: General qTest API failure.
+        """
+
+        req_api = swagger_client.RequirementApi()
+        req_resource = swagger_client.RequirementResource(name=self.name)
+
+        try:
+            req_id = req_api.create_requirement(self._qtest_project_id,
+                                                req_resource,
+                                                parent_id=self._qtest_req_module_id).id
+            self._update_req_id_cache(self._jira_id, req_id)
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
+
+    @classmethod
+    def _update_req_id_cache(cls, jira_id, qtest_req_id):
+        """Update the requirement ID cache used to track requirements shared between multiple JiraRequirement objects.
+
+        Args:
+            jira_id (str): The Jira ticket ID.
+            qtest_req_id (int): The qTest resource ID for associated with the given Jira ticket ID.
+        """
+
+        cls._jira_req_id_cache[jira_id] = qtest_req_id
+
+    @classmethod
+    def _purge_req_id_cache(cls, jira_id):
+        """Purge an item from the required ID cache used to track requirements shared between multiple JiraRequirement
+        objects.
+
+        Args:
+            jira_id (str): The Jira ticket ID to purge from the cache.
+        """
+
+        del cls._jira_req_id_cache[jira_id]
+
+
 class TestCaseInfo(object):
     def __init__(self,
                  qtest_api_token,
                  qtest_project_id,
+                 qtest_req_module_id,
                  state,
                  name=None,
                  class_name=None,
@@ -97,6 +299,8 @@ class TestCaseInfo(object):
         Args:
             qtest_api_token (str): The API token for the target qTest project.
             qtest_project_id (int): The target qTest project under test.
+            qtest_req_module_id (int): The module to use as the parent for Jira requirements in the qTest
+                'Requirements' view.
             state (str): The state of the test. (Valid values: 'passed', 'skipped', 'failure', 'error')
             name (str): The desired name of the test. (Automatically generated if value is None)
             class_name (str): The desired classname of the test. (Automatically generated if value is None)
@@ -120,6 +324,7 @@ class TestCaseInfo(object):
         self._state = state
         self._qtest_api_token = qtest_api_token
         self._qtest_project_id = qtest_project_id
+        self._qtest_req_module_id = qtest_req_module_id
         self._name = name if name else "test_{}".format(str(uuid.uuid1()))
         self._class_name = class_name
         self._file_path = file_path
@@ -127,11 +332,12 @@ class TestCaseInfo(object):
         self._duration = duration if duration else 1
         self._message = message if message else "Test execution state: {}".format(self._state)
         self._jira_tickets = jira_tickets if jira_tickets \
-            else ["JIRA-{}".format(''.join(choice(string.digits) for _ in range(4)))]
+            else ["JIRA-{}".format(choice(range(1, 100000)))]
 
         self._test_id = str(uuid.uuid1())
         self._start_time = start if start else datetime.utcnow()
         self._end_time = self._start_time + timedelta(seconds=self._duration)
+        self._qtest_requirements = None
         self._qtest_testcase_id = None
         self._qtest_test_run_ids = None
         self._qtest_parent_module_id = None
@@ -366,9 +572,6 @@ class TestCaseInfo(object):
             RuntimeError: General qTest API failure.
         """
 
-        if not self._qtest_testcase_id:
-            self.assert_exists()
-
         testcase_api = swagger_client.TestcaseApi()
 
         try:
@@ -404,6 +607,26 @@ class TestCaseInfo(object):
                                "Reason: {}\n"
                                "Message: {}".format(e.status, e.reason, e.body))
 
+    @property
+    def qtest_requirements(self):
+        """A list of qTest swagger_client requirement models associated with the given test case.
+
+        Returns:
+            list(swagger_client.RequirementResource)
+
+        Raises:
+            AssertionError: Associated test runs do not exist.
+            RuntimeError: General qTest API failure.
+        """
+
+        if not self._qtest_requirements:
+            self.assert_requirements_exist()
+
+        try:
+            return [req.qtest_req_info for req in self._qtest_requirements]
+        except (RuntimeError, AssertionError):
+            raise
+
     def clean_up(self):
         """Delete the test case and associated test runs from the qTest project under test.
 
@@ -426,6 +649,18 @@ class TestCaseInfo(object):
                                    "Status code: {}\n"
                                    "Reason: {}\n"
                                    "Message: {}".format(e.status, e.reason, e.body))
+            self.reset()
+
+    def clean_up_requirements(self):
+        """Delete all existing requirements associated with this test case.
+
+        Raises:
+            RuntimeError: Failed to clean-up or general qTest API failure.
+        """
+
+        if self._qtest_requirements:
+            for req in self._qtest_requirements:
+                req.clean_up()
 
     def assert_exists(self):
         """Verify that the given test case is present in the "Test Design" view.
@@ -457,6 +692,35 @@ class TestCaseInfo(object):
         else:
             raise AssertionError("Test case '{}' has no associate test runs!".format(self.name))
 
+    def assert_requirements_exist(self):
+        """Verify qTest requirement resources exist matching the given test case's specified Jira tickets.
+
+        Raises:
+            AssertionError: A requirement does not exist.
+        """
+
+        if not self._qtest_requirements:
+            self._qtest_requirements = []
+            for jira_ticket in self._jira_tickets:
+                req = JiraRequirementInfo(self._qtest_api_token,
+                                          self._qtest_project_id,
+                                          self._qtest_req_module_id,
+                                          jira_ticket)
+                req.assert_exists()
+                self._qtest_requirements.append(req)
+
+    def assert_requirements_linked(self):
+        """Verify that the given test case is properly linked to all specified Jira requirements in qTest.
+
+        Raises:
+            AssertionError: A requirement does not exist or is not linked.
+        """
+
+        self.assert_requirements_exist()
+
+        for requirement in self._qtest_requirements:
+            requirement.assert_linked(self._qtest_testcase_id)
+
     def reset(self):
         """Reset cached data on this test case."""
 
@@ -464,19 +728,23 @@ class TestCaseInfo(object):
         self._qtest_test_run_ids = None
         self._qtest_parent_module_id = None
         self._qtest_root_module_id = None
+        self._qtest_requirements = None
 
 
 class TestSuiteInfo(Sequence):
-    def __init__(self, qtest_api_token, qtest_project_id):
+    def __init__(self, qtest_api_token, qtest_project_id, qtest_req_module_id):
         """Create a collection of TestCaseInfo objects to be used in validation of JUnitXML documents.
 
         Args:
             qtest_api_token (str): The API token for the target qTest project.
             qtest_project_id (int): The target qTest project under test.
+            qtest_req_module_id (int): The module to use as the parent for Jira requirements in the qTest
+                'Requirements' view.
         """
 
         self._qtest_api_token = qtest_api_token
         self._qtest_project_id = qtest_project_id
+        self._qtest_req_module_id = qtest_req_module_id
         self._tests = []
         self._total_count = 0
         self._skip_count = 0
@@ -507,20 +775,20 @@ class TestSuiteInfo(Sequence):
 
     @property
     def failure_count(self):
-        """The total number of test cases with 'failed' state in this collection.
+        """The total number of test cases with 'failure' state in this collection.
 
         Returns:
-            int:  The total number of test cases with 'failed' state in this collection.
+            int:  The total number of test cases with 'failure' state in this collection.
         """
 
         return self._failure_count
 
     @property
     def error_count(self):
-        """The total number of test cases with 'errored' state in this collection.
+        """The total number of test cases with 'error' state in this collection.
 
         Returns:
-            int:  The total number of test cases with 'errored' state in this collection.
+            int:  The total number of test cases with 'error' state in this collection.
         """
 
         return self._error_count
@@ -571,6 +839,7 @@ class TestSuiteInfo(Sequence):
         try:
             test_case = TestCaseInfo(self._qtest_api_token,
                                      self._qtest_project_id,
+                                     self._qtest_req_module_id,
                                      state,
                                      name,
                                      class_name,
@@ -587,14 +856,34 @@ class TestSuiteInfo(Sequence):
 
         if test_case.state == 'skipped':
             self._skip_count += 1
-        elif test_case.state == 'failed':
+        elif test_case.state == 'failure':
             self._failure_count += 1
-        elif test_case.state == 'errored':
+        elif test_case.state == 'error':
             self._error_count += 1
 
         self._total_count += 1
         self._total_duration += duration
-        self._start_time = self._start_time + timedelta(duration)
+        self._start_time += timedelta(seconds=duration)
+
+    def assert_requirements_exist(self):
+        """Verify qTest requirement resources exist for all tests in this suite.
+
+        Raises:
+            AssertionError: A requirement does not exist.
+        """
+
+        for test in self._tests:
+            test.assert_requirements_exist()
+
+    def assert_requirements_linked(self):
+        """Verify that the given test case is properly linked to all specified Jira requirements in qTest.
+
+        Raises:
+            AssertionError: A requirement does not exist or is not linked.
+        """
+
+        for test in self._tests:
+            test.assert_requirements_linked()
 
     def clean_up(self, clean_up_modules=False):
         """Delete all test cases and optionally the test module hierarchy if "clean_up_modules" is enabled.
@@ -626,6 +915,16 @@ class TestSuiteInfo(Sequence):
         else:
             for test in self._tests:
                 test.clean_up()
+
+    def clean_up_requirements(self):
+        """Delete all existing requirements associated with tests cases within this suite.
+
+        Raises:
+            RuntimeError: Failed to clean-up or general qTest API failure.
+        """
+
+        for test in self._tests:
+            test.clean_up_requirements()
 
     def count(self, value):
         """Return the number of times x appears in the list.
@@ -702,14 +1001,22 @@ class ZigZagRunner(object):
                               keep_trailing_newline=True)
     _junit_template = _jinja2_env.get_template('junit.xml.j2')
 
-    def __init__(self, qtest_api_token, project_id, root_test_cycle, junit_xml_file_path, ci_environment):
+    def __init__(self,
+                 qtest_api_token,
+                 qtest_project_id,
+                 qtest_root_test_cycle,
+                 qtest_root_req_module,
+                 junit_xml_file_path,
+                 ci_environment):
         """Instantiate an object used to write ZigZag compliant JUnitXML files and execute ZigZag.
 
         Args:
             qtest_api_token (str): The API token for the target qTest project.
-            project_id (int): The target qTest project to use for publishing results.
-            root_test_cycle (swagger_client.TestCycleResource): The test cycle to use as root for the test results
+            qtest_project_id (int): The target qTest project to use for publishing results.
+            qtest_root_test_cycle (swagger_client.TestCycleResource): The test cycle to use as root for the test results
                 hierarchy.
+            qtest_root_req_module (swagger_client.ModuleResource): The module to use as the parent for Jira requirements
+                in the qTest 'Requirements' view.
             junit_xml_file_path (str): A file path to a JUnitXML file.
             ci_environment (str): The CI environment used to produce the JUnitXML file.
                 (Valid values: 'asc', 'mk8s')
@@ -727,12 +1034,13 @@ class ZigZagRunner(object):
 
         self._ci_environment = ci_environment
         self._qtest_api_token = qtest_api_token
-        self._project_id = project_id
-        self._root_test_cycle = root_test_cycle
+        self._qtest_project_id = qtest_project_id
+        self._qtest_root_test_cycle = qtest_root_test_cycle
+        self._qtest_root_req_module = qtest_root_req_module
         self._junit_xml_file_path = junit_xml_file_path
 
         self._last_invocation_queue_job_id = None   # Also used to indicate if runner has ran before
-        self._tests = TestSuiteInfo(self.qtest_api_token, self.project_id)
+        self._tests = TestSuiteInfo(self.qtest_api_token, self._qtest_project_id, self._qtest_root_req_module.id)
         self._last_line = 0
         self._last_time = 1
 
@@ -747,24 +1055,34 @@ class ZigZagRunner(object):
         return self._qtest_api_token
 
     @property
-    def project_id(self):
+    def qtest_project_id(self):
         """The ID for the qTest project used for publishing results.
 
         Returns:
             int: The target qTest project to use for publishing results.
         """
 
-        return self._project_id
+        return self._qtest_project_id
 
     @property
-    def root_test_cycle(self):
+    def qtest_root_test_cycle(self):
         """Test cycle information used as root for the test results hierarchy.
 
         Returns:
             swagger_client.TestCycleResource: The test cycle to use as root for the test results hierarchy.
         """
 
-        return self._root_test_cycle
+        return self._qtest_root_test_cycle
+
+    @property
+    def qtest_root_req_module(self):
+        """Module information used as root for requirements.
+
+        Returns:
+            swagger_client.ModuleResource: The module to use as root for the requirements.
+        """
+
+        return self._qtest_root_req_module
 
     @property
     def junit_xml_file_path(self):
@@ -870,8 +1188,8 @@ class ZigZagRunner(object):
 
         zz = ZigZag(self._junit_xml_file_path,
                     self._qtest_api_token,
-                    self._project_id,
-                    self._root_test_cycle.name,
+                    self._qtest_project_id,
+                    self._qtest_root_test_cycle.name,
                     False)
 
         self._last_invocation_queue_job_id = zz.upload_test_results()
@@ -889,8 +1207,10 @@ class ZigZagRunner(object):
             self.tests.clean_up()
 
             try:
-                for test_cycle in self.root_test_cycle.test_cycles:
-                    test_cycle_api.delete_cycle(project_id=self.project_id, test_cycle_id=test_cycle.id, force=True)
+                for test_cycle in self.qtest_root_test_cycle.test_cycles:
+                    test_cycle_api.delete_cycle(project_id=self.qtest_project_id,
+                                                test_cycle_id=test_cycle.id,
+                                                force=True)
             except ApiException as e:
                 raise RuntimeError("The qTest API reported an error!\n"
                                    "Status code: {}\n"
@@ -937,8 +1257,12 @@ class ZigZagRunner(object):
             test.assert_exists()
             test.assert_executed()
 
-    def assert_invoke_zigzag(self):
+    def assert_invoke_zigzag(self, force_clean_up=True):
         """Execute the ZigZag CLI and validates if the results were published correctly to qTest.
+
+        Args:
+            force_clean_up (bool): Flag indicating whether previous test data should be cleaned up first before
+                execution. (Default: True)
 
         Returns:
             click.testing.Result: Information about the zigzag execution.
@@ -947,7 +1271,7 @@ class ZigZagRunner(object):
             AssertionError: ZigZag invocation failed to publish results correctly.
         """
 
-        self.invoke_zigzag()
+        self.invoke_zigzag(force_clean_up)
         self.assert_queue_job_complete()
         self.assert_tests()
 
@@ -993,8 +1317,7 @@ def search_qtest(qtest_api_token, qtest_project_id, object_type, query, fields=N
     except requests.exceptions.RequestException as e:
         raise RuntimeError("The qTest API reported an error!\n"
                            "Status code: {}\n"
-                           "Reason: {}\n"
-                           "Message: {}".format(e.status, e.reason, e.body))
+                           "Reason: {}\n".format(e.response.status_code, e.response.reason))
 
     return parsed
 
@@ -1141,7 +1464,8 @@ def _configure_test_environment(qtest_env_vars):
     """Configure the qTest project for testing.
 
     Returns:
-        swagger_client.TestCycleResource: Test cycle information.
+        tuple(swagger_client.TestCycleResource, swagger_client.ModuleResource): A tuple containing the root test cycle
+            and root requirement module to use for testing.
 
     Raises:
         RuntimeError: Failed to create or cleanup all qTest elements.
@@ -1151,24 +1475,27 @@ def _configure_test_environment(qtest_env_vars):
     swagger_client.configuration.api_key['Authorization'] = qtest_env_vars['QTEST_API_TOKEN']
     project_id = qtest_env_vars['QTEST_SANDBOX_PROJECT_ID']
     test_cycle_api = swagger_client.TestcycleApi()
+    module_api = swagger_client.ModuleApi()
 
     try:
-        test_cycle = test_cycle_api.create_cycle(
-            project_id=project_id,
-            parent_id=0,
-            parent_type='root',
-            body=swagger_client.TestCycleResource(name=str(uuid.uuid1())))
+        root_test_cycle = test_cycle_api.create_cycle(project_id=project_id,
+                                                      parent_id=0,
+                                                      parent_type='root',
+                                                      body=swagger_client.TestCycleResource(name=str(uuid.uuid1())))
+        root_req_module = module_api.create_module(project_id=project_id,
+                                                   body=swagger_client.ModuleResource(name=str(uuid.uuid1())))
     except ApiException as e:
         raise RuntimeError("The qTest API reported an error!\n"
                            "Status code: {}\n"
                            "Reason: {}\n"
                            "Message: {}".format(e.status, e.reason, e.body))
 
-    yield test_cycle
+    yield root_test_cycle, root_req_module
 
     # Teardown
     try:
-        test_cycle_api.delete_cycle(project_id=project_id, test_cycle_id=test_cycle.id, force=True)
+        test_cycle_api.delete_cycle(project_id=project_id, test_cycle_id=root_test_cycle.id, force=True)
+        module_api.delete_module(project_id=project_id, module_id=root_req_module.id, force=True)
     except ApiException as e:
         raise RuntimeError("The qTest API reported an error!\n"
                            "Status code: {}\n"
@@ -1203,10 +1530,12 @@ def _zigzag_runner_factory(qtest_env_vars, _configure_test_environment, tmpdir_f
             RuntimeError: Invalid value provided for the 'ci_environment' argument.
         """
 
+        root_test_cyle, root_req_module = _configure_test_environment
         junit_xml_file_path = temp_dir.join(junit_xml_file_name).strpath
         runner = ZigZagRunner(qtest_env_vars['QTEST_API_TOKEN'],
                               qtest_env_vars['QTEST_SANDBOX_PROJECT_ID'],
-                              _configure_test_environment,
+                              root_test_cyle,
+                              root_req_module,
                               junit_xml_file_path,
                               ci_environment)
         zz_runners.append(runner)

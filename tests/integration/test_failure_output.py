@@ -52,11 +52,10 @@ class TestFailureOutputField(object):
 
         # Setup
         single_failing_test_for_asc.tests[0].state = 'passed'   # Change the state of the test to 'passed'
-        single_failing_test_for_asc.invoke_zigzag(force_clean_up=False)     # Re-run ZigZag
+        single_failing_test_for_asc.assert_invoke_zigzag(force_clean_up=False)     # Re-run ZigZag
         test_runs = single_failing_test_for_asc.tests[0].qtest_test_runs
 
         # Test
-        single_failing_test_for_asc.assert_queue_job_complete()
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', '')
 
@@ -96,10 +95,9 @@ class TestFailureOutputField(object):
 
         # Setup
         single_failing_test_for_mk8s.tests[0].state = 'passed'  # Change the state of the test to 'passed'
-        single_failing_test_for_mk8s.invoke_zigzag(force_clean_up=False)  # Re-run ZigZag
+        single_failing_test_for_mk8s.assert_invoke_zigzag(force_clean_up=False)  # Re-run ZigZag
         test_runs = single_failing_test_for_mk8s.tests[0].qtest_test_runs
 
         # Test
-        single_failing_test_for_mk8s.assert_queue_job_complete()
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', '')
