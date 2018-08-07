@@ -253,3 +253,88 @@ class TestLinkGenerationFacade(object):
                                                 SHA,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
+
+    def test_asc_diff_link(self, mocker):
+        """Validate when configured with asc as ci-environment"""
+        molecule_test_repo = 'molecule-validate-neutron-deploy'
+        molecule_scenario_name = 'default'
+        fork = 'rcbops'
+
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'asc'
+        zz.testsuite_props = {
+            'REPO_URL': 'https://github.com/{}/rpc-openstack'.format(fork),
+            'MOLECULE_GIT_COMMIT': SHA,
+            'MOLECULE_TEST_REPO': molecule_test_repo,
+            'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
+        }
+
+        lgf = LinkGenerationFacade(zz)
+        pass_fork = 'zreichert'
+        pass_base = 'master'
+
+        diff_link = lgf.github_diff_link(pass_fork, pass_base)
+        assert diff_link == ('https://github.com/'
+                             '{}/'
+                             '{}/'
+                             'compare/'
+                             '{}...{}:{}'.format(fork,
+                                                 molecule_test_repo,
+                                                 SHA,
+                                                 pass_fork,
+                                                 pass_base))
+
+    def test_mk8s_diff_link(self, mocker):
+        """Validate when configured with mk8s as ci-environment"""
+        fork = 'rcbops'
+        repo_name = 'mk8s'
+
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'mk8s'
+        zz.testsuite_props = {
+            'GIT_URL': 'https://github.com/{}/{}.git'.format(fork, repo_name),
+            'GIT_COMMIT': SHA,
+        }
+
+        lgf = LinkGenerationFacade(zz)
+        pass_fork = 'zreichert'
+        pass_base = 'master'
+
+        diff_link = lgf.github_diff_link(pass_fork, pass_base)
+        assert diff_link == ('https://github.com/'
+                             '{}/'
+                             '{}/'
+                             'compare/'
+                             '{}...{}:{}'.format(fork,
+                                                 repo_name,
+                                                 SHA,
+                                                 pass_fork,
+                                                 pass_base))
+
+    def test_mk8s_diff_link_missing_info(self, mocker):
+        """diff link should be 'Unknown' when it cant be calculated"""
+
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'mk8s'
+        zz.testsuite_props = {}
+
+        lgf = LinkGenerationFacade(zz)
+        pass_fork = 'zreichert'
+        pass_base = 'master'
+
+        diff_link = lgf.github_diff_link(pass_fork, pass_base)
+        assert diff_link == 'Unknown'
+
+    def test_asc_diff_link_missing_info(self, mocker):
+        """diff link should be 'Unknown' when it cant be calculated"""
+
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'asc'
+        zz.testsuite_props = {}
+
+        lgf = LinkGenerationFacade(zz)
+        pass_fork = 'zreichert'
+        pass_base = 'master'
+
+        diff_link = lgf.github_diff_link(pass_fork, pass_base)
+        assert diff_link == 'Unknown'

@@ -24,9 +24,9 @@ class LinkGenerationFacade(object):
                 split = urlsplit(self._get_testsuite_prop('REPO_URL'))
                 path = self._strip_git_ending(split.path)
                 self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
-                self._molecule_name = self._get_testsuite_prop('MOLECULE_TEST_REPO')
                 self._molecule_scenario = self._get_testsuite_prop('MOLECULE_SCENARIO_NAME')
-                self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
+                self._repo_fork = list(filter(None, path.split('/')))[0]
+                self._repo_name = self._get_testsuite_prop('MOLECULE_TEST_REPO')
             elif mediator.ci_environment == 'mk8s':
                 split = urlsplit(self._get_testsuite_prop('GIT_URL'))
                 self._git_sha = self._get_testsuite_prop('GIT_COMMIT')
@@ -61,7 +61,7 @@ class LinkGenerationFacade(object):
             if self._mediator.ci_environment == 'asc':
                 # for Molecule repo of repos pattern
                 path = "/{}/{}/tree/{}/molecule/{}/{}".format(self._repo_fork,
-                                                              self._molecule_name,
+                                                              self._repo_name,
                                                               self._git_sha,
                                                               self._molecule_scenario,
                                                               test_log.test_file)
@@ -79,6 +79,34 @@ class LinkGenerationFacade(object):
             return urlunsplit((self._scheme, self._netloc, path, '', line))
         except AttributeError:
             return 'Unknown'  # If we ask for the failure link and can't determine it we will supply 'Unknown'
+
+    def github_diff_link(self, pass_fork, pass_base):
+        """Generates a GitHub compare link based on the attributes of this facade
+        This method would be used when we have a last known pass of a given test
+        We are making an assumption that the attributes of this facade are children of
+        pass_fork and pass_base
+
+        Args:
+            pass_fork (str): the fork you wish to compare against
+            pass_base (str): the branch or SHA you want to compare against
+
+        Returns:
+            str: The string containing the link to the relevant github compare view
+        """
+        try:
+            # These variable names are the language used by GitHub
+            base_fork = self._repo_fork
+            base = self._git_sha
+            head_fork = pass_fork
+            compare = pass_base
+            path = "/{}/{}/compare/{}...{}:{}".format(base_fork,
+                                                      self._repo_name,
+                                                      base,
+                                                      head_fork,
+                                                      compare)
+            return urlunsplit((self._scheme, self._netloc, path, '', ''))
+        except AttributeError:
+            return 'Unknown'  # If we ask for the diff link and can't determine it we will supply 'Unknown'
 
     def _get_line_number_from_failure_output(self, test_log):
         """Attempts to pull the failure line number from failure output
