@@ -281,6 +281,10 @@ class JiraRequirementInfo(object):
 
 
 class TestCaseInfo(object):
+    # Class variables
+    # This regex will pull the qTest ID for the 'href' attribute on swagger_client.Link model
+    _HREF_ID_REGEX = re.compile(r'/(\d+)$')
+
     def __init__(self,
                  qtest_api_token,
                  qtest_project_id,
@@ -311,7 +315,7 @@ class TestCaseInfo(object):
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
             message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
-            jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
+            jira_tickets ([str]): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
 
         Raises:
@@ -379,6 +383,16 @@ class TestCaseInfo(object):
 
         return self._name
 
+    @name.setter
+    def name(self, value):
+        """Sets the name of the test case.
+
+        Args:
+            value (str): A name for the test case.
+        """
+
+        self._name = value
+
     @property
     def class_name(self):
         """The 'classname' for the test case. (JUnitXML 'testcase' attribute)
@@ -389,6 +403,16 @@ class TestCaseInfo(object):
 
         return self._class_name
 
+    @class_name.setter
+    def class_name(self, value):
+        """Sets the 'classname' for the test case. (JUnitXML 'testcase' attribute)
+
+        Args:
+            value (str): A 'classname' for the test case.
+        """
+
+        self._class_name = value
+
     @property
     def file_path(self):
         """The 'file' for the test case which is usually a file path. (JUnitXML 'testcase' attribute)
@@ -398,6 +422,16 @@ class TestCaseInfo(object):
         """
 
         return self._file_path
+
+    @file_path.setter
+    def file_path(self, value):
+        """Sets the 'file' for the test case which is usually a file path. (JUnitXML 'testcase' attribute)
+
+        Args:
+            value (str): A path for the 'file' JUnitXML attribute.
+        """
+
+        self._file_path = value
 
     @property
     def line(self):
@@ -587,7 +621,7 @@ class TestCaseInfo(object):
         """A list of qTest swagger_client detailed test run models associated with the given test case.
 
         Returns:
-            list(swagger_client.TestRunWithCustomFieldResource)
+            [swagger_client.TestRunWithCustomFieldResource)]
 
         Raises:
             AssertionError: Associated test runs do not exist.
@@ -612,7 +646,7 @@ class TestCaseInfo(object):
         """A list of qTest swagger_client requirement models associated with the given test case.
 
         Returns:
-            list(swagger_client.RequirementResource)
+            [swagger_client.RequirementResource]
 
         Raises:
             AssertionError: Associated test runs do not exist.
@@ -626,6 +660,38 @@ class TestCaseInfo(object):
             return [req.qtest_req_info for req in self._qtest_requirements]
         except (RuntimeError, AssertionError):
             raise
+
+    @property
+    def qtest_parent_test_cycles(self):
+        """A list of qTest swagger_client test cycle models which are the direct ancestor for all associated test runs.
+
+        Returns:
+            [swagger_client.TestCycleResource]
+
+        Raises:
+            AssertionError: Associated test cycles do not exist.
+            RuntimeError: General qTest API failure.
+        """
+
+        test_cycle_ids = []
+
+        for run in self.qtest_test_runs:
+            for link in run.links:
+                if link.rel == 'test-cycle':
+                    try:
+                        test_cycle_ids.append(int(self._HREF_ID_REGEX.search(link.href).group(1)))
+                    except (AttributeError, IndexError):
+                        raise AssertionError('Test case does not have parent test cycles!')
+
+        test_cycle_api = swagger_client.TestcycleApi()
+
+        try:
+            return [test_cycle_api.get_test_cycle(self._qtest_project_id, tc_id) for tc_id in test_cycle_ids]
+        except ApiException as e:
+            raise RuntimeError("The qTest API reported an error!\n"
+                               "Status code: {}\n"
+                               "Reason: {}\n"
+                               "Message: {}".format(e.status, e.reason, e.body))
 
     def clean_up(self):
         """Delete the test case and associated test runs from the qTest project under test.
@@ -669,7 +735,7 @@ class TestCaseInfo(object):
             AssertionError: Test case does not exist.
         """
 
-        query = "'name' ~ '{}'".format(self.name)
+        query = "'Automation Content' ~ '{}'".format(self.test_id)
         result = search_qtest(self._qtest_api_token, self._qtest_project_id, 'test-cases', query, ['id'])
 
         if result['items']:
@@ -826,7 +892,7 @@ class TestSuiteInfo(Sequence):
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
             message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
-            jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
+            jira_tickets ([str]): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
 
         Raises:
@@ -1109,7 +1175,7 @@ class ZigZagRunner(object):
         """The global properties for the test suite.
 
         Returns:
-            dict(str): Global properties for the test suite.
+            {str: obj}: Global properties for the test suite.
         """
 
         return self._global_props
@@ -1161,7 +1227,7 @@ class ZigZagRunner(object):
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
             message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
-            jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
+            jira_tickets ([str]): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
 
         Raises:
@@ -1291,7 +1357,7 @@ def search_qtest(qtest_api_token, qtest_project_id, object_type, query, fields=N
         object_type (str): The type of qTest objects to search.
             (Valid values: 'requirements', 'test-cases', 'test-runs', 'defects')
         query (str): The query to execute against the given object type.
-        fields (list(str)): A list of qTest object field names to capture in the return data.
+        fields ([str]): A list of qTest object field names to capture in the return data.
             (All fields captured if None is specified)
 
     Returns:
@@ -1353,7 +1419,7 @@ def get_qtest_property(model, prop_name):
         custom_props = {}
 
     if prop_name in model_dict:
-        actual_values.append(model[prop_name])
+        actual_values.append(model_dict[prop_name])
     elif prop_name in custom_props:
         actual_values = custom_props[prop_name]
     else:
@@ -1571,7 +1637,7 @@ def qtest_env_vars():
     """Retrieve a dictionary of required environment variables for running integration tests.
 
     Returns:
-        dict(str): A dictionary of environment variables. (Case sensitive)
+        {str: obj}: A dictionary of environment variables. (Case sensitive)
     """
 
     env_vars = {}
