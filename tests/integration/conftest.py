@@ -678,7 +678,10 @@ class TestCaseInfo(object):
         for run in self.qtest_test_runs:
             for link in run.links:
                 if link.rel == 'test-cycle':
-                    test_cycle_ids.append(int(self._HREF_ID_REGEX.search(link.href).group(1)))
+                    try:
+                        test_cycle_ids.append(int(self._HREF_ID_REGEX.search(link.href).group(1)))
+                    except IndexError:
+                        raise AssertionError('Test case does not have parent test cycles!')
 
         test_cycle_api = swagger_client.TestcycleApi()
 
