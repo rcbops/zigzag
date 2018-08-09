@@ -1530,11 +1530,11 @@ def _zigzag_runner_factory(qtest_env_vars, _configure_test_environment, tmpdir_f
             RuntimeError: Invalid value provided for the 'ci_environment' argument.
         """
 
-        root_test_cyle, root_req_module = _configure_test_environment
+        root_test_cycle, root_req_module = _configure_test_environment
         junit_xml_file_path = temp_dir.join(junit_xml_file_name).strpath
         runner = ZigZagRunner(qtest_env_vars['QTEST_API_TOKEN'],
                               qtest_env_vars['QTEST_SANDBOX_PROJECT_ID'],
-                              root_test_cyle,
+                              root_test_cycle,
                               root_req_module,
                               junit_xml_file_path,
                               ci_environment)
