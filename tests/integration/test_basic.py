@@ -306,6 +306,7 @@ class TestRename(object):
         """
 
         # Setup
+        single_passing_test_for_asc.tests[0].class_name = 'tests.test_default'  # Enforce known starting point.
         single_passing_test_for_asc.assert_invoke_zigzag()
         original_parent_test_cycle = single_passing_test_for_asc.tests[0].qtest_parent_test_cycles[0].name
 
@@ -333,6 +334,7 @@ class TestRename(object):
         """
 
         # Setup
+        single_passing_test_for_mk8s.tests[0].class_name = 'tests.test_default'  # Enforce known starting point.
         single_passing_test_for_mk8s.assert_invoke_zigzag()
         original_parent_test_cycle = single_passing_test_for_mk8s.tests[0].qtest_parent_test_cycles[0].name
 
@@ -360,6 +362,8 @@ class TestRename(object):
         """
 
         # Setup
+        single_passing_test_for_asc.tests[0].class_name = 'tests.test_default'  # Enforce known starting point.
+        single_passing_test_for_asc.tests[0].file_path = 'tests/test_default.py'  # Enforce known starting point.
         single_passing_test_for_asc.assert_invoke_zigzag()
         original_parent_test_cycle = single_passing_test_for_asc.tests[0].qtest_parent_test_cycles[0].name
 
@@ -388,6 +392,8 @@ class TestRename(object):
         """
 
         # Setup
+        single_passing_test_for_mk8s.tests[0].class_name = 'tests.test_default'  # Enforce known starting point.
+        single_passing_test_for_mk8s.tests[0].file_path = 'tests/test_default.py'  # Enforce known starting point.
         single_passing_test_for_mk8s.assert_invoke_zigzag()
         original_parent_test_cycle = single_passing_test_for_mk8s.tests[0].qtest_parent_test_cycles[0].name
 
