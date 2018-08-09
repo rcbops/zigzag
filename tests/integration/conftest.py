@@ -680,7 +680,7 @@ class TestCaseInfo(object):
                 if link.rel == 'test-cycle':
                     try:
                         test_cycle_ids.append(int(self._HREF_ID_REGEX.search(link.href).group(1)))
-                    except IndexError:
+                    except (AttributeError, IndexError):
                         raise AssertionError('Test case does not have parent test cycles!')
 
         test_cycle_api = swagger_client.TestcycleApi()
