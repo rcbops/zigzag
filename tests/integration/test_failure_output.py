@@ -27,7 +27,7 @@ class TestFailureOutputField(object):
         test_runs = single_failing_test_for_asc.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r'Test execution state: failure \(long\)'
+        test_failure_msg_regex_exp = r'Test execution state: failure'
 
         # Test
         assert len(test_runs) == 1
@@ -44,7 +44,7 @@ class TestFailureOutputField(object):
         test_runs = single_failing_test_for_asc.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r'Test execution state: failure \(long\)'
+        test_failure_msg_regex_exp = r'Test execution state: failure'
 
         # Test
         assert len(test_runs) == 1
@@ -70,7 +70,7 @@ class TestFailureOutputField(object):
         test_runs = single_failing_test_for_mk8s.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r'Test execution state: failure \(long\)'
+        test_failure_msg_regex_exp = r'Test execution state: failure'
 
         # Test
         assert len(test_runs) == 1
@@ -87,7 +87,7 @@ class TestFailureOutputField(object):
         test_runs = single_failing_test_for_mk8s.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r'Test execution state: failure \(long\)'
+        test_failure_msg_regex_exp = r'Test execution state: failure'
 
         # Test
         assert len(test_runs) == 1

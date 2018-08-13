@@ -12,6 +12,7 @@ import requests
 import swagger_client
 from time import sleep
 from random import choice
+from copy import deepcopy
 from zigzag.zigzag import ZigZag
 from datetime import datetime, timedelta
 from swagger_client.rest import ApiException
@@ -41,6 +42,7 @@ DEFAULT_ASC_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
                                  "JOB_NAME": "JOB_NAME",
                                  "MOLECULE_TEST_REPO": "MOLECULE_TEST_REPO",
                                  "MOLECULE_SCENARIO_NAME": "MOLECULE_SCENARIO_NAME",
+                                 "MOLECULE_GIT_COMMIT": "Unknown",
                                  "ci-environment": "asc"}
 
 DEFAULT_MK8S_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
@@ -53,7 +55,7 @@ DEFAULT_MK8S_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
                                   "WORKSPACE": "WORKSPACE",
                                   "CVS_BRANCH": "CVS_BRANCH",
                                   "GIT_COMMIT": "GIT_COMMIT",
-                                  "GIT_URL": "https://github.com/rcbops/mk8s.git",
+                                  "GIT_URL": "Unknown",
                                   "GIT_BRANCH": "master",
                                   "GIT_LOCAL_BRANCH": "GIT_LOCAL_BRANCH",
                                   "GIT_AUTHOR_NAME": "GIT_AUTHOR_NAME",
@@ -297,6 +299,7 @@ class TestCaseInfo(object):
                  start=None,
                  duration=None,
                  message=None,
+                 short_message=None,
                  jira_tickets=None):
         """Capture or generate test case information to be used in validation of JUnitXML documents.
 
@@ -315,7 +318,9 @@ class TestCaseInfo(object):
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
             message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
-            jira_tickets ([str]): A list of Jira ticket IDs to associated with the test case.
+            short_message (str): The desired short message for the test which is only used for 'skipped', 'failure',
+                'error' test states. (Automatically generated if value is None)
+            jira_tickets (list(str)): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
 
         Raises:
@@ -335,6 +340,7 @@ class TestCaseInfo(object):
         self._line = line
         self._duration = duration if duration else 1
         self._message = message if message else "Test execution state: {}".format(self._state)
+        self._short_message = short_message if short_message else "State: {}".format(self._state)
         self._jira_tickets = jira_tickets if jira_tickets \
             else ["JIRA-{}".format(choice(range(1, 100000)))]
 
@@ -461,7 +467,7 @@ class TestCaseInfo(object):
             int: Short message.
         """
 
-        return "{} (short)".format(self._message)
+        return self._short_message
 
     @property
     def long_msg(self):
@@ -471,7 +477,7 @@ class TestCaseInfo(object):
             int: Long message.
         """
 
-        return "{} (long)".format(self._message)
+        return self._message
 
     @property
     def jira_tickets(self):
@@ -1073,7 +1079,8 @@ class ZigZagRunner(object):
                  qtest_root_test_cycle,
                  qtest_root_req_module,
                  junit_xml_file_path,
-                 ci_environment):
+                 ci_environment,
+                 metadata=None):
         """Instantiate an object used to write ZigZag compliant JUnitXML files and execute ZigZag.
 
         Args:
@@ -1086,15 +1093,17 @@ class ZigZagRunner(object):
             junit_xml_file_path (str): A file path to a JUnitXML file.
             ci_environment (str): The CI environment used to produce the JUnitXML file.
                 (Valid values: 'asc', 'mk8s')
+            metadata (dict): Provide a dictionary of arbitrary metadata for this runner. Useful for when you want to
+                attach extra fixture data to the runner.
 
         Raises:
             RuntimeError: Invalid value provided for the 'ci_environment' argument.
         """
 
         if ci_environment == 'asc':
-            self._global_props = DEFAULT_ASC_GLOBAL_PROPERTIES
+            self._global_props = deepcopy(DEFAULT_ASC_GLOBAL_PROPERTIES)
         elif ci_environment == 'mk8s':
-            self._global_props = DEFAULT_MK8S_GLOBAL_PROPERTIES
+            self._global_props = deepcopy(DEFAULT_MK8S_GLOBAL_PROPERTIES)
         else:
             raise RuntimeError("Invalid value provided for the 'ci_environment' argument!")
 
@@ -1104,6 +1113,7 @@ class ZigZagRunner(object):
         self._qtest_root_test_cycle = qtest_root_test_cycle
         self._qtest_root_req_module = qtest_root_req_module
         self._junit_xml_file_path = junit_xml_file_path
+        self._metadata = metadata if metadata else {}
 
         self._last_invocation_queue_job_id = None   # Also used to indicate if runner has ran before
         self._tests = TestSuiteInfo(self.qtest_api_token, self._qtest_project_id, self._qtest_root_req_module.id)
@@ -1203,6 +1213,17 @@ class ZigZagRunner(object):
 
         assert self._last_invocation_queue_job_id
         return self._last_invocation_queue_job_id
+
+    @property
+    def metadata(self):
+        """A dictionary of arbitrary metadata for this runner. Useful for when you want to attach extra fixture data
+        to the runner.
+
+        Returns:
+            dict
+        """
+
+        return self._metadata
 
     def add_test_case(self,
                       state,
