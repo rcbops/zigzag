@@ -7,7 +7,7 @@
 # ======================================================================================================================
 import pytest
 import swagger_client
-from conftest import ZigZagRunner
+from .conftest import ZigZagRunner
 
 
 # ======================================================================================================================
@@ -85,7 +85,7 @@ class TestNegativeScenarios(object):
         with pytest.raises(RuntimeError) as e:
             neg_invalid_api_token.assert_invoke_zigzag()
 
-        assert 'Reason: Unauthorized' in e.value.message
+        assert 'Reason: Unauthorized' in str(e.value)
 
     # noinspection PyShadowingNames
     def test_invalid_project_id(self, neg_invalid_project_id):
@@ -95,5 +95,5 @@ class TestNegativeScenarios(object):
         with pytest.raises(RuntimeError) as e:
             neg_invalid_project_id.assert_invoke_zigzag()
 
-        assert 'Status code: 404' in e.value.message
-        assert 'Reason: Not Found' in e.value.message
+        assert 'Status code: 404' in str(e.value)
+        assert 'Reason: Not Found' in str(e.value)
