@@ -3,7 +3,6 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-
 from __future__ import absolute_import
 import swagger_client
 from base64 import b64encode
@@ -230,7 +229,8 @@ class ZigZagTestLog(object):
             log.attachments.append(
                 swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
                                                   content_type='text/plain',
-                                                  data=b64encode(log.full_fail_log_text.encode('UTF-8')),
+                                                  data=b64encode(
+                                                      log.full_fail_log_text.encode('UTF-8')).decode('UTF-8'),
                                                   author={}))
         return log
 

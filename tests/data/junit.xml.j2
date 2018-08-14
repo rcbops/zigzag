@@ -7,7 +7,7 @@ skips="{{ tests.skip_count }}"
 tests="{{ tests.total_count }}"
 time="{{ tests.total_duration }}">
     <properties>
-    {% for key, value in global_props.iteritems() %}
+    {% for key, value in global_props.items() %}
         <property name="{{ key }}" value="{{ value }}"/>
     {% endfor %}
     </properties>

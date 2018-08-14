@@ -1270,7 +1270,7 @@ class ZigZagRunner(object):
             self.clean_up()
         self.tests.reset()  # This is for super safety in case a developer was being tricky with execution
 
-        with open(self._junit_xml_file_path, 'wb') as f:
+        with open(self._junit_xml_file_path, 'w') as f:
             f.write(self._junit_template.render(tests=self._tests, global_props=self._global_props))
 
         zz = ZigZag(self._junit_xml_file_path,

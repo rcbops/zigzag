@@ -76,8 +76,8 @@ test: check-unit ## run unit tests quickly with the default Python
 test-integration: check-integration ## run integration tests with the default Python
 	py.test tests/integration
 
-test-all: ## run unit tests on every Python version with tox
-	tox
+test-all: ## run lint, unit and integration tests on all supported Python versions
+	tox -epy27,py35,flake8,integration_py27,integration_py35,integration_py36
 
 coverage-html: ## check code coverage with an HTML report
 	py.test --cov-report html --cov=zigzag tests/
@@ -123,14 +123,14 @@ bump-minor: ## bumps the version of by minor
 bump-patch: ## bumps the version of by patch
 	bumpversion patch
 
-release-major: clean-build build develop bump-major lint test publish ## package and upload a major release
+release-major: develop lint test-all bump-major build publish ## package and upload a major release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-minor: clean-build build develop bump-minor lint test publish ## package and upload a minor release
+release-minor: develop lint test-all bump-minor build publish ## package and upload a minor release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-patch: clean-build build develop bump-patch lint test publish ## package and upload a patch release
+release-patch: develop lint test-all bump-patch build publish ## package and upload a patch release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
