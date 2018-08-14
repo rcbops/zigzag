@@ -44,8 +44,10 @@ class LinkGenerationFacade(object):
                     self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
             self._scheme = split.scheme
             self._netloc = split.netloc
-        except KeyError:
+        except UnboundLocalError:
             pass  # If we dont have the info to generate links we want to silently fail
+        except KeyError:
+            pass
 
     def github_testlog_failure_link(self, test_log):
         """Generates a link to test case failure in GitHub
@@ -127,3 +129,16 @@ class LinkGenerationFacade(object):
         if re.match(r'unknown', value, re.IGNORECASE):
             raise KeyError
         return value
+
+    @classmethod
+    def github_range_link(cls, **kwargs):
+
+        # for Molecule repo of repos pattern
+        # TODO fix me
+        path = "/{}/{}/tree/{}/{}".format(kwargs['fork'],
+                                                      kwargs['molecule'],
+                                                      kwargs['branch'],
+                                                      kwargs['test_file'])
+
+        line = "L{}-L{}".format(kwargs['start_line'], kwargs['end_line'])
+        return urlunsplit(('https', 'github.com', path, '', line))

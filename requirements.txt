@@ -16,3 +16,5 @@ twine
 requests
 jinja2
 future
+gitpython
+astor

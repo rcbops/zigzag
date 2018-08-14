@@ -45,10 +45,10 @@ class ZigZag(object):
 
         self._utility_facade = UtilityFacade(self)
         parsing_facade = XmlParsingFacade(self)  # no need to attach this to self (mediator)
-        parsing_facade.parse()
+        #parsing_facade.parse()
         self._requirement_link_facade = RequirementsLinkFacade(self)
 
-    #  properties with only getters
+
     @property
     def qtest_api_token(self):
         """Gets the qTest API token
