@@ -266,11 +266,13 @@ class TestFailureOutputField(object):
         test_runs = multi_line_failure_message_for_asc.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r"E       assert 'Ubuntu 14\.04 LTS' in ''"
+        test_failure_msg_exp = """Log truncated, please see attached failure log for more details...
+E       assert 'Ubuntu 14.04 LTS' in ''
+E        +  where '' = CommandResult(command="lxc-attach -n `lxc-ls -1 | grep utility | head -n 1` --...ls is deprecated..."""     # noqa
 
         # Test
         assert len(test_runs) == 1
-        pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', test_failure_msg_exp)
 
     # noinspection PyUnresolvedReferences
     def test_truncated_failure_output_for_mk8s(self, multi_line_failure_message_for_mk8s):
@@ -283,8 +285,10 @@ class TestFailureOutputField(object):
         test_runs = multi_line_failure_message_for_mk8s.tests[0].qtest_test_runs
 
         # Expectations
-        test_failure_msg_regex_exp = r"E       docker\.errors\.APIError: 500 Server Error"
+        test_failure_msg_exp = """Log truncated, please see attached failure log for more details...
+>       raise cls(e, response=response, explanation=explanation)
+E       docker.errors.APIError: 500 Server Error: Internal Server Error ("Get https://registry.kubernetes-mk8s-t-inst-pr..."""  # noqa
 
         # Test
         assert len(test_runs) == 1
-        pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', test_failure_msg_exp)
