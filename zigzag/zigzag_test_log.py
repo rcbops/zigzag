@@ -31,9 +31,6 @@ class ZigZagTestLog(object):
             mediator (ZigZag): the mediator that stores shared data
         """
 
-        self._max_log_message_length = 100
-        self._max_log_message_length_notification = "... log truncated. Please see attached log file."
-
         self._exe_end_date = None
         self._exe_start_date = None
 
@@ -300,18 +297,13 @@ class ZigZagTestLog(object):
             self._status = 'FAILED'
 
             if self.test_run_failure_output_field_id is not None:
-                max_log_message_length = self._max_log_message_length
                 errors = self._testcase_xml.findall('error')
                 failures = self._testcase_xml.findall('failure')
                 possible_messages = errors + failures
                 message = "\n".join([element.text for element in possible_messages if element is not None])
-                self._full_failure_output = message
-                if len(message) > max_log_message_length:
-                    self._failure_output = message[:max_log_message_length] + \
-                        self._max_log_message_length_notification
-                else:
-                    self._failure_output = message
 
+                self._full_failure_output = message
+                self._failure_output = self._get_truncated_failure_output(message)
         elif self._testcase_xml.find('skipped') is not None:
             self._status = 'SKIPPED'
 
@@ -493,3 +485,30 @@ class ZigZagTestLog(object):
             cls._test_sha_field_id = \
                 UtilityFacade(mediator).find_custom_field_id_by_label('Test SHA', 'test-runs')
         return cls._test_sha_field_id
+
+    @classmethod
+    def _get_truncated_failure_output(cls, message):
+        """Process failure/error messages to produce a truncated version of the message for readability in the qTest
+        interface.
+
+        Args:
+            message (str): Message to process.
+
+        Returns:
+            str: Truncated failure message.
+        """
+
+        max_lines = 3
+        max_line_length = 120
+        msg_line_count = len(message.split('\n'))
+        # Throw out the useless last 2 lines of the message if over a certain length.
+        # Note: pytest failure messages follow a predictable pattern, hence why we can toss lines without inspection.
+        msg_lines = message.split('\n')[msg_line_count - (max_lines + 2):msg_line_count - 2] \
+            if msg_line_count > (max_lines + 2) else [message]
+        truncated_message = 'Log truncated, please see attached failure log for more details...\n' \
+            if len(msg_lines) == max_lines else ''
+
+        for line in msg_lines:
+            truncated_message += line + '\n' if len(line) <= max_line_length else line[:max_line_length] + '...\n'
+
+        return truncated_message.rstrip()
