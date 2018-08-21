@@ -208,9 +208,13 @@ class _ZigZagTestLog(object):
             log.properties.append(swagger_client.PropertyResource(field_id=field['id'],
                                                                   field_value=field['value']
                                                                   ))
-        if self.status == 'FAILED' and self.failure_link_field_id:
+        if self.failure_link_field_id:
+            if self.status == 'FAILED':
+                link = self.github_failure_link
+            else:
+                link = ''  # must be set to empty string so we dont get links on passing runs :(
             log.properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
-                                                                  field_value=self.github_failure_link))
+                                                                  field_value=link))
         # Attach SHA
         if self.test_sha_field_id and self.link_generation_facade.git_sha:
             log.properties.append(swagger_client.PropertyResource(field_id=self.test_sha_field_id,
