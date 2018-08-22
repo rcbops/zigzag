@@ -124,8 +124,8 @@ class XmlParsingFacade(object):
         """
 
         if ci_environment == 'asc':
-            return pkg_resources.resource_stream('pytest_rpc', 'data/molecule_junit.xsd')
+            return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')
         elif ci_environment == 'mk8s':
-            return pkg_resources.resource_stream('pytest_rpc', 'data/mk8s_junit.xsd')
+            return pkg_resources.resource_stream('zigzag', 'data/mk8s_junit.xsd')
         else:
             raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))
