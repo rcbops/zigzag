@@ -10,7 +10,6 @@ pytest-mock
 pytest-helpers-namespace
 ipython
 rpc-qtest-swagger-client
-pytest-rpc
 twine
 requests
 jinja2

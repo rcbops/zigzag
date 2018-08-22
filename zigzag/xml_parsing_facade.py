@@ -118,6 +118,9 @@ class XmlParsingFacade(object):
 
         Returns:
             io.BytesIO: A file like stream object.
+
+        Raises:
+            RuntimeError: 'Unknown ci-environment'
         """
 
         if ci_environment == 'asc':

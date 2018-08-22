@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <!--SIMPLE TYPES-->
-
     <xs:simpleType name="validTestcaseProperty">
         <xs:restriction base="xs:normalizedString">
+            <xs:enumeration value="test_step" />
             <xs:enumeration value="test_id" />
             <xs:enumeration value="jira" />
             <xs:enumeration value="start_time" />
@@ -41,9 +41,11 @@
         <xs:attribute name="value" type="xs:normalizedString" use="required" />
     </xs:complexType>
 
-    <!--Testcase properties element containing at least 3 sub-elements.-->
+    <!--Testcase properties element containing at least 4 sub-elements.-->
+    <!--Note: since sometimes either 'start_time' or 'end_time' might not be present because of setup/teardown
+    failure we allow one less than the five possible test case properties.-->
     <xs:complexType name="testCasePropertiesType">
-        <xs:sequence minOccurs="3" maxOccurs="unbounded">
+        <xs:sequence minOccurs="4" maxOccurs="unbounded">
             <xs:element name="property" type="testCasePropertyType" />
         </xs:sequence>
     </xs:complexType>
