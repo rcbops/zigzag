@@ -6,9 +6,9 @@
 
 from __future__ import absolute_import
 import os
-import pytest_rpc
 from lxml import etree
 from zigzag.zigzag_test_log import ZigZagTestLog
+import pkg_resources
 
 
 class XmlParsingFacade(object):
@@ -89,7 +89,7 @@ class XmlParsingFacade(object):
         """
 
         root_element = 'testsuite'
-        junit_xsd = pytest_rpc.get_xsd(self._mediator.ci_environment)
+        junit_xsd = self._get_xsd(self._mediator.ci_environment)
         file_path = self._mediator.junit_xml_file_path
 
         try:
@@ -109,3 +109,20 @@ class XmlParsingFacade(object):
         if self._mediator.junit_xml.tag != root_element:
             raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(
                 file_path, root_element))
+
+    def _get_xsd(self, ci_environment='asc'):
+        """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
+
+        Args:
+            ci_environment (str): the value found in the ci-environment global property from the XML
+
+        Returns:
+            io.BytesIO: A file like stream object.
+        """
+
+        if ci_environment == 'asc':
+            return pkg_resources.resource_stream('pytest_rpc', 'data/molecule_junit.xsd')
+        elif ci_environment == 'mk8s':
+            return pkg_resources.resource_stream('pytest_rpc', 'data/mk8s_junit.xsd')
+        else:
+            raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))
