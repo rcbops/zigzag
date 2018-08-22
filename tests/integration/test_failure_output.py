@@ -6,6 +6,7 @@
 # Imports
 # ======================================================================================================================
 import pytest
+from zigzag.zigzag_test_log import SWEET_UNICORN_GIF
 
 
 # ======================================================================================================================
@@ -187,9 +188,9 @@ class TestFailureOutputField(object):
         pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
 
     # noinspection PyUnresolvedReferences
-    def test_failure_output_after_state_change_for_asc(self, single_failing_test_for_asc):
-        """Verify the qTest 'Failure Output' test log field is populated with the correct message for a single test
-        failing from the "asc" CI environment.
+    def test_failure_behavior_after_state_change_for_asc(self, single_failing_test_for_asc):
+        """Verify the qTest 'Failure Output' and 'Failure Link' test log field is populated with the correct message
+        for a single test failing from the "asc" CI environment.
         """
 
         # Setup
@@ -198,10 +199,12 @@ class TestFailureOutputField(object):
 
         # Expectations
         test_failure_msg_regex_exp = r'Test execution state: failure'
+        test_failure_link_regex_exp = r'http.*'
 
         # Test
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
+        pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Link', test_failure_link_regex_exp)
 
         # Setup
         single_failing_test_for_asc.tests[0].state = 'passed'   # Change the state of the test to 'passed'
@@ -211,6 +214,7 @@ class TestFailureOutputField(object):
         # Test
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', '')
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', SWEET_UNICORN_GIF)
 
     # noinspection PyUnresolvedReferences
     def test_failure_output_for_mk8s(self, single_failing_test_for_mk8s):
@@ -230,9 +234,9 @@ class TestFailureOutputField(object):
         pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
 
     # noinspection PyUnresolvedReferences
-    def test_failure_output_after_state_change_for_mk8s(self, single_failing_test_for_mk8s):
-        """Verify the qTest 'Failure Output' test log field is populated with the correct message for a single test
-        failing from the "mk8s" CI environment.
+    def test_failure_behavior_after_state_change_for_mk8s(self, single_failing_test_for_mk8s):
+        """Verify the qTest 'Failure Output' and 'Failure Link' test log field is populated with the correct message
+        for a single test failing from the "mk8s" CI environment.
         """
 
         # Setup
@@ -241,10 +245,12 @@ class TestFailureOutputField(object):
 
         # Expectations
         test_failure_msg_regex_exp = r'Test execution state: failure'
+        test_failure_link_regex_exp = r'http.*'
 
         # Test
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
+        pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Link', test_failure_link_regex_exp)
 
         # Setup
         single_failing_test_for_mk8s.tests[0].state = 'passed'  # Change the state of the test to 'passed'
@@ -254,6 +260,7 @@ class TestFailureOutputField(object):
         # Test
         assert len(test_runs) == 1
         pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Output', '')
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', SWEET_UNICORN_GIF)
 
     # noinspection PyUnresolvedReferences
     def test_truncated_failure_output_for_asc(self, multi_line_failure_message_for_asc):

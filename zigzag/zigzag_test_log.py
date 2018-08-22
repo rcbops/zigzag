@@ -15,6 +15,8 @@ from zigzag.utility_facade import UtilityFacade
 from zigzag.link_generation_facade import LinkGenerationFacade
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
+SWEET_UNICORN_GIF = 'https://media.giphy.com/media/g6i1lEax9Pa24/giphy.gif'
+
 
 # ======================================================================================================================
 # Classes
@@ -209,10 +211,11 @@ class _ZigZagTestLog(object):
                                                                   field_value=field['value']
                                                                   ))
         if self.failure_link_field_id:
+            link = None
             if self.status == 'FAILED':
                 link = self.github_failure_link
-            else:
-                link = ''  # must be set to empty string so we dont get links on passing runs :(
+            if not link:
+                link = SWEET_UNICORN_GIF
             log.properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
                                                                   field_value=link))
         # Attach SHA
