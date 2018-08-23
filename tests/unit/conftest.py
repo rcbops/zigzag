@@ -51,8 +51,10 @@ DEFAULT_TESTCASE_PROPERTIES = \
 def merge_dicts(*args):
     """Given any number of dicts, shallow copy and merge into a new dict, precedence goes to key value pairs in latter
     dicts.
+
     Args:
         *args (list(dict)): A list of dictionaries to be merged.
+
     Returns:
         dict: A merged dictionary.
     """
@@ -101,9 +103,11 @@ def single_fail_xml(tmpdir_factory):
             name="test_fail[ansible://localhost]" time="0.00335693359375">
                 {testcase_properties}
                 <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
             def test_fail(host):
         &gt;       assert False
         E       assert False
+
         tests/test_default.py:18: AssertionError</failure>
             </testcase>
         </testsuite>
@@ -128,10 +132,12 @@ def single_error_xml(tmpdir_factory):
             name="test_error[ansible://localhost]" time="0.00208067893982">
                 {testcase_properties}
                 <error message="test setup failure">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
             @pytest.fixture
             def error_fixture(host):
         &gt;       raise RuntimeError(&apos;oops&apos;)
         E       RuntimeError: oops
+
         tests/test_default.py:10: RuntimeError</error>
             </testcase>
         </testsuite>
@@ -261,19 +267,23 @@ def flat_mix_status_xml(tmpdir_factory):
             name="test_fail[ansible://localhost]" time="0.00335693359375">
                 {testcase_properties}
                 <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
             def test_fail(host):
         &gt;       assert False
         E       assert False
+
         tests/test_default.py:18: AssertionError</failure>
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="20"
             name="test_error[ansible://localhost]" time="0.00208067893982">
                 {testcase_properties}
                 <error message="test setup failure">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
             @pytest.fixture
             def error_fixture(host):
         &gt;       raise RuntimeError(&apos;oops&apos;)
         E       RuntimeError: oops
+
         tests/test_default.py:10: RuntimeError</error>
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="24"

@@ -9,7 +9,6 @@ import swagger_client
 from hashlib import md5
 from zigzag.zigzag import ZigZag
 from swagger_client.rest import ApiException
-from tests.unit.conftest import merge_dicts
 import requests
 import json
 
@@ -446,9 +445,9 @@ class TestParseXMLtoTestLogs(object):
                         'default',
                         'test_for_acs-150',
                         'TestForRPC10PlusPostDeploymentQCProcess']
-        test_log_exp = merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name,
-                                                         'status': 'PASSED',
-                                                         'module_names': module_names})
+        test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name,
+                                                                        'status': 'PASSED',
+                                                                        'module_names': module_names})
 
         # Test
         for exp in test_log_exp:
@@ -514,10 +513,10 @@ class TestGenerateAutoRequest(object):
         auto_req_dict = zz._generate_auto_request().to_dict()
 
         # Expectation
-        test_logs_exp = [merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_pass', 'status': 'PASSED'}),
-                         merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_fail', 'status': 'FAILED'}),
-                         merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_error', 'status': 'FAILED'}),
-                         merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_skip', 'status': 'SKIPPED'})]
+        test_logs_exp = [pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_pass', 'status': 'PASSED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_fail', 'status': 'FAILED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_error', 'status': 'FAILED'}),
+                         pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': 'test_skip', 'status': 'SKIPPED'})]
 
         # Test
         for x in range(len(auto_req_dict['test_logs'])):
