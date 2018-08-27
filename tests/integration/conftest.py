@@ -1278,6 +1278,7 @@ class ZigZagRunner(object):
                     self._qtest_project_id,
                     self._qtest_root_test_cycle.name,
                     False)
+        zz.parse()
 
         self._last_invocation_queue_job_id = zz.upload_test_results()
 
