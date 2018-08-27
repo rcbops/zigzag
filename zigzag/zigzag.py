@@ -44,8 +44,7 @@ class ZigZag(object):
         self._junit_xml_doc = None
 
         self._utility_facade = UtilityFacade(self)
-        parsing_facade = XmlParsingFacade(self)  # no need to attach this to self (mediator)
-        parsing_facade.parse()
+        self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
 
     #  properties with only getters
@@ -259,3 +258,8 @@ class ZigZag(object):
         self._requirement_link_facade.link()
 
         return int(response.id)
+
+    def parse(self):
+        """Parse the xml"""
+        self._parsing_facade.parse() # this was moved from the init method
+

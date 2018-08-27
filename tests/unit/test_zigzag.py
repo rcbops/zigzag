@@ -55,6 +55,7 @@ class TestZigZag(object):
 
         # Setup
         zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Test
         assert 12345 == zz.qtest_project_id
@@ -86,6 +87,7 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Setup
         zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Expectations
         root_tag_atribute_exp = {'errors': '0',
@@ -110,7 +112,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag('/path/does/not/exist', TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag('/path/does/not/exist', TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_invalid_xml_content(self, bad_xml, mocker):
         """Verify that invalid XML file content raises an exception"""
@@ -123,7 +126,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(bad_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(bad_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_missing_junit_xml_root(self, bad_junit_root, mocker):
         """Verify that XML files missing the expected JUnitXML root element raises an exception"""
@@ -136,7 +140,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(bad_junit_root, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(bad_junit_root, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_missing_build_url_xml(self, missing_build_url_xml, mocker):
         """Verify that JUnitXML that is missing the test suite 'BUILD_URL' property element causes a RuntimeError."""
@@ -149,7 +154,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(missing_build_url_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(missing_build_url_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_missing_testcase_properties_xml(self, missing_testcase_properties_xml, mocker):
         """Verify that JUnitXML that is missing the test case 'properties' element causes a RuntimeError."""
@@ -162,7 +168,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(missing_testcase_properties_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(missing_testcase_properties_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_missing_test_id_xml(self, missing_test_id_xml, mocker):
         """Verify that JUnitXML that is missing the 'test_id' test case property causes a RuntimeError."""
@@ -175,7 +182,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_exceeds_max_file_size(self, flat_all_passing_xml, mocker):
         """Verify that XML files that exceed the max file size are rejected"""
@@ -191,7 +199,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz = ZigZag(flat_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+            zz.parse()
 
     def test_schema_violation_with_pprint_on_fail(self, missing_test_id_xml, mocker):
         """Verify that JUnitXML that violates the schema with 'pprint_on_fail' enabled with emit an error message with
@@ -208,7 +217,8 @@ class TestLoadingInputJunitXMLFile(object):
 
         # Test
         try:
-            ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE, pprint_on_fail=True)
+            zz = ZigZag(missing_test_id_xml, TOKEN, PROJECT_ID, TEST_CYCLE, pprint_on_fail=True)
+            zz.parse()
         except RuntimeError as e:
             assert error_msg_exp in str(e)
 
@@ -239,6 +249,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
@@ -272,6 +283,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(single_fail_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
@@ -305,6 +317,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(single_error_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
@@ -339,6 +352,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(single_skip_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log = zz.test_logs[0]
 
@@ -372,6 +386,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(suite_all_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_logs = zz.test_logs
 
@@ -400,6 +415,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
@@ -434,6 +450,7 @@ class TestParseXMLtoTestLogs(object):
 
         # Setup
         zz = ZigZag(classname_with_dashes_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         # noinspection PyUnresolvedReferences
         test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
@@ -471,6 +488,7 @@ class TestParseXMLtoTestLogs(object):
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
         # Setup
         zz = ZigZag(invalid_classname_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Test
         with pytest.raises(RuntimeError):
@@ -510,6 +528,7 @@ class TestGenerateAutoRequest(object):
 
         # Setup
         zz = ZigZag(flat_mix_status_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         auto_req_dict = zz._generate_auto_request().to_dict()
 
         # Expectation
@@ -559,6 +578,7 @@ class TestUploadTestResults(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Test
         response = zz.upload_test_results()
@@ -583,6 +603,7 @@ class TestUploadTestResults(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Test
         with pytest.raises(RuntimeError):
@@ -605,6 +626,7 @@ class TestUploadTestResults(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
 
         # Test
         with pytest.raises(RuntimeError):

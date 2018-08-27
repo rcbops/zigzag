@@ -95,6 +95,7 @@ class TestRequirementsLinkFacade(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         rlf = RequirementsLinkFacade(zz)
         log = zz.test_logs[0]
 
@@ -129,6 +130,7 @@ class TestRequirementsLinkFacade(object):
 
         # Setup
         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
         rlf = RequirementsLinkFacade(zz)
         log = zz.test_logs[0]
 
