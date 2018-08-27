@@ -261,5 +261,5 @@ class ZigZag(object):
 
     def parse(self):
         """Parse the xml"""
-        self._parsing_facade.parse() # this was moved from the init method
 
+        self._parsing_facade.parse()  # this was moved from the init method
