@@ -14,7 +14,6 @@ with open('HISTORY.rst') as history_file:
 requirements = ['Click>=6.0',
                 'lxml',
                 'rpc-qtest-swagger-client<10.0.0',
-                'pytest-rpc<1.0.0',
                 'requests',
                 'future']
 packages = ['zigzag']

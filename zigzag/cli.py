@@ -50,6 +50,7 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
                     qtest_test_cycle,
                     pprint_on_fail)
 
+        zz.parse()
         job_id = zz.upload_test_results()
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
         click.echo(click.style("\nSuccess!", fg='green'))

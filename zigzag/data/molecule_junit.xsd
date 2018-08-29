@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <!--SIMPLE TYPES-->
+    <xs:simpleType name="validTestcaseProperty">
+        <xs:restriction base="xs:normalizedString">
+            <xs:enumeration value="test_step" />
+            <xs:enumeration value="test_id" />
+            <xs:enumeration value="jira" />
+            <xs:enumeration value="start_time" />
+            <xs:enumeration value="end_time" />
+        </xs:restriction>
+    </xs:simpleType>
+    <!--SIMPLE TYPES-->
+
+    <!--Test case result information.-->
+    <xs:complexType name="resultType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="type" type="xs:normalizedString" />
+                <xs:attribute name="message" type="xs:normalizedString" />
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!--Global property element with required attributes.-->
+    <xs:complexType name="globalPropertyType">
+        <xs:attribute name="name" type="xs:normalizedString" use="required" />
+        <xs:attribute name="value" type="xs:normalizedString" use="required" />
+    </xs:complexType>
+
+    <!--Global properties element containing at least one sub-element.-->
+    <xs:complexType name="globalPropertiesType">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="property" type="globalPropertyType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--Testcase property element with required attributes.-->
+    <xs:complexType name="testCasePropertyType">
+        <xs:attribute name="name" type="validTestcaseProperty" use="required" />
+        <xs:attribute name="value" type="xs:normalizedString" use="required" />
+    </xs:complexType>
+
+    <!--Testcase properties element containing at least 4 sub-elements.-->
+    <!--Note: since sometimes either 'start_time' or 'end_time' might not be present because of setup/teardown
+    failure we allow one less than the five possible test case properties.-->
+    <xs:complexType name="testCasePropertiesType">
+        <xs:sequence minOccurs="4" maxOccurs="unbounded">
+            <xs:element name="property" type="testCasePropertyType" />
+        </xs:sequence>
+    </xs:complexType>
+
+    <!--Test case.-->
+    <xs:complexType name="testCaseType">
+        <xs:sequence>
+            <xs:element name="properties" type="testCasePropertiesType" />
+            <xs:element name="error" type="resultType" minOccurs="0" maxOccurs="unbounded" />
+            <xs:element name="skipped" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="failure" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-out" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:normalizedString" use="required"/>
+        <xs:attribute name="line" type="xs:integer" />
+        <xs:attribute name="file" type="xs:normalizedString" />
+        <xs:attribute name="assertions" type="xs:integer" />
+        <xs:attribute name="time" type="xs:decimal" />
+        <xs:attribute name="classname" type="xs:normalizedString" />
+        <xs:attribute name="status" type="xs:normalizedString" />
+    </xs:complexType>
+
+    <!--Test suite.-->
+    <xs:complexType name="testSuiteType">
+        <xs:sequence>
+            <xs:element name="system-out" type="xs:string" minOccurs="0" />
+            <xs:element name="system-err" type="xs:string" minOccurs="0" />
+            <xs:element name="properties" type="globalPropertiesType" />
+            <xs:element name="testcase" type="testCaseType" maxOccurs="unbounded" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:normalizedString" use="required" />
+        <xs:attribute name="hostname" type="xs:normalizedString" />
+        <xs:attribute name="package" type="xs:normalizedString" />
+        <xs:attribute name="id" type="xs:integer" />
+        <xs:attribute name="tests" type="xs:integer" />
+        <xs:attribute name="disabled" type="xs:integer" />
+        <xs:attribute name="errors" type="xs:integer" />
+        <xs:attribute name="failures" type="xs:integer" />
+        <xs:attribute name="skips" type="xs:integer" />
+        <xs:attribute name="time" type="xs:decimal" />
+        <xs:attribute name="timestamp" type="xs:dateTime" />
+    </xs:complexType>
+
+    <!--Test suites.-->
+    <xs:complexType name="testSuitesType">
+        <xs:sequence maxOccurs="unbounded">
+            <xs:element name="testsuite" type="testSuiteType" />
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:normalizedString" use="required" />
+        <xs:attribute name="time" type="xs:decimal" />
+        <xs:attribute name="tests" type="xs:integer" />
+        <xs:attribute name="failures" type="xs:integer" />
+        <xs:attribute name="disabled" type="xs:integer" />
+        <xs:attribute name="errors" type="xs:integer" />
+    </xs:complexType>
+    <!--END COMPLEX TYPES-->
+
+    <!--ELEMENTS-->
+    <!--These are the allowed root elements in the JUnitXML file.-->
+    <xs:element name="testsuite" type="testSuiteType" />
+    <xs:element name="testsuites" type="testSuitesType" />
+    <!--END ELEMENTS-->
+
+</xs:schema>
