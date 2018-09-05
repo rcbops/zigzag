@@ -27,15 +27,13 @@ class _ZigZagTestLog(object):
     _failure_link_field_id = 0
     _test_sha_field_id = 0
 
-    def __init__(self, testcase_xml, mediator, auto_parse=True, auto_lookup=True):
+    def __init__(self, testcase_xml, mediator, auto_parse=True):
         """Create a TestLog object.
 
         Args:
             testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
             mediator (ZigZag): The mediator that stores shared data.
             auto_parse (bool): Enable automatically parsing the incoming test case XML upon object instantiation.
-            auto_lookup (bool): Enable automatic lookup of qTest test case ID. (Requires 'auto_parse' to be enabled
-                if this flag is set to True)
         """
 
         self._exe_end_date = None
@@ -61,8 +59,6 @@ class _ZigZagTestLog(object):
 
         if auto_parse:
             self._parse()
-            if auto_lookup:
-                self._lookup_ids()
 
     @property
     def name(self):
@@ -550,7 +546,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
         """
 
         # Initialize without parsing so we can post-process the test steps.
-        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator, auto_parse=False, auto_lookup=False)
+        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator, auto_parse=False)
 
         self._name = testcase_name
         self._teststeps_xml = teststeps_xml
@@ -600,7 +596,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
 
         # Convert the test steps into test logs for easier post-processing.
         self._zz_test_step_logs = \
-            [_ZigZagTestLog(ts_xml, self._mediator, auto_lookup=False) for ts_xml in self._teststeps_xml]
+            [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
         self._status = 'SKIPPED'
 
         for zz_test_step_log, order in zip(self._zz_test_step_logs, range(len(self._zz_test_step_logs))):

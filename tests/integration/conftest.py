@@ -216,3 +216,31 @@ def mixed_status_tests_for_mk8s(_zigzag_runner_factory):
         zz_runner.add_test_case(state)
 
     return zz_runner
+
+
+@pytest.fixture(scope='session')
+def single_passing_test_step_for_asc(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "asc" CI environment with a test case containing one passing test step.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_passing_test_step_for_asc.xml', 'asc')
+    zz_runner.add_test_case('passed', test_steps=[{'state': 'passed'}])
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def single_passing_test_step_for_mk8s(_zigzag_runner_factory):
+    """ZigZag CLI runner configured for the "mk8s" CI environment with a test case containing one passing test step.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_passing_test_step_for_mk8s.xml', 'mk8s')
+    zz_runner.add_test_case('passed', test_steps=[{'state': 'passed'}])
+
+    return zz_runner
