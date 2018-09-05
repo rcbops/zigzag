@@ -19,12 +19,13 @@ class ZigZag(object):
         subsystems and sub Facades.
 
         Args:
-           junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
-           qtest_api_token (str): Token to use for authorization to the qTest API.
-           qtest_project_id (int): The target qTest project for the test results.
-           qtest_test_cycle (str): The parent qTest test cycle for test results. (e.g. Product Release codename "Queens")
-           pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
-        """  # noqa
+            junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
+            qtest_api_token (str): Token to use for authorization to the qTest API.
+            qtest_project_id (int): The target qTest project for the test results.
+            qtest_test_cycle (str): The parent qTest test cycle for test results.
+                (e.g. Product Release codename "Queens")
+            pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
+        """
 
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
         self._qtest_api_token = qtest_api_token
@@ -48,6 +49,16 @@ class ZigZag(object):
         self._requirement_link_facade = RequirementsLinkFacade(self)
 
     #  properties with only getters
+    @property
+    def utility_facade(self):
+        """Gets the attached utility facade.
+
+        Returns:
+            UtilityFacade
+        """
+
+        return self._utility_facade
+
     @property
     def qtest_api_token(self):
         """Gets the qTest API token
@@ -98,15 +109,6 @@ class ZigZag(object):
             bool: If zigzag should pprint
         """
         return self._pprint_on_fail
-
-    @property
-    def test_logs(self):
-        """Gets the test log objects
-
-        Returns:
-            list(TestLog): A list of TestLog objects
-        """
-        return self._test_logs
 
     #  properties with setters and getters
     @property
@@ -204,12 +206,30 @@ class ZigZag(object):
         Returns:
             str: the configured ci_environment
         """
+
         return self._ci_environment
 
     @ci_environment.setter
     def ci_environment(self, value):
         """Sets the configured ci_environment"""
+
         self._ci_environment = value
+
+    @property
+    def test_logs(self):
+        """Gets the test log objects.
+
+        Returns:
+            zigzag.zigzag_test_log.ZigZagTestLogs: A sequence object containing of ZigZagTestLog objects
+        """
+
+        return self._test_logs
+
+    @test_logs.setter
+    def test_logs(self, value):
+        """Set the test log objects."""
+
+        self._test_logs = value
 
     def _generate_auto_request(self):
         """Construct a qTest swagger model for a JUnitXML test run result. (Called an "automation request" in
@@ -236,7 +256,7 @@ class ZigZag(object):
 
         Raises:
             RuntimeError: Failed to upload test results to qTest Manager.
-        """  # noqa
+        """
 
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()
