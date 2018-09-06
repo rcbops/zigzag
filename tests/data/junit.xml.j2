@@ -13,9 +13,9 @@ time="{{ tests.total_duration }}">
     </properties>
 {% for test in tests %}
     <testcase
-    classname="{{ test.class_name or 'tests.test_default' }}"
-    file="{{ test.file_path or 'tests/test_default.py' }}"
-    line="{{ test.line or '1' }}"
+    classname="{{ test.class_name }}"
+    file="{{ test.file_path }}"
+    line="{{ test.line|string }}"
     name="{{ test.name }}"
     time="{{ test.duration }}">
         <properties>
@@ -23,6 +23,7 @@ time="{{ tests.total_duration }}">
             <property name="jira" value="{{ jira_ticket }}"/>
         {% endfor %}
             <property name="test_id" value="{{ test.test_id }}"/>
+            <property name="test_step" value="{{ test.is_test_step|string|lower }}"/>
             <property name="start_time" value="{{ test.start_time }}"/>
             <property name="end_time" value="{{ test.end_time }}"/>
         </properties>

@@ -1,16 +1,16 @@
 -c constraints.txt
-lxml
-click
 bumpversion
+click
 flake8
-tox
+future
+ipython
+jinja2
+lxml
 pytest
 pytest-cov
-pytest-mock
 pytest-helpers-namespace
-ipython
-rpc-qtest-swagger-client
-twine
+pytest-mock
 requests
-jinja2
-future
+rpc-qtest-swagger-client
+tox
+twine

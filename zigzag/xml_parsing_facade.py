@@ -3,12 +3,11 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-
 from __future__ import absolute_import
 import os
-from lxml import etree
-from zigzag.zigzag_test_log import ZigZagTestLog
 import pkg_resources
+from lxml import etree
+from zigzag.zigzag_test_log import ZigZagTestLogs
 
 
 class XmlParsingFacade(object):
@@ -31,20 +30,23 @@ class XmlParsingFacade(object):
         sets the property 'build_url' on the mediator
         sets the property 'build_number' on the mediator
         """
+
         self._read()
         self._determine_ci_environment()
         self._validate()
-        self._mediator.testsuite_props = {
-            p.attrib['name']: p.attrib['value'] for p in self._mediator.junit_xml.findall('./properties/property')}
-        self._mediator.serialized_junit_xml = etree.tostring(
-            self._mediator.junit_xml, encoding='UTF-8', xml_declaration=True)
+        self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
+                                          for p in self._mediator.junit_xml.findall('./properties/property')}
+        self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
+                                                             encoding='UTF-8',
+                                                             xml_declaration=True)
+
         try:
             self._mediator.build_url = self._mediator.testsuite_props['BUILD_URL']
             self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
         except KeyError as e:
             raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
-        for testcase_xml in self._mediator.junit_xml.findall('testcase'):
-            ZigZagTestLog(testcase_xml, self._mediator)  # new test logs attach themselves to the mediator
+
+        ZigZagTestLogs(self._mediator)  # new test logs attach themselves to the mediator
 
     def _determine_ci_environment(self):
         """Determines the ci-environment that was used to create the junit xml file"""
@@ -110,7 +112,8 @@ class XmlParsingFacade(object):
             raise RuntimeError("The file '{}' does not have JUnitXML '{}' root element!".format(
                 file_path, root_element))
 
-    def _get_xsd(self, ci_environment='asc'):
+    @staticmethod
+    def _get_xsd(ci_environment='asc'):
         """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
 
         Args:

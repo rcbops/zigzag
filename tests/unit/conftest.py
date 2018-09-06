@@ -6,42 +6,6 @@
 import pytest
 pytest_plugins = ['helpers_namespace']
 
-# ======================================================================================================================
-# Globals
-# ======================================================================================================================
-DEFAULT_GLOBAL_PROPERTIES = \
-    """
-            <properties>
-                <property name="BUILD_URL" value="https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/"/>
-                <property name="BUILD_NUMBER" value="78"/>
-                <property name="RE_JOB_ACTION" value="system"/>
-                <property name="RE_JOB_IMAGE" value="xenial_mnaio_no_artifacts"/>
-                <property name="RE_JOB_SCENARIO" value="swift"/>
-                <property name="RE_JOB_BRANCH" value="pike-rc"/>
-                <property name="RPC_RELEASE" value="r16.2.0"/>
-                <property name="RPC_PRODUCT_RELEASE" value="pike"/>
-                <property name="OS_ARTIFACT_SHA" value="Unknown"/>
-                <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
-                <property name="APT_ARTIFACT_SHA" value="Unknown"/>
-                <property name="REPO_URL" value="https://github.com/rcbops/rpc-openstack"/>
-                <property name="JOB_NAME" value="PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system"/>
-                <property name="MOLECULE_TEST_REPO" value="molecule-validate-neutron-deploy"/>
-                <property name="MOLECULE_SCENARIO_NAME" value="default"/>
-                <property name="ci-environment" value="asc"/>
-            </properties>
-    """  # noqa
-
-DEFAULT_TESTCASE_PROPERTIES = \
-    """
-                <properties>
-                    <property name="jira" value="ASC-123"/>
-                    <property name="jira" value="ASC-456"/>
-                    <property name="test_id" value="1"/>
-                    <property name="start_time" value="2018-04-10T21:38:18Z"/>
-                    <property name="end_time" value="2018-04-10T21:38:19Z"/>
-                </properties>
-    """
-
 
 # ======================================================================================================================
 # Helpers
@@ -65,11 +29,71 @@ def merge_dicts(*args):
     return result
 
 
+# noinspection PyUnresolvedReferences
+@pytest.helpers.register
+def is_sub_dict(small, big):
+    """Determine if one dictionary is a subset of another dictionary.
+
+    Args:
+        small (dict): A dictionary that is proposed to be a subset of another dictionary.
+        big (dict): A dictionary that is a superset of another dictionary.
+
+    Returns:
+        bool: A bool indicating if the small dictionary is in fact a sub-dictionary of big
+    """
+
+    return dict(big, **small) == big
+
+
 # ======================================================================================================================
 # Fixtures
 # ======================================================================================================================
 @pytest.fixture(scope='session')
-def single_passing_xml(tmpdir_factory):
+def default_global_properties():
+    """Default global properties which can be used to construct valid JUnitXML documents."""
+
+    return \
+        """
+                <properties>
+                    <property name="BUILD_URL" value="https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/"/>
+                    <property name="BUILD_NUMBER" value="78"/>
+                    <property name="RE_JOB_ACTION" value="system"/>
+                    <property name="RE_JOB_IMAGE" value="xenial_mnaio_no_artifacts"/>
+                    <property name="RE_JOB_SCENARIO" value="swift"/>
+                    <property name="RE_JOB_BRANCH" value="pike-rc"/>
+                    <property name="RPC_RELEASE" value="r16.2.0"/>
+                    <property name="RPC_PRODUCT_RELEASE" value="pike"/>
+                    <property name="OS_ARTIFACT_SHA" value="Unknown"/>
+                    <property name="PYTHON_ARTIFACT_SHA" value="Unknown"/>
+                    <property name="APT_ARTIFACT_SHA" value="Unknown"/>
+                    <property name="REPO_URL" value="https://github.com/rcbops/rpc-openstack"/>
+                    <property name="JOB_NAME" value="PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system"/>
+                    <property name="MOLECULE_TEST_REPO" value="molecule-validate-neutron-deploy"/>
+                    <property name="MOLECULE_SCENARIO_NAME" value="default"/>
+                    <property name="ci-environment" value="asc"/>
+                </properties>
+        """  # noqa
+
+
+@pytest.fixture(scope='session')
+def default_testcase_properties():
+    """Default test case properties which can be used to construct valid JUnitXML documents."""
+
+    return \
+        """
+                    <properties>
+                        <property name="jira" value="ASC-123"/>
+                        <property name="jira" value="ASC-456"/>
+                        <property name="test_id" value="1"/>
+                        <property name="test_step" value="false"/>
+                        <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                        <property name="end_time" value="2018-04-10T21:38:19Z"/>
+                    </properties>
+        """
+
+
+@pytest.fixture(scope='session')
+def single_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a single passing test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
@@ -82,7 +106,7 @@ def single_passing_xml(tmpdir_factory):
                 {testcase_properties}
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -91,7 +115,7 @@ def single_passing_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def single_fail_xml(tmpdir_factory):
+def single_fail_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a single failing test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_fail.xml').strpath
@@ -111,7 +135,7 @@ def single_fail_xml(tmpdir_factory):
         tests/test_default.py:18: AssertionError</failure>
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -120,7 +144,7 @@ def single_fail_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def single_error_xml(tmpdir_factory):
+def single_error_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a single erroring test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_error.xml').strpath
@@ -141,7 +165,7 @@ def single_error_xml(tmpdir_factory):
         tests/test_default.py:10: RuntimeError</error>
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -150,7 +174,7 @@ def single_error_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def single_skip_xml(tmpdir_factory):
+def single_skip_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a single skipping test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_skip.xml').strpath
@@ -166,7 +190,7 @@ def single_skip_xml(tmpdir_factory):
                 </skipped>
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -175,7 +199,7 @@ def single_skip_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def flat_all_passing_xml(tmpdir_factory):
+def flat_all_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing multiple passing test cases."""
 
     filename = tmpdir_factory.mktemp('data').join('flat_all_passing.xml').strpath
@@ -204,7 +228,7 @@ def flat_all_passing_xml(tmpdir_factory):
                 {testcase_properties}
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -213,7 +237,7 @@ def flat_all_passing_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def suite_all_passing_xml(tmpdir_factory):
+def suite_all_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing multiple passing test cases in a test suite. (Tests within a Python class)"""
 
     filename = tmpdir_factory.mktemp('data').join('suite_all_passing.xml').strpath
@@ -242,7 +266,7 @@ def suite_all_passing_xml(tmpdir_factory):
                 {testcase_properties}
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -251,7 +275,7 @@ def suite_all_passing_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def flat_mix_status_xml(tmpdir_factory):
+def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing mixed status for multiple test cases."""
 
     filename = tmpdir_factory.mktemp('data').join('flat_mix_status.xml').strpath
@@ -294,7 +318,7 @@ def flat_mix_status_xml(tmpdir_factory):
                 </skipped>
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -333,7 +357,7 @@ def bad_junit_root(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def missing_testcase_properties_xml(tmpdir_factory):
+def missing_testcase_properties_xml(tmpdir_factory, default_global_properties):
     """JUnitXML sample representing a test case that is missing the test case "properties" element."""
 
     filename = tmpdir_factory.mktemp('data').join('missing_testcase_properties.xml').strpath
@@ -344,7 +368,7 @@ def missing_testcase_properties_xml(tmpdir_factory):
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852"/>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -353,7 +377,7 @@ def missing_testcase_properties_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def missing_test_id_xml(tmpdir_factory):
+def missing_test_id_xml(tmpdir_factory, default_global_properties):
     """JUnitXML sample representing a test case that has a missing test id property element."""
 
     filename = tmpdir_factory.mktemp('data').join('missing_test_id.xml').strpath
@@ -369,7 +393,7 @@ def missing_test_id_xml(tmpdir_factory):
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -378,7 +402,7 @@ def missing_test_id_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def missing_build_url_xml(tmpdir_factory):
+def missing_build_url_xml(tmpdir_factory, default_testcase_properties):
     """JUnitXML sample representing a test suite that is missing the "BUILD_URL" property."""
 
     filename = tmpdir_factory.mktemp('data').join('missing_build_url.xml').strpath
@@ -403,7 +427,7 @@ def missing_build_url_xml(tmpdir_factory):
             name="test_pass[ansible://localhost]" time="0.00372695922852"/>
                 {testcase_properties}
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -412,7 +436,7 @@ def missing_build_url_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def classname_with_dashes_xml(tmpdir_factory):
+def classname_with_dashes_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a testcase that has a 'classname' attribute which contains dashes for the py.test
     filename."""
 
@@ -427,7 +451,7 @@ def classname_with_dashes_xml(tmpdir_factory):
                 {testcase_properties}
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -436,7 +460,7 @@ def classname_with_dashes_xml(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def invalid_classname_xml(tmpdir_factory):
+def invalid_classname_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """JUnitXML sample representing a testcase that has an invalid 'classname' attribute which is used to build the
     results hierarchy in the '_generate_module_hierarchy' function."""
 
@@ -450,7 +474,7 @@ def invalid_classname_xml(tmpdir_factory):
                 {testcase_properties}
             </testcase>
         </testsuite>
-        """.format(global_properties=DEFAULT_GLOBAL_PROPERTIES, testcase_properties=DEFAULT_TESTCASE_PROPERTIES)
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)

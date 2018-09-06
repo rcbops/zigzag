@@ -4,6 +4,7 @@
 # Imports
 # ======================================================================================================================
 from __future__ import absolute_import
+import re
 import swagger_client
 from swagger_client.rest import ApiException
 
@@ -17,8 +18,22 @@ class UtilityFacade(object):
         Args:
             mediator (ZigZag): the mediator that stores shared data
         """
+
         self._mediator = mediator
         self._field_api = swagger_client.FieldApi()
+
+        self._testcase_group_rgx = re.compile(r'tests\.(test_[\w-]+)\.?(Test\w+)?$')
+
+    @property
+    def testcase_group_rgx(self):
+        """A compiled regular expression for extracting the test module and class. (Only grabs the class if the user
+        made a test suite using a Python class)
+
+        Returns:
+            re.RegexObject
+        """
+
+        return self._testcase_group_rgx
 
     def find_custom_field_id_by_label(self, field_name, object_type):
         """Find a custom field id by its label

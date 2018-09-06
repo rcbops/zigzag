@@ -422,7 +422,7 @@ class TestParseXMLtoTestLogs(object):
         # Expectation
         attachment_exp_name_regex = re.compile(r'^junit_.+\.xml$')
         attachment_exp_content_type = 'application/xml'
-        attachment_exp_data_md5 = 'a8edcd76851bcaab8ad3546cacd8d1ff'
+        attachment_exp_data_md5 = '4128ed80ee5728281c987bc251551ad4'
 
         # Test
         assert attachment_exp_name_regex.match(test_log_dict['attachments'][0]['name']) is not None

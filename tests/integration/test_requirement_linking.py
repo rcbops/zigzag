@@ -29,6 +29,23 @@ class TestRequirementLinking(object):
 
         mixed_status_tests_for_asc.tests.assert_requirements_linked()
 
+    def test_steps_with_requirement_link_for_asc(self, single_passing_test_step_for_asc):
+        """Verify the qTest test cases containing test steps can be linked to requirements using the "asc" CI
+        environment.
+        """
+
+        # Setup
+        single_passing_test_step_for_asc.tests.assert_requirements_exist()
+
+        # Test
+        single_passing_test_step_for_asc.assert_invoke_zigzag()
+
+        # Re-run ZigZag because requirement linking is eventually consistent and a second run guarantees ZigZag will
+        # link all the test cases.
+        single_passing_test_step_for_asc.assert_invoke_zigzag(force_clean_up=False)
+
+        single_passing_test_step_for_asc.tests.assert_requirements_linked()
+
     def test_missing_link_for_asc(self, single_passing_test_for_asc):
         """Verify that links will not be created for requirements that don't exist using the "asc" CI environment."""
 
@@ -60,6 +77,23 @@ class TestRequirementLinking(object):
         mixed_status_tests_for_mk8s.assert_invoke_zigzag(force_clean_up=False)
 
         mixed_status_tests_for_mk8s.tests.assert_requirements_linked()
+
+    def test_steps_with_requirement_link_for_mk8s(self, single_passing_test_step_for_mk8s):
+        """Verify the qTest test cases containing test steps can be linked to requirements using the "mk8s" CI
+        environment.
+        """
+
+        # Setup
+        single_passing_test_step_for_mk8s.tests.assert_requirements_exist()
+
+        # Test
+        single_passing_test_step_for_mk8s.assert_invoke_zigzag()
+
+        # Re-run ZigZag because requirement linking is eventually consistent and a second run guarantees ZigZag will
+        # link all the test cases.
+        single_passing_test_step_for_mk8s.assert_invoke_zigzag(force_clean_up=False)
+
+        single_passing_test_step_for_mk8s.tests.assert_requirements_linked()
 
     def test_missing_link_for_mk8s(self, single_passing_test_for_mk8s):
         """Verify that links will not be created for requirements that don't exist using the "mk8s" CI environment."""

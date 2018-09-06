@@ -4,18 +4,22 @@
 # Imports
 # ======================================================================================================================
 from __future__ import absolute_import
+import re
+import json
+import requests
 import swagger_client
 from base64 import b64encode
 from datetime import datetime
-import re
+from future.moves.collections import Sequence
 from zigzag.utility_facade import UtilityFacade
-import requests
-import json
-from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from zigzag.link_generation_facade import LinkGenerationFacade
+from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 
-class ZigZagTestLog(object):
+# ======================================================================================================================
+# Classes
+# ======================================================================================================================
+class _ZigZagTestLog(object):
 
     _TESTCASE_NAME_RGX = re.compile(r'(^[\w-]+)')
     _test_run_failure_output_field_id = 0
@@ -23,12 +27,13 @@ class ZigZagTestLog(object):
     _failure_link_field_id = 0
     _test_sha_field_id = 0
 
-    def __init__(self, testcase_xml, mediator):
-        """Create a TestLog object
+    def __init__(self, testcase_xml, mediator, auto_parse=True):
+        """Create a TestLog object.
 
         Args:
             testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
-            mediator (ZigZag): the mediator that stores shared data
+            mediator (ZigZag): The mediator that stores shared data.
+            auto_parse (bool): Enable automatically parsing the incoming test case XML upon object instantiation.
         """
 
         self._exe_end_date = None
@@ -36,19 +41,24 @@ class ZigZagTestLog(object):
 
         self._testcase_xml = testcase_xml
         self._mediator = mediator
-        self._module_hierarchy_facade = ModuleHierarchyFacade(testcase_xml, mediator)
+        self._module_hierarchy_facade = None
 
         # this is data that will be collected from qTest
         self._qtest_requirements = []
-        self._jira_issues = []
         self._qtest_testcase_id = None
 
+        self._status = ''
+        self._test_file = ''
+        self._classname = ''
         self._failure_output = ''  # hard code this to empty string
-        self._full_failure_output = ''
         self._def_line_number = ''
-        self._parse()
-        self._lookup_ids()
-        self._mediator.test_logs.append(self)
+        self._automation_content = ''
+        self._full_failure_output = ''
+
+        self._jira_issues = []
+
+        if auto_parse:
+            self._parse()
 
     @property
     def name(self):
@@ -173,6 +183,10 @@ class ZigZagTestLog(object):
         Raises:
             RuntimeError: the testcase 'classname' attribute is invalid
         """
+
+        if not self._module_hierarchy_facade:
+            self._module_hierarchy_facade = ModuleHierarchyFacade(self._classname, self._mediator)
+
         return self._module_hierarchy_facade.get_module_hierarchy()
 
     @property
@@ -180,8 +194,9 @@ class ZigZagTestLog(object):
         """Gets a qTest AutomationTestLogResource
 
         Returns:
-            AutomationTestLogResource: a qTest swagger client object
+            swagger_client.AutomationTestLogResource
         """
+
         date_time_now = datetime.utcnow()
         log = swagger_client.AutomationTestLogResource()
         log.properties = [
@@ -288,9 +303,14 @@ class ZigZagTestLog(object):
         return self._get_test_sha_field_id(self._mediator)
 
     def _parse(self):
-        """Parse the _testcase_xml"""
+        """Parse the _testcase_xml
+
+        Raises:
+            RuntimeError: Test case missing required property.
+        """
 
         self._status = 'PASSED'
+        self._classname = self._testcase_xml.attrib['classname']
 
         all_failures = self._testcase_xml.findall('failure') + self._testcase_xml.findall('error')
         if len(all_failures):
@@ -308,7 +328,7 @@ class ZigZagTestLog(object):
             self._status = 'SKIPPED'
 
         try:  # Required
-            self._name = ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
+            self._name = _ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
             self._automation_content = self._find_property('test_id')
             self._jira_issues = \
                 [jira.get('value') for jira in self._testcase_xml.findall("./properties/property/[@name='jira']")]
@@ -512,3 +532,190 @@ class ZigZagTestLog(object):
             truncated_message += line + '\n' if len(line) <= max_line_length else line[:max_line_length] + '...\n'
 
         return truncated_message.rstrip()
+
+
+class _ZigZagTestLogWithSteps(_ZigZagTestLog):
+    def __init__(self, testcase_name, teststeps_xml, mediator):
+        """Create a TestLog object that contains steps.
+
+        Args:
+            testcase_name (str): The name of the test case.
+            teststeps_xml (list(ElementTree)): A list of JUnit style testcase XML elements representing test steps for
+                a single qTest test log.
+            mediator (ZigZag): The mediator that stores shared data.
+        """
+
+        # Initialize without parsing so we can post-process the test steps.
+        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator, auto_parse=False)
+
+        self._name = testcase_name
+        self._teststeps_xml = teststeps_xml
+        self._zz_test_step_logs = []
+        self._qtest_test_step_logs = []
+
+        self._parse()
+
+    @property
+    def qtest_test_log(self):
+        """Gets a qTest AutomationTestLogResource
+
+        Returns:
+            swagger_client.AutomationTestLogResource
+        """
+
+        log = super(_ZigZagTestLogWithSteps, self).qtest_test_log
+        log.test_step_logs = self._qtest_test_step_logs
+
+        return log
+
+    def _parse(self):
+        """Parse the _testcase_xml
+
+        Raises:
+            RuntimeError: Test case missing required property.
+        """
+
+        self._process_test_steps_xml()
+
+        self._exe_start_date = self._zz_test_step_logs[0].start_date   # Start of first step
+        self._exe_end_date = self._zz_test_step_logs[-1].end_date   # End of last step
+        self._test_file = self._zz_test_step_logs[0].test_file  # All steps have the same file so just pick the first
+        self._def_line_number = self._zz_test_step_logs[0].def_line_number  # Pick line number of first step
+        self._automation_content = self._zz_test_step_logs[0].automation_content  # All steps have the same 'test_id'
+        self._jira_issues = self._zz_test_step_logs[0].jira_issues  # All steps have the same 'jira' issues
+
+        # Get tricky with the classname by reading the first step and stripping the test name.
+        self._classname = self._teststeps_xml[0].attrib['classname'].replace(".{}".format(self.name), '')
+
+    def _process_test_steps_xml(self):
+        """Process the test steps XML elements into qtest AutomationTestStepLog objects.
+
+        Raises:
+            RuntimeError: Test case missing required property.
+        """
+
+        # Convert the test steps into test logs for easier post-processing.
+        self._zz_test_step_logs = \
+            [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
+        self._status = 'SKIPPED'
+
+        for zz_test_step_log, order in zip(self._zz_test_step_logs, range(len(self._zz_test_step_logs))):
+            qtest_test_step_log = swagger_client.AutomationTestStepLog()
+            qtest_test_step_log.order = order
+            qtest_test_step_log.description = zz_test_step_log.name
+            qtest_test_step_log.status = zz_test_step_log.status
+            qtest_test_step_log.attachments = []
+            qtest_test_step_log.expected_result = 'pass'
+            qtest_test_step_log.actual_result = zz_test_step_log.failure_output \
+                if zz_test_step_log.status == 'FAILED' else qtest_test_step_log.status
+
+            if zz_test_step_log.status == 'FAILED':
+                qtest_test_step_log.attachments.append(zz_test_step_log.qtest_test_log.attachments[1])  # Failure log
+                self._failure_output = zz_test_step_log.failure_output
+                self._full_failure_output = zz_test_step_log.full_failure_output
+                self._status = 'FAILED'
+            elif zz_test_step_log.status == 'PASSED' and self._status != 'FAILED':
+                self._status = 'PASSED'
+
+            self._qtest_test_step_logs.append(qtest_test_step_log)
+
+
+class ZigZagTestLogs(Sequence):
+    def __init__(self, mediator):
+        """Create test logs.
+
+        Args:
+            mediator (ZigZag): The mediator that stores shared data.
+        """
+
+        self._mediator = mediator
+        self._test_logs = []
+
+        self._parse_test_cases_with_steps()
+        self._parse_test_cases_without_steps()
+
+        self._mediator.test_logs = self
+
+    def count(self, value):
+        """Return the number of times x appears in the list.
+
+        Args:
+            value (object): Desired value to search for within the list.
+
+        Returns:
+            int: number of times 'value' appears in the list.
+        """
+
+        return self._test_logs.count(value)
+
+    def index(self, value, start=None, stop=None):
+        """Return zero-based index in the list of the first item whose value is equal to 'value'.
+
+        The optional arguments start and stop are interpreted as in the slice notation and are used to limit the search
+        to a particular subsequence of the list. The returned index is computed relative to the beginning of the full
+        sequence rather than the start argument.
+
+        Args:
+            value (object): Desired value to search for within the list.
+            start (int): Starting slice index. (Optional)
+            stop (int): Ending slice index. (Optional)
+
+        Returns:
+            int: Zero-based index in the list of the first item whose value is equal to 'value'
+
+        Raises:
+            ValueError: No such value exists in collection.
+        """
+
+        return self._test_logs.index(value, start, stop)
+
+    def __reversed__(self):
+        """Sequence ABC override."""
+
+        return self._test_logs.__reversed__()
+
+    def __contains__(self, item):
+        """Sequence ABC override."""
+
+        return self._test_logs.__contains__(item)
+
+    def __getitem__(self, key):
+        """Sequence ABC override."""
+
+        return self._test_logs.__getitem__(key)
+
+    def __iter__(self):
+        """Sequence ABC override."""
+
+        return iter(self._test_logs)
+
+    def __len__(self):
+        """Sequence ABC override."""
+
+        return len(self._test_logs)
+
+    def _parse_test_cases_with_steps(self):
+        """Parse the JUnitXML for test cases that are marked as steps."""
+
+        tc_group_rgx = self._mediator.utility_facade.testcase_group_rgx
+        testcases_with_steps_xpath = ".//property/[@name='test_step'][@value='true']/../.."
+        testcases_with_steps_xml = {}
+
+        for testcase_xml in self._mediator.junit_xml.findall(testcases_with_steps_xpath):
+            tc_name = tc_group_rgx.search(testcase_xml.attrib['classname']).group(2)
+
+            if tc_name in testcases_with_steps_xml:
+                testcases_with_steps_xml[tc_name].append(testcase_xml)
+            else:
+                testcases_with_steps_xml[tc_name] = [testcase_xml]
+
+        for tc_name in testcases_with_steps_xml:
+            self._test_logs.append(_ZigZagTestLogWithSteps(tc_name, testcases_with_steps_xml[tc_name], self._mediator))
+
+    def _parse_test_cases_without_steps(self):
+        """Parse the JUnitXML for test cases that are NOT marked as steps."""
+
+        testcase_xpath = ".//property/[@name='test_step'][@value='false']/../.."
+
+        for testcase_xml in self._mediator.junit_xml.findall(testcase_xpath):
+            self._test_logs.append(_ZigZagTestLog(testcase_xml, self._mediator))
