@@ -194,7 +194,7 @@ class TestLinkGenerationFacade(object):
                                                 LINE_NUMBER))
 
     def test_mk8s_missing_data(self, mocker):
-        """Failure link should be 'Unknown' when it cant be calculated"""
+        """Failure link should be None when it cant be calculated"""
         zz = mocker.MagicMock()
         zz.ci_environment = 'mk8s'
         zz.testsuite_props = {}
@@ -206,10 +206,10 @@ class TestLinkGenerationFacade(object):
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
-        assert failure_link == 'Unknown'
+        assert failure_link is None
 
     def test_asc_missing_data(self, mocker):
-        """Failure link should be 'Unknown' when it cant be calculated"""
+        """Failure link should be None when it cant be calculated"""
         zz = mocker.MagicMock()
         zz.ci_environment = 'asc'
         zz.testsuite_props = {}
@@ -221,7 +221,7 @@ class TestLinkGenerationFacade(object):
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
-        assert failure_link == 'Unknown'
+        assert failure_link is None
 
     def test_mk8s_pr_testing(self, mocker):
         """Validate when configured with mk8s as ci-environment testing a PR"""

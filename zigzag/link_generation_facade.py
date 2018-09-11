@@ -78,7 +78,7 @@ class LinkGenerationFacade(object):
                 line = "L{}".format(line)
             return urlunsplit((self._scheme, self._netloc, path, '', line))
         except AttributeError:
-            return 'Unknown'  # If we ask for the failure link and can't determine it we will supply 'Unknown'
+            pass  # If we ask for the failure link and can't determine it we should silently fail
 
     def github_diff_link(self, upstream_fork, upstream_base):
         """Generates a GitHub compare link based on the attributes of this facade

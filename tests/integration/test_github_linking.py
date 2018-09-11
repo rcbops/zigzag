@@ -6,6 +6,7 @@
 # Imports
 # ======================================================================================================================
 import pytest
+from zigzag.zigzag_test_log import SWEET_UNICORN_GIF
 
 
 # ======================================================================================================================
@@ -141,7 +142,7 @@ class TestGitHubLinking(object):
 
         # Test
         assert len(test_runs) == 1
-        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', '')
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', SWEET_UNICORN_GIF)
 
     # noinspection PyShadowingNames
     def test_github_link_for_mk8s(self, github_failure_for_mk8s):
@@ -170,4 +171,4 @@ class TestGitHubLinking(object):
 
         # Test
         assert len(test_runs) == 1
-        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', '')
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Failure Link', SWEET_UNICORN_GIF)
