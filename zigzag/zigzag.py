@@ -14,7 +14,12 @@ from zigzag.requirements_link_facade import RequirementsLinkFacade
 
 class ZigZag(object):
 
-    def __init__(self, junit_xml_file_path, qtest_api_token, qtest_project_id, qtest_test_cycle, pprint_on_fail=False):
+    def __init__(self,
+                 junit_xml_file_path,
+                 qtest_api_token,
+                 qtest_project_id,
+                 qtest_test_cycle=None,  # if None this will be assigned by the module_hierarchy_facade
+                 pprint_on_fail=False):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
         subsystems and sub Facades.
 
