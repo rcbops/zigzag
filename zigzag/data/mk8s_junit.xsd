@@ -54,11 +54,13 @@
     <xs:complexType name="testCaseType">
         <xs:sequence>
             <xs:element name="properties" type="testCasePropertiesType" />
-            <xs:element name="error" type="resultType" minOccurs="0" maxOccurs="unbounded" />
-            <xs:element name="skipped" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
-            <xs:element name="failure" type="resultType" minOccurs="0"  maxOccurs="unbounded" />
-            <xs:element name="system-out" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
-            <xs:element name="system-err" type="xs:string" minOccurs="0"  maxOccurs="unbounded" />
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="error" type="resultType" />
+                <xs:element name="skipped" type="resultType" />
+                <xs:element name="failure" type="resultType" />
+                <xs:element name="system-out" type="xs:string" />
+                <xs:element name="system-err" type="xs:string" />
+            </xs:choice>
         </xs:sequence>
         <xs:attribute name="name" type="xs:normalizedString" use="required"/>
         <xs:attribute name="line" type="xs:integer" />
