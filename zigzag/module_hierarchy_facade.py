@@ -65,7 +65,7 @@ class ModuleHierarchyFacade(object):
             list[str]: The strings to use for the module_hierarchy
         """
 
-        pr_regex = re.compile(".*(PR-\d+).*")
+        pr_regex = re.compile(r'.*(PR-\d+).*')
         pr = re.match(pr_regex, self._mediator.testsuite_props['GIT_BRANCH'])
 
         if pr:

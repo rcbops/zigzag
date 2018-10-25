@@ -424,7 +424,7 @@ class _ZigZagTestLog(object):
                                    "Status code: {}\n"
                                    "Reason: {}\n"
                                    "Message: {}".format(e.status, e.reason, e.body))
-            exact_jira_regex = re.compile('([a-zA-Z]+-\d+)')
+            exact_jira_regex = re.compile(r'([a-zA-Z]+-\d+)')
             if parsed['total'] == 1:
                 self._qtest_requirements.append(parsed['items'][0]['id'])
             elif parsed['total'] > 1:
