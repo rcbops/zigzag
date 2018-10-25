@@ -393,7 +393,7 @@ class TestParseXMLtoTestLogs(object):
         # Test
         for log in test_logs:
             assert 'PASSED' == log.status
-            assert re.match("test_pass\d", log.name)
+            assert re.match(r'test_pass\d', log.name)
 
     def test_junit_xml_attachment(self, single_passing_xml, mocker):
         """Verify that an xml file is attached to the qTest testlog
