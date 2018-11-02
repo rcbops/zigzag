@@ -49,6 +49,9 @@ class _ZigZagTestLog(object):
         self._qtest_requirements = []
         self._qtest_testcase_id = None
 
+        self._stdout = None
+        self._stderr = None
+
         self._status = ''
         self._test_file = ''
         self._classname = ''
@@ -111,6 +114,38 @@ class _ZigZagTestLog(object):
             str: the status of this test execution
         """
         return self._status
+
+    @property
+    def stderr(self):
+        """Gets the contents of 'stderr' if captured.
+
+        Return:
+            str: output printed to 'stderr'
+        """
+
+        if self._stderr is None:
+            try:
+                self._stderr = self._testcase_xml.find('system-err').text
+            except AttributeError:
+                self._stderr = ''
+
+        return self._stderr
+
+    @property
+    def stdout(self):
+        """Gets the contents of 'stdout' if captured.
+
+        Return:
+            str: output printed to 'stdout'
+        """
+
+        if self._stdout is None:
+            try:
+                self._stdout = self._testcase_xml.find('system-out').text
+            except AttributeError:
+                self._stdout = ''
+
+        return self._stdout
 
     @property
     def failure_output(self):
@@ -251,6 +286,19 @@ class _ZigZagTestLog(object):
                                                   data=b64encode(
                                                       log.full_fail_log_text.encode('UTF-8')).decode('UTF-8'),
                                                   author={}))
+        if self.status == 'FAILED' and self.stderr:
+            log.attachments.append(
+                swagger_client.AttachmentResource(name="stderr_{}.txt".format(log.attachment_suffix),
+                                                  content_type='text/plain',
+                                                  data=b64encode(self.stderr.encode('UTF-8')).decode('UTF-8'),
+                                                  author={}))
+        if self.status == 'FAILED' and self.stdout:
+            log.attachments.append(
+                swagger_client.AttachmentResource(name="stdout_{}.txt".format(log.attachment_suffix),
+                                                  content_type='text/plain',
+                                                  data=b64encode(self.stdout.encode('UTF-8')).decode('UTF-8'),
+                                                  author={}))
+
         return log
 
     @property
@@ -617,7 +665,11 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
                 if zz_test_step_log.status == 'FAILED' else qtest_test_step_log.status
 
             if zz_test_step_log.status == 'FAILED':
-                qtest_test_step_log.attachments.append(zz_test_step_log.qtest_test_log.attachments[1])  # Failure log
+                # Attach the failure log along with stderr and stdout to the test step if the exist.
+                qtest_test_step_log.attachments = zz_test_step_log.qtest_test_log.attachments[1:]
+
+                self._stderr = zz_test_step_log.stderr
+                self._stdout = zz_test_step_log.stdout
                 self._failure_output = zz_test_step_log.failure_output
                 self._full_failure_output = zz_test_step_log.full_failure_output
                 self._status = 'FAILED'

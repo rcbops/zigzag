@@ -35,6 +35,8 @@ class TestCaseInfo(object):
                  duration=None,
                  message=None,
                  short_message=None,
+                 system_err=None,
+                 system_out=None,
                  jira_tickets=None):
         """Capture or generate test case information to be used in validation of JUnitXML documents.
 
@@ -55,6 +57,10 @@ class TestCaseInfo(object):
                 test states. (Automatically generated if value is None)
             short_message (str): The desired short message for the test which is only used for 'skipped', 'failure',
                 'error' test states. (Automatically generated if value is None)
+            system_err (str): The desired 'stderr' capture which is only used for 'error' test states.
+                (Automatically generated if value is None)
+            system_out (str): The desired 'stdout' capture which is only used for 'error' test states.
+                (Automatically generated if value is None)
             jira_tickets (list): A list of Jira ticket IDs to associated with the test case.
                 (Automatically generated if value is None)
 
@@ -75,6 +81,8 @@ class TestCaseInfo(object):
         self._duration = duration if duration else choice(range(1, 11))
         self._message = message if message else "Test execution state: {}".format(self._state)
         self._short_message = short_message if short_message else "State: {}".format(self._state)
+        self._system_err = system_err if system_err else 'stderr'
+        self._system_out = system_out if system_out else 'stdout'
         self._jira_tickets = jira_tickets if jira_tickets else ["JIRA-{}".format(choice(range(1, 100000)))]
 
         self._test_steps = []
@@ -202,7 +210,7 @@ class TestCaseInfo(object):
         """The short message for non-passed test artifact states.
 
         Returns:
-            int: Short message.
+            str
         """
 
         return self._short_message
@@ -212,10 +220,30 @@ class TestCaseInfo(object):
         """The long message for non-passed test artifact states.
 
         Returns:
-            int: Long message.
+            str
         """
 
         return self._message
+
+    @property
+    def system_err(self):
+        """The 'stderr' capture.
+
+        Returns:
+            str
+        """
+
+        return self._system_err
+
+    @property
+    def system_out(self):
+        """The 'stdout' capture.
+
+        Returns:
+            str
+        """
+
+        return self._system_out
 
     @property
     def jira_tickets(self):
@@ -643,6 +671,8 @@ class TestStepInfo(TestCaseInfo):
                  start=None,
                  duration=None,
                  message=None,
+                 system_err=None,
+                 system_out=None,
                  short_message=None):
         """Capture or generate test case information to be used in validation of JUnitXML documents.
 
@@ -656,6 +686,10 @@ class TestStepInfo(TestCaseInfo):
             duration (int): The desired duration of the test in seconds. (Automatically generated if value is None)
             message (str): The desired message for the test which is only used for 'skipped', 'failure', 'error'
                 test states. (Automatically generated if value is None)
+            system_err (str): The desired 'stderr' capture which is only used for 'error' test states.
+                (Automatically generated if value is None)
+            system_out (str): The desired 'stdout' capture which is only used for 'error' test states.
+                (Automatically generated if value is None)
             short_message (str): The desired short message for the test which is only used for 'skipped', 'failure',
                 'error' test states. (Automatically generated if value is None)
 
@@ -675,6 +709,8 @@ class TestStepInfo(TestCaseInfo):
                                            duration,
                                            message,
                                            short_message,
+                                           system_err,
+                                           system_out,
                                            test_case.jira_tickets)
 
         self._parent_test_case_info = test_case

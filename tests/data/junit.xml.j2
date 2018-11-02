@@ -34,6 +34,8 @@ time="{{ tests.total_duration }}">
             {{ test.long_msg }}
         </{{ test.state }}>
     {% endif %}
+        <system-out>{{ test.system_out }}</system-out>
+        <system-err>{{ test.system_err }}</system-err>
     </testcase>
 {% endfor %}
 </testsuite>
