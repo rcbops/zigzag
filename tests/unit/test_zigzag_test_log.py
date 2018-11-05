@@ -57,18 +57,17 @@ def mock_zigzag(mocker):
 
 
 @pytest.fixture(scope='module')
-def short_single_line_failure_message(tmpdir_factory, default_global_properties, default_testcase_properties):
-    """Failing test case with a short single line failure message."""
+def single_passing_no_sys_capture_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single passing test that does not have 'system-out' or 'system-err' testcase elements."""
 
-    filename = tmpdir_factory.mktemp('data').join('short_single_line_failure_message.xml').strpath
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
     junit_xml = \
         """<?xml version="1.0" encoding="utf-8"?>
         <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
             {global_properties}
-            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
-            name="test_fail[ansible://localhost]" time="0.00335693359375">
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
+            name="test_pass[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
-                <failure message="short">Short</failure>
             </testcase>
         </testsuite>
         """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
@@ -80,7 +79,140 @@ def short_single_line_failure_message(tmpdir_factory, default_global_properties,
 
 
 @pytest.fixture(scope='module')
-def long_single_line_failure_message(tmpdir_factory, default_global_properties, default_testcase_properties):
+def single_failing_no_sys_capture_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single failing test that does not have 'system-out' or 'system-err' testcase elements."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
+            name="test_fail[ansible://localhost]" time="0.00335693359375">
+                {testcase_properties}
+                <failure message="fail">Fail</failure>
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_failing_duplicate_sys_capture_xml(tmpdir_factory,
+                                             default_global_properties,
+                                             default_testcase_properties,
+                                             default_testcase_elements):
+    """A single failing test that has duplicate 'system-out' and 'system-err' testcase elements."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
+            name="test_fail[ansible://localhost]" time="0.00335693359375">
+                {testcase_properties}
+                <failure message="fail">Fail</failure>
+                {testcase_elements}
+                {testcase_elements}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_failing_missing_sys_err_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single failing test that does not have 'system-err' testcase element."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
+            name="test_fail[ansible://localhost]" time="0.00335693359375">
+                {testcase_properties}
+                <failure message="fail">Fail</failure>
+                <system-out>stdout</system-out>
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_failing_missing_sys_out_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single failing test that does not have 'system-out' testcase element."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
+            name="test_fail[ansible://localhost]" time="0.00335693359375">
+                {testcase_properties}
+                <failure message="fail">Fail</failure>
+                <system-err>stderr</system-err>
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def short_single_line_failure_message(tmpdir_factory,
+                                      default_global_properties,
+                                      default_testcase_properties,
+                                      default_testcase_elements):
+    """Failing test case with a short single line failure message."""
+
+    filename = tmpdir_factory.mktemp('data').join('short_single_line_failure_message.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
+            name="test_fail[ansible://localhost]" time="0.00335693359375">
+                {testcase_properties}
+                <failure message="short">Short</failure>
+                {testcase_elements}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def long_single_line_failure_message(tmpdir_factory,
+                                     default_global_properties,
+                                     default_testcase_properties,
+                                     default_testcase_elements):
     """Failing test case with a long (153 characters) single line failure message."""
 
     filename = tmpdir_factory.mktemp('data').join('long_single_line_failure_message.xml').strpath
@@ -92,11 +224,13 @@ def long_single_line_failure_message(tmpdir_factory, default_global_properties, 
             name="test_fail[ansible://localhost]" time="0.00335693359375">
                 {testcase_properties}
                 <failure message="long">{failure_message}</failure>
+                {testcase_elements}
             </testcase>
         </testsuite>
         """.format(global_properties=default_global_properties,
                    testcase_properties=default_testcase_properties,
-                   failure_message=LONG_FAILURE_MESSAGE)
+                   failure_message=LONG_FAILURE_MESSAGE,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -105,7 +239,10 @@ def long_single_line_failure_message(tmpdir_factory, default_global_properties, 
 
 
 @pytest.fixture(scope='module')
-def long_multi_line_failure_message(tmpdir_factory, default_global_properties, default_testcase_properties):
+def long_multi_line_failure_message(tmpdir_factory,
+                                    default_global_properties,
+                                    default_testcase_properties,
+                                    default_testcase_elements):
     """Failing test case with 7 long (153 characters) lines in failure message."""
 
     filename = tmpdir_factory.mktemp('data').join('long_multi_line_failure_message.xml').strpath
@@ -125,11 +262,13 @@ def long_multi_line_failure_message(tmpdir_factory, default_global_properties, d
                     {failure_message}
                     {failure_message}
                 </failure>
+                {testcase_elements}
             </testcase>
         </testsuite>
         """.format(global_properties=default_global_properties,
                    testcase_properties=default_testcase_properties,
-                   failure_message=LONG_FAILURE_MESSAGE)
+                   failure_message=LONG_FAILURE_MESSAGE,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -138,8 +277,67 @@ def long_multi_line_failure_message(tmpdir_factory, default_global_properties, d
 
 
 @pytest.fixture(scope='module')
-def single_test_with_mixed_status_steps_xml(tmpdir_factory, default_global_properties):
+def single_test_with_mixed_status_steps_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing a single test case with multiple steps."""
+
+    test_step_testcase_properties = \
+        """
+                    <properties>
+                        <property name="jira" value="ASC-123"/>
+                        <property name="test_id" value="1"/>
+                        <property name="test_step" value="true"/>
+                        <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                        <property name="end_time" value="2018-04-10T21:38:19Z"/>
+                    </properties>
+        """
+
+    filename = tmpdir_factory.mktemp('data').join('single_test_with_mixed_status_steps.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+            <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="8"
+            name="test_step_pass[ansible://localhost]" time="0.00372695922852">
+                {testcase_properties}
+                {testcase_elements}
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="12"
+            name="test_step_fail[ansible://localhost]" time="0.00341415405273">
+                {testcase_properties}
+                <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
+            def test_fail(host):
+        &gt;       assert False
+        E       assert False
+
+        tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
+            name="test_step_skip[ansible://localhost]" time="0.00363945960999">
+                {testcase_properties}
+                <skipped message="unconditional skip" type="pytest.skip">
+                    tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
+                </skipped>
+                {testcase_elements}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=test_step_testcase_properties,
+                   testcase_name='TestCaseWithSteps',
+                   testcase_elements=default_testcase_elements)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_test_with_mixed_status_steps_no_sys_capture_xml(tmpdir_factory, default_global_properties):
+    """JUnitXML sample representing a single test case with multiple steps. The failing step does not have
+    'system-err' or 'system-out' elements.
+    """
 
     test_step_testcase_properties = \
         """
@@ -191,7 +389,119 @@ def single_test_with_mixed_status_steps_xml(tmpdir_factory, default_global_prope
 
 
 @pytest.fixture(scope='module')
-def single_test_with_multiple_skipping_steps_xml(tmpdir_factory, default_global_properties):
+def single_test_with_mixed_status_steps_missing_sys_err_xml(tmpdir_factory, default_global_properties):
+    """JUnitXML sample representing a single test case with multiple steps. The failing step does not have
+    the 'system-err' element.
+    """
+
+    test_step_testcase_properties = \
+        """
+                    <properties>
+                        <property name="jira" value="ASC-123"/>
+                        <property name="test_id" value="1"/>
+                        <property name="test_step" value="true"/>
+                        <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                        <property name="end_time" value="2018-04-10T21:38:19Z"/>
+                    </properties>
+        """
+
+    filename = tmpdir_factory.mktemp('data').join('single_test_with_mixed_status_steps.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+            <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="8"
+            name="test_step_pass[ansible://localhost]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="12"
+            name="test_step_fail[ansible://localhost]" time="0.00341415405273">
+                {testcase_properties}
+                <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
+            def test_fail(host):
+        &gt;       assert False
+        E       assert False
+
+        tests/test_default.py:18: AssertionError</failure>
+                <system-out>stdout</system-out>
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
+            name="test_step_skip[ansible://localhost]" time="0.00363945960999">
+                {testcase_properties}
+                <skipped message="unconditional skip" type="pytest.skip">
+                    tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
+                </skipped>
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=test_step_testcase_properties,
+                   testcase_name='TestCaseWithSteps')
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_test_with_mixed_status_steps_missing_sys_out_xml(tmpdir_factory, default_global_properties):
+    """JUnitXML sample representing a single test case with multiple steps. The failing step does not have
+    the 'system-out' element.
+    """
+
+    test_step_testcase_properties = \
+        """
+                    <properties>
+                        <property name="jira" value="ASC-123"/>
+                        <property name="test_id" value="1"/>
+                        <property name="test_step" value="true"/>
+                        <property name="start_time" value="2018-04-10T21:38:18Z"/>
+                        <property name="end_time" value="2018-04-10T21:38:19Z"/>
+                    </properties>
+        """
+
+    filename = tmpdir_factory.mktemp('data').join('single_test_with_mixed_status_steps.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+            <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="8"
+            name="test_step_pass[ansible://localhost]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="12"
+            name="test_step_fail[ansible://localhost]" time="0.00341415405273">
+                {testcase_properties}
+                <failure message="assert False">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
+
+            def test_fail(host):
+        &gt;       assert False
+        E       assert False
+
+        tests/test_default.py:18: AssertionError</failure>
+                <system-err>stderr</system-err>
+            </testcase>
+            <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
+            name="test_step_skip[ansible://localhost]" time="0.00363945960999">
+                {testcase_properties}
+                <skipped message="unconditional skip" type="pytest.skip">
+                    tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
+                </skipped>
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=test_step_testcase_properties,
+                   testcase_name='TestCaseWithSteps')
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
+def single_test_with_multiple_skipping_steps_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing a single test case with multiple skipping steps."""
 
     test_step_testcase_properties = \
@@ -216,6 +526,7 @@ def single_test_with_multiple_skipping_steps_xml(tmpdir_factory, default_global_
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
             name="test_skip_step[ansible://localhost]" time="0.00363945960999">
@@ -223,11 +534,13 @@ def single_test_with_multiple_skipping_steps_xml(tmpdir_factory, default_global_
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
         </testsuite>
         """.format(global_properties=default_global_properties,
                    testcase_properties=test_step_testcase_properties,
-                   testcase_name='TestCaseWithSteps')
+                   testcase_name='TestCaseWithSteps',
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -236,7 +549,7 @@ def single_test_with_multiple_skipping_steps_xml(tmpdir_factory, default_global_
 
 
 @pytest.fixture(scope='module')
-def single_test_with_multiple_passing_steps_xml(tmpdir_factory, default_global_properties):
+def single_test_with_multiple_passing_steps_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing a single test case with multiple passing steps."""
 
     test_step_testcase_properties = \
@@ -258,15 +571,18 @@ def single_test_with_multiple_passing_steps_xml(tmpdir_factory, default_global_p
             <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
             name="test_pass_step[ansible://localhost]" time="0.00363945960999">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.{testcase_name}" file="tests/test_default.py" line="15"
             name="test_pass_step[ansible://localhost]" time="0.00363945960999">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
         """.format(global_properties=default_global_properties,
                    testcase_properties=test_step_testcase_properties,
-                   testcase_name='TestCaseWithSteps')
+                   testcase_name='TestCaseWithSteps',
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -275,7 +591,7 @@ def single_test_with_multiple_passing_steps_xml(tmpdir_factory, default_global_p
 
 
 @pytest.fixture(scope='module')
-def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_properties):
+def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing multiple test cases with various statuses along with a single step each."""
 
     test_step_testcase_properties = \
@@ -297,6 +613,7 @@ def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_pro
             <testcase classname="tests.test_default.TestCasePass" file="tests/test_default.py" line="8"
             name="test_step_pass[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseFail" file="tests/test_default.py" line="12"
             name="test_step_fail[ansible://localhost]" time="0.00341415405273">
@@ -308,6 +625,7 @@ def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_pro
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseSkip" file="tests/test_default.py" line="15"
             name="test_step_skip[ansible://localhost]" time="0.00363945960999">
@@ -315,9 +633,12 @@ def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_pro
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=test_step_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=test_step_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -326,7 +647,7 @@ def multiple_mixed_status_tests_with_step_xml(tmpdir_factory, default_global_pro
 
 
 @pytest.fixture(scope='module')
-def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_properties):
+def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing multiple test cases with various statuses along with multiple steps each."""
 
     test_step_testcase_properties = \
@@ -348,10 +669,12 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
             <testcase classname="tests.test_default.TestCasePass" file="tests/test_default.py" line="8"
             name="test_pass_step_0[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCasePass" file="tests/test_default.py" line="8"
             name="test_pass_step_1[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseFail" file="tests/test_default.py" line="12"
             name="test_fail_step_0[ansible://localhost]" time="0.00341415405273">
@@ -363,6 +686,7 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseFail" file="tests/test_default.py" line="12"
             name="test_fail_step_1[ansible://localhost]" time="0.00341415405273">
@@ -374,6 +698,7 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseSkip" file="tests/test_default.py" line="15"
             name="test_skip_step_0[ansible://localhost]" time="0.00363945960999">
@@ -381,6 +706,7 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestCaseSkip" file="tests/test_default.py" line="15"
             name="test_skip_step_1[ansible://localhost]" time="0.00363945960999">
@@ -388,9 +714,12 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=test_step_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=test_step_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -399,7 +728,7 @@ def multiple_mixed_status_tests_with_steps_xml(tmpdir_factory, default_global_pr
 
 
 @pytest.fixture(scope='module')
-def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_properties):
+def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing a mix of test cases with and without steps."""
 
     filename = tmpdir_factory.mktemp('data').join('multiple_tests_with_and_without_steps.xml').strpath
@@ -416,6 +745,7 @@ def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_pro
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_case_without_steps[ansible://localhost]" time="0.00372695922852">
@@ -426,9 +756,10 @@ def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_pro
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties)
+        """.format(global_properties=default_global_properties, testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -442,6 +773,23 @@ def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_pro
 # noinspection PyProtectedMember
 class TestZigZagTestLog(object):
     """Tests for the _ZigZagTestLog class through the ZigZagTestLogs public class."""
+
+    def test_single_passing_no_sys_capture(self, single_passing_no_sys_capture_xml, mock_zigzag):
+        """Test that nothing blows up if the JUnitXML testcase element lacks 'system-out' and 'system-err' elements."""
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_passing_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Expectations
+        qtest_id_exp = 5678
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
+        assert not tl.stderr
+        assert not tl.stdout
+        assert tl.qtest_testcase_id == qtest_id_exp
 
     def test_lookup_ids(self, single_passing_xml, mock_zigzag):
         """Test for _lookup_ids happy path"""
@@ -544,6 +892,8 @@ class TestZigZagTestLog(object):
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.stderr == 'stderr'
+        assert tl.stdout == 'stdout'
 
         # there should be a list of two attachments: the junit xml
         # file and a text log
@@ -792,6 +1142,32 @@ class TestFailedTestCases(object):
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.stderr == 'stderr'
+        assert tl.stdout == 'stdout'
+
+        # there should be a list of two attachments: the junit xml
+        # file and a text log
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 4
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+    def test_failed_test_case_attachments_no_sys_capture(self, single_failing_no_sys_capture_xml, mock_zigzag):
+        """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
+        not contain 'system-err' or 'system-out' elements.
+        """
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_failing_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert not tl.stderr
+        assert not tl.stdout
 
         # there should be a list of two attachments: the junit xml
         # file and a text log
@@ -799,6 +1175,81 @@ class TestFailedTestCases(object):
         assert len(tl.qtest_test_log.attachments) == 2
         assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
         assert tl.qtest_test_log.attachments[1].content_type == 'text/plain'
+
+    def test_failed_test_case_attachments_duplicate_sys_capture(self,
+                                                                single_failing_duplicate_sys_capture_xml,
+                                                                mock_zigzag):
+        """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element has
+        duplicate 'system-err' and 'system-out' elements. Expected behavior is to select the first set of elements for
+        data extraction. (See ASC-1141)
+        """
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_failing_duplicate_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.stderr == 'stderr'
+        assert tl.stdout == 'stdout'
+
+        # there should be a list of two attachments: the junit xml
+        # file and a text log
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 4
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+    def test_failed_test_case_attachments_missing_sys_err(self, single_failing_missing_sys_err_xml, mock_zigzag):
+        """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
+        not contain the 'system-err' element.
+        """
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_failing_missing_sys_err_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert not tl.stderr
+        assert tl.stdout == 'stdout'
+
+        # there should be a list of two attachments: the junit xml
+        # file and a text log
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 3
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+    def test_failed_test_case_attachments_missing_sys_out(self, single_failing_missing_sys_out_xml, mock_zigzag):
+        """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
+        not contain the 'system-out' element.
+        """
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_failing_missing_sys_out_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.stderr == 'stderr'
+        assert not tl.stdout
+
+        # there should be a list of two attachments: the junit xml
+        # file and a text log
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 3
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
 
     def test_failed_test_step_attachments(self, single_test_with_mixed_status_steps_xml, mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
@@ -810,8 +1261,40 @@ class TestFailedTestCases(object):
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
+        assert tl.stderr == 'stderr'
+        assert tl.stdout == 'stdout'
 
-        # The test log should have the junit xml file and a failure text log attached.
+        # The test log should have the junit xml file, failure, stderr and stdout text logs attached.
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 4
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+        # The failing step should have a failure log, stderr and stdout text logs attached.
+        failing_step = tl.qtest_test_log.test_step_logs[1]      # Failing step at known location.
+        assert len(failing_step.attachments) == 3
+
+        for failing_test_log_attachment in failing_step.attachments:
+            assert failing_test_log_attachment.content_type == 'text/plain'
+
+    def test_failed_test_step_attachments_no_sys_capture(self,
+                                                         single_test_with_mixed_status_steps_no_sys_capture_xml,
+                                                         mock_zigzag):
+        """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_test_with_mixed_status_steps_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]
+        assert not tl.stderr
+        assert not tl.stdout
+
+        # The test log should have the junit xml file and failure text log attached.
         assert isinstance(tl.qtest_test_log.attachments, list)
         assert len(tl.qtest_test_log.attachments) == 2
         assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
@@ -820,7 +1303,66 @@ class TestFailedTestCases(object):
         # The failing step should have a failure text log attached.
         failing_step = tl.qtest_test_log.test_step_logs[1]      # Failing step at known location.
         assert len(failing_step.attachments) == 1
-        assert failing_step.attachments[0].content_type == 'text/plain'
+
+    def test_failed_test_step_attachments_missing_sys_err_xml(self,
+                                                              single_test_with_mixed_status_steps_missing_sys_err_xml,
+                                                              mock_zigzag):
+        """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_err_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]
+        assert not tl.stderr
+        assert tl.stdout == 'stdout'
+
+        # The test log should have the junit xml file, failure and stdout text logs attached.
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 3
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+        # The failing test log should have the junit xml file, failure and stdout text logs attached.
+        failing_step = tl.qtest_test_log.test_step_logs[1]      # Failing step at known location.
+        assert len(failing_step.attachments) == 2
+
+        for failing_test_log_attachment in failing_step.attachments:
+            assert failing_test_log_attachment.content_type == 'text/plain'
+
+    def test_failed_test_step_attachments_missing_sys_out_xml(self,
+                                                              single_test_with_mixed_status_steps_missing_sys_out_xml,
+                                                              mock_zigzag):
+        """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
+
+        # Setup
+        mock_zigzag()
+        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_out_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]
+        assert tl.stderr == 'stderr'
+        assert not tl.stdout
+
+        # The test log should have the junit xml file, failure and stderr text logs attached.
+        assert isinstance(tl.qtest_test_log.attachments, list)
+        assert len(tl.qtest_test_log.attachments) == 3
+        assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+        for test_log_attachment in tl.qtest_test_log.attachments[1:]:
+            assert test_log_attachment.content_type == 'text/plain'
+
+            # The failing test log should have the junit xml file, failure and stderr text logs attached.
+        failing_step = tl.qtest_test_log.test_step_logs[1]      # Failing step at known location.
+        assert len(failing_step.attachments) == 2
+
+        for failing_test_log_attachment in failing_step.attachments:
+            assert failing_test_log_attachment.content_type == 'text/plain'
 
     def test_truncated_failure_output(self, single_fail_xml, mock_zigzag):
         """Test to ensure that log messages are truncated correctly"""

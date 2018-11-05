@@ -93,7 +93,21 @@ def default_testcase_properties():
 
 
 @pytest.fixture(scope='session')
-def single_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def default_testcase_elements():
+    """Default test case properties which can be used to construct valid JUnitXML documents."""
+
+    return \
+        """
+                    <system-out>stdout</system-out>
+                    <system-err>stderr</system-err>
+        """
+
+
+@pytest.fixture(scope='session')
+def single_passing_xml(tmpdir_factory,
+                       default_global_properties,
+                       default_testcase_properties,
+                       default_testcase_elements):
     """JUnitXML sample representing a single passing test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
@@ -104,9 +118,12 @@ def single_passing_xml(tmpdir_factory, default_global_properties, default_testca
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -115,7 +132,10 @@ def single_passing_xml(tmpdir_factory, default_global_properties, default_testca
 
 
 @pytest.fixture(scope='session')
-def single_fail_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def single_fail_xml(tmpdir_factory,
+                    default_global_properties,
+                    default_testcase_properties,
+                    default_testcase_elements):
     """JUnitXML sample representing a single failing test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_fail.xml').strpath
@@ -133,9 +153,12 @@ def single_fail_xml(tmpdir_factory, default_global_properties, default_testcase_
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -144,7 +167,10 @@ def single_fail_xml(tmpdir_factory, default_global_properties, default_testcase_
 
 
 @pytest.fixture(scope='session')
-def single_error_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def single_error_xml(tmpdir_factory,
+                     default_global_properties,
+                     default_testcase_properties,
+                     default_testcase_elements):
     """JUnitXML sample representing a single erroring test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_error.xml').strpath
@@ -155,6 +181,7 @@ def single_error_xml(tmpdir_factory, default_global_properties, default_testcase
             <testcase classname="tests.test_default" file="tests/test_default.py" line="20"
             name="test_error[ansible://localhost]" time="0.00208067893982">
                 {testcase_properties}
+
                 <error message="test setup failure">host = &lt;testinfra.host.Host object at 0x7f0921d98cd0&gt;
 
             @pytest.fixture
@@ -163,9 +190,12 @@ def single_error_xml(tmpdir_factory, default_global_properties, default_testcase
         E       RuntimeError: oops
 
         tests/test_default.py:10: RuntimeError</error>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -174,7 +204,10 @@ def single_error_xml(tmpdir_factory, default_global_properties, default_testcase
 
 
 @pytest.fixture(scope='session')
-def single_skip_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def single_skip_xml(tmpdir_factory,
+                    default_global_properties,
+                    default_testcase_properties,
+                    default_testcase_elements):
     """JUnitXML sample representing a single skipping test."""
 
     filename = tmpdir_factory.mktemp('data').join('single_skip.xml').strpath
@@ -188,9 +221,12 @@ def single_skip_xml(tmpdir_factory, default_global_properties, default_testcase_
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -199,7 +235,10 @@ def single_skip_xml(tmpdir_factory, default_global_properties, default_testcase_
 
 
 @pytest.fixture(scope='session')
-def flat_all_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def flat_all_passing_xml(tmpdir_factory,
+                         default_global_properties,
+                         default_testcase_properties,
+                         default_testcase_elements):
     """JUnitXML sample representing multiple passing test cases."""
 
     filename = tmpdir_factory.mktemp('data').join('flat_all_passing.xml').strpath
@@ -210,25 +249,32 @@ def flat_all_passing_xml(tmpdir_factory, default_global_properties, default_test
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass1[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="12"
             name="test_pass2[ansible://localhost]" time="0.00341415405273">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="15"
             name="test_pass3[ansible://localhost]" time="0.00363945960999">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="18"
             name="test_pass4[ansible://localhost]" time="0.00314617156982">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="21"
             name="test_pass5[ansible://localhost]" time="0.00332307815552">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -237,7 +283,10 @@ def flat_all_passing_xml(tmpdir_factory, default_global_properties, default_test
 
 
 @pytest.fixture(scope='session')
-def suite_all_passing_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def suite_all_passing_xml(tmpdir_factory,
+                          default_global_properties,
+                          default_testcase_properties,
+                          default_testcase_elements):
     """JUnitXML sample representing multiple passing test cases in a test suite. (Tests within a Python class)"""
 
     filename = tmpdir_factory.mktemp('data').join('suite_all_passing.xml').strpath
@@ -248,25 +297,32 @@ def suite_all_passing_xml(tmpdir_factory, default_global_properties, default_tes
             <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="8"
             name="test_pass1[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="12"
             name="test_pass2[ansible://localhost]" time="0.00341415405273">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="15"
             name="test_pass3[ansible://localhost]" time="0.00363945960999">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="18"
             name="test_pass4[ansible://localhost]" time="0.00314617156982">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default.TestSuite" file="tests/test_default.py" line="21"
             name="test_pass5[ansible://localhost]" time="0.00332307815552">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -275,7 +331,10 @@ def suite_all_passing_xml(tmpdir_factory, default_global_properties, default_tes
 
 
 @pytest.fixture(scope='session')
-def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def flat_mix_status_xml(tmpdir_factory,
+                        default_global_properties,
+                        default_testcase_properties,
+                        default_testcase_elements):
     """JUnitXML sample representing mixed status for multiple test cases."""
 
     filename = tmpdir_factory.mktemp('data').join('flat_mix_status.xml').strpath
@@ -286,6 +345,7 @@ def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testc
             <testcase classname="tests.test_default" file="tests/test_default.py" line="12"
             name="test_pass[ansible://localhost]" time="0.0034921169281">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="16"
             name="test_fail[ansible://localhost]" time="0.00335693359375">
@@ -297,6 +357,7 @@ def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testc
         E       assert False
 
         tests/test_default.py:18: AssertionError</failure>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="20"
             name="test_error[ansible://localhost]" time="0.00208067893982">
@@ -309,6 +370,7 @@ def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testc
         E       RuntimeError: oops
 
         tests/test_default.py:10: RuntimeError</error>
+                {testcase_elements}
             </testcase>
             <testcase classname="tests.test_default" file="tests/test_default.py" line="24"
             name="test_skip[ansible://localhost]" time="0.00197100639343">
@@ -316,9 +378,12 @@ def flat_mix_status_xml(tmpdir_factory, default_global_properties, default_testc
                 <skipped message="unconditional skip" type="pytest.skip">
                     tests/test_default.py:24: &lt;py._xmlgen.raw object at 0x7f0921ff4d50&gt;
                 </skipped>
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -377,7 +442,7 @@ def missing_testcase_properties_xml(tmpdir_factory, default_global_properties):
 
 
 @pytest.fixture(scope='session')
-def missing_test_id_xml(tmpdir_factory, default_global_properties):
+def missing_test_id_xml(tmpdir_factory, default_global_properties, default_testcase_elements):
     """JUnitXML sample representing a test case that has a missing test id property element."""
 
     filename = tmpdir_factory.mktemp('data').join('missing_test_id.xml').strpath
@@ -392,8 +457,9 @@ def missing_test_id_xml(tmpdir_factory, default_global_properties):
                     <property name="start_time" value="2018-04-10T21:38:18Z"/>
                     <property name="end_time" value="2018-04-10T21:38:19Z"/>
                 </properties>
+                {testcase_elements}
         </testsuite>
-        """.format(global_properties=default_global_properties)
+        """.format(global_properties=default_global_properties, testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -402,7 +468,7 @@ def missing_test_id_xml(tmpdir_factory, default_global_properties):
 
 
 @pytest.fixture(scope='session')
-def missing_build_url_xml(tmpdir_factory, default_testcase_properties):
+def missing_build_url_xml(tmpdir_factory, default_testcase_properties, default_testcase_elements):
     """JUnitXML sample representing a test suite that is missing the "BUILD_URL" property."""
 
     filename = tmpdir_factory.mktemp('data').join('missing_build_url.xml').strpath
@@ -426,8 +492,9 @@ def missing_build_url_xml(tmpdir_factory, default_testcase_properties):
             <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852"/>
                 {testcase_properties}
+                {testcase_elements}
         </testsuite>
-        """.format(testcase_properties=default_testcase_properties)
+        """.format(testcase_properties=default_testcase_properties, testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -436,7 +503,10 @@ def missing_build_url_xml(tmpdir_factory, default_testcase_properties):
 
 
 @pytest.fixture(scope='session')
-def classname_with_dashes_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def classname_with_dashes_xml(tmpdir_factory,
+                              default_global_properties,
+                              default_testcase_properties,
+                              default_testcase_elements):
     """JUnitXML sample representing a testcase that has a 'classname' attribute which contains dashes for the py.test
     filename."""
 
@@ -449,9 +519,12 @@ def classname_with_dashes_xml(tmpdir_factory, default_global_properties, default
             file="tests/test_for_acs-150.py" line="140"
             name="test_verify_kibana_horizon_access_with_no_ssh[_testinfra_host0]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
@@ -460,7 +533,10 @@ def classname_with_dashes_xml(tmpdir_factory, default_global_properties, default
 
 
 @pytest.fixture(scope='session')
-def invalid_classname_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
+def invalid_classname_xml(tmpdir_factory,
+                          default_global_properties,
+                          default_testcase_properties,
+                          default_testcase_elements):
     """JUnitXML sample representing a testcase that has an invalid 'classname' attribute which is used to build the
     results hierarchy in the '_generate_module_hierarchy' function."""
 
@@ -472,9 +548,12 @@ def invalid_classname_xml(tmpdir_factory, default_global_properties, default_tes
             <testcase classname="this is not a valid classname" file="tests/test_default.py" line="8"
             name="test_pass[ansible://localhost]" time="0.00372695922852">
                 {testcase_properties}
+                {testcase_elements}
             </testcase>
         </testsuite>
-        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+        """.format(global_properties=default_global_properties,
+                   testcase_properties=default_testcase_properties,
+                   testcase_elements=default_testcase_elements)
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
