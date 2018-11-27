@@ -29,41 +29,40 @@ class _ZigZagTestLog(object):
     _failure_link_field_id = 0
     _test_sha_field_id = 0
 
-    def __init__(self, testcase_xml, mediator, auto_parse=True):
+    def __init__(self, testcase_xml, mediator):
         """Create a TestLog object.
 
         Args:
             testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
             mediator (ZigZag): The mediator that stores shared data.
-            auto_parse (bool): Enable automatically parsing the incoming test case XML upon object instantiation.
         """
 
-        self._exe_end_date = None
-        self._exe_start_date = None
+        self._end_date = None
+        self._start_date = None
 
         self._testcase_xml = testcase_xml
         self._mediator = mediator
         self._module_hierarchy_facade = None
 
         # this is data that will be collected from qTest
-        self._qtest_requirements = []
+        self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
 
         self._stdout = None
         self._stderr = None
 
-        self._status = ''
-        self._test_file = ''
-        self._classname = ''
-        self._failure_output = ''  # hard code this to empty string
-        self._def_line_number = ''
-        self._automation_content = ''
-        self._full_failure_output = ''
+        self._status = None
+        self._test_file = None
+        self._classname = None
+        self._failure_output = None
+        self._def_line_number = None
+        self._automation_content = None
+        self._full_failure_output = None
+        self._name = None
+        self._errors = None
+        self._failures = None
 
-        self._jira_issues = []
-
-        if auto_parse:
-            self._parse()
+        self._jira_issues = None
 
     @property
     def name(self):
@@ -72,6 +71,12 @@ class _ZigZagTestLog(object):
         Returns:
             str: The name of the test log
         """
+        if self._name is None:
+            try:
+                self._name = _ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
+            except AttributeError:
+                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+
         return self._name
 
     @property
@@ -93,6 +98,13 @@ class _ZigZagTestLog(object):
         Returns:
             list[str]: A list of jira issue ids
         """
+        if self._jira_issues is None:
+            try:
+                self._jira_issues = \
+                    [jira.get('value') for jira in self._testcase_xml.findall("./properties/property/[@name='jira']")]
+            except AttributeError:
+                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+
         return self._jira_issues
 
     @property
@@ -113,6 +125,17 @@ class _ZigZagTestLog(object):
         Return:
             str: the status of this test execution
         """
+        if self._status is None:
+            self._status = 'PASSED'
+            try:
+                all_failures = self.failures + self.errors
+                if len(all_failures):
+                    self._status = 'FAILED'
+                elif self._testcase_xml.find('skipped') is not None:
+                    self._status = 'SKIPPED'
+            except AttributeError:
+                self._status = ''
+
         return self._status
 
     @property
@@ -154,7 +177,46 @@ class _ZigZagTestLog(object):
         Returns:
             str: The output from failure or error of this test execution
         """
+        if self._failure_output is None:
+            max_lines = 3
+            max_line_length = 120
+            msg_line_count = len(self.full_failure_output.split('\n'))
+            # Throw out the useless last 2 lines of the message if over a certain length.
+            # Note: pytest failure messages follow a predictable pattern, hence why we can toss lines without inspection
+            msg_lines = self.full_failure_output.split('\n')[msg_line_count - (max_lines + 2):msg_line_count - 2] \
+                if msg_line_count > (max_lines + 2) else [self.full_failure_output]
+            truncated_message = 'Log truncated, please see attached failure log for more details...\n' \
+                if len(msg_lines) == max_lines else ''
+
+            for line in msg_lines:
+                truncated_message += line + '\n' if len(line) <= max_line_length else line[:max_line_length] + '...\n'
+
+            self._failure_output = truncated_message.rstrip()
         return self._failure_output
+
+    @property
+    def errors(self):
+        """Gets the errors form the testcase_xml
+
+        Returns:
+            list: the list of errors found
+        """
+        if self._errors is None:
+            self._errors = self._testcase_xml.findall('error')
+
+        return self._errors
+
+    @property
+    def failures(self):
+        """Gets the failures from the testcase_xml
+
+        Returns:
+            list: the list of failures found
+        """
+        if self._failures is None:
+            self._failures = self._testcase_xml.findall('failure')
+
+        return self._failures
 
     @property
     def full_failure_output(self):
@@ -163,6 +225,14 @@ class _ZigZagTestLog(object):
         Returns:
             str: The output from failure or error of this test execution
         """
+        if self._full_failure_output is None:
+            possible_messages = self.errors + self.failures
+            if len(possible_messages):
+                if self.test_run_failure_output_field_id is not None:
+                    message = "\n".join([element.text for element in possible_messages if element is not None])
+                    self._full_failure_output = message
+            else:
+                self._full_failure_output = ''  # hard code this to empty string
         return self._full_failure_output
 
     @property
@@ -172,7 +242,13 @@ class _ZigZagTestLog(object):
         Returns:
             str: the start date of this test execution
         """
-        return self._exe_start_date
+        if self._start_date is None:
+            try:
+                self._start_date = self._find_property('start_time')
+            except AttributeError:
+                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+
+        return self._start_date
 
     @property
     def end_date(self):
@@ -181,7 +257,13 @@ class _ZigZagTestLog(object):
         Returns:
             str: the end date of this test execution
         """
-        return self._exe_end_date
+        if self._end_date is None:
+            try:
+                self._end_date = self._find_property('end_time')
+            except AttributeError:
+                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+
+        return self._end_date
 
     @property
     def automation_content(self):
@@ -190,6 +272,11 @@ class _ZigZagTestLog(object):
         Returns:
             str: The UUID that we associate with this Test Case
         """
+        if self._automation_content is None:
+            try:
+                self._automation_content = self._find_property('test_id')
+            except AttributeError:
+                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
         return self._automation_content
 
     @property
@@ -222,9 +309,45 @@ class _ZigZagTestLog(object):
         """
 
         if not self._module_hierarchy_facade:
-            self._module_hierarchy_facade = ModuleHierarchyFacade(self._classname, self._mediator)
+            self._module_hierarchy_facade = ModuleHierarchyFacade(self.classname, self._mediator)
 
         return self._module_hierarchy_facade.get_module_hierarchy()
+
+    @property
+    def test_file(self):
+        """Gets the test_file property
+
+        Returns:
+            str: the file containing the test that generated the xml
+        """
+        if self._test_file is None:
+            self._test_file = self._testcase_xml.attrib['file']
+
+        return self._test_file
+
+    @property
+    def classname(self):
+        """Gets the classname property
+
+        Returns:
+            str: the classname of the test
+        """
+        if self._classname is None:
+            self._classname = self._testcase_xml.attrib['classname']
+
+        return self._classname
+
+    @property
+    def def_line_number(self):
+        """Gets the def_line_number
+
+        Returns:
+            str: the sting that is the def_line_number
+        """
+        if self._def_line_number is None:
+            self._def_line_number = self._testcase_xml.attrib['line']
+
+        return self._def_line_number
 
     @property
     def qtest_test_log(self):
@@ -238,7 +361,7 @@ class _ZigZagTestLog(object):
         log = swagger_client.AutomationTestLogResource()
         log.properties = [
             swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
-                                            field_value=self._failure_output)]
+                                            field_value=self.failure_output)]
         # Attach all test suite properties to the log
         # noinspection PyUnresolvedReferences
         for name, field in list(self.fields.items()):
@@ -257,23 +380,23 @@ class _ZigZagTestLog(object):
         if self.test_sha_field_id and self.link_generation_facade.git_sha:
             log.properties.append(swagger_client.PropertyResource(field_id=self.test_sha_field_id,
                                                                   field_value=self.link_generation_facade.git_sha))
-        log.name = self._name
-        log.automation_content = self._automation_content
+        log.name = self.name
+        log.automation_content = self.automation_content
 
-        if self._exe_start_date:
-            log.exe_start_date = self._exe_start_date
+        if self.start_date:
+            log.exe_start_date = self.start_date
         else:
             log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
-        if self._exe_end_date:
-            log.exe_end_date = self._exe_end_date
+        if self.end_date:
+            log.exe_end_date = self.end_date
         else:
             log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
         log.build_url = self._mediator.build_url
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
-        log.full_fail_log_text = self._full_failure_output
+        log.full_fail_log_text = self.full_failure_output
         log.attachment_suffix = date_time_now.strftime('%Y-%m-%dT%H-%M')
-        log.status = self._status
+        log.status = self.status
         log.attachments = \
             [swagger_client.AttachmentResource(name="junit_{}.xml".format(log.attachment_suffix),
                                                content_type='application/xml',
@@ -322,15 +445,6 @@ class _ZigZagTestLog(object):
         return self._get_link_generation_facade(self._mediator)
 
     @property
-    def test_file(self):
-        """Gets the file that contains the test that generated this log
-
-        Returns:
-            str: the path to this file
-        """
-        return self._test_file
-
-    @property
     def failure_link_field_id(self):
         """Gets the failure output field id
 
@@ -340,15 +454,6 @@ class _ZigZagTestLog(object):
         return self._get_failure_link_field_id(self._mediator)
 
     @property
-    def def_line_number(self):
-        """Gets the line number of the test def
-
-        Returns:
-            str: The line number of the test definition
-        """
-        return self._def_line_number
-
-    @property
     def test_sha_field_id(self):
         """Gets the Test SHA field id
 
@@ -356,47 +461,6 @@ class _ZigZagTestLog(object):
             int: The id of the 'Test SHA' field for test-run objects
         """
         return self._get_test_sha_field_id(self._mediator)
-
-    def _parse(self):
-        """Parse the _testcase_xml
-
-        Raises:
-            RuntimeError: Test case missing required property.
-        """
-
-        self._status = 'PASSED'
-        self._classname = self._testcase_xml.attrib['classname']
-
-        all_failures = self._testcase_xml.findall('failure') + self._testcase_xml.findall('error')
-        if len(all_failures):
-            self._status = 'FAILED'
-
-            if self.test_run_failure_output_field_id is not None:
-                errors = self._testcase_xml.findall('error')
-                failures = self._testcase_xml.findall('failure')
-                possible_messages = errors + failures
-                message = "\n".join([element.text for element in possible_messages if element is not None])
-
-                self._full_failure_output = message
-                self._failure_output = self._get_truncated_failure_output(message)
-        elif self._testcase_xml.find('skipped') is not None:
-            self._status = 'SKIPPED'
-
-        try:  # Required
-            self._name = _ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
-            self._automation_content = self._find_property('test_id')
-            self._jira_issues = \
-                [jira.get('value') for jira in self._testcase_xml.findall("./properties/property/[@name='jira']")]
-            self._exe_start_date = self._find_property('start_time')
-        except AttributeError:
-            raise RuntimeError("Test case '{}' is missing the required property!".format(self.name))
-
-        try:  # Optional
-            self._exe_end_date = self._find_property('end_time')  # Its possible for a case to not have an end date
-            self._test_file = self._testcase_xml.attrib['file']
-            self._def_line_number = self._testcase_xml.attrib['line']
-        except AttributeError:
-            pass
 
     def _find_property(self, name):
         """A helper to find a property by name
@@ -447,7 +511,7 @@ class _ZigZagTestLog(object):
         Using the 'requests' library gets us around the bugs in the Swagger client
         If the API response contains no items _qtest_requirements will be an empty list
         """
-        for jira_id in self._jira_issues:
+        for jira_id in self.jira_issues:
             headers = {'Authorization': self._mediator.qtest_api_token,
                        'Content-Type': 'application/json'}
             endpoint = "https://apitryout.qtestnet.com/api/v3/projects/{}/search?pageSize=100&page=1".format(
@@ -505,7 +569,6 @@ class _ZigZagTestLog(object):
         Returns:
             dict(str: ZigZagTestLogField)
         """
-
         if cls._fields == 0:
             cls._fields = {}
             for prop, value in list(mediator.testsuite_props.items()):
@@ -561,33 +624,6 @@ class _ZigZagTestLog(object):
                 UtilityFacade(mediator).find_custom_field_id_by_label('Test SHA', 'test-runs')
         return cls._test_sha_field_id
 
-    @classmethod
-    def _get_truncated_failure_output(cls, message):
-        """Process failure/error messages to produce a truncated version of the message for readability in the qTest
-        interface.
-
-        Args:
-            message (str): Message to process.
-
-        Returns:
-            str: Truncated failure message.
-        """
-
-        max_lines = 3
-        max_line_length = 120
-        msg_line_count = len(message.split('\n'))
-        # Throw out the useless last 2 lines of the message if over a certain length.
-        # Note: pytest failure messages follow a predictable pattern, hence why we can toss lines without inspection.
-        msg_lines = message.split('\n')[msg_line_count - (max_lines + 2):msg_line_count - 2] \
-            if msg_line_count > (max_lines + 2) else [message]
-        truncated_message = 'Log truncated, please see attached failure log for more details...\n' \
-            if len(msg_lines) == max_lines else ''
-
-        for line in msg_lines:
-            truncated_message += line + '\n' if len(line) <= max_line_length else line[:max_line_length] + '...\n'
-
-        return truncated_message.rstrip()
-
 
 class _ZigZagTestLogWithSteps(_ZigZagTestLog):
     def __init__(self, testcase_name, teststeps_xml, mediator):
@@ -599,16 +635,126 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
                 a single qTest test log.
             mediator (ZigZag): The mediator that stores shared data.
         """
-
-        # Initialize without parsing so we can post-process the test steps.
-        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator, auto_parse=False)
+        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator)
 
         self._name = testcase_name
         self._teststeps_xml = teststeps_xml
         self._zz_test_step_logs = []
         self._qtest_test_step_logs = []
 
-        self._parse()
+        # Convert the test steps into test logs for easier post-processing.
+        self._zz_test_step_logs = \
+            [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
+
+    @property
+    def errors(self):
+        """Gets the errors form the testcase_xml
+
+        Returns:
+            list: the list of errors found
+        """
+        if self._errors is None:
+            self._errors = [error for log in self._zz_test_step_logs for error in log.errors]
+
+        return self._errors
+
+    @property
+    def failures(self):
+        """Gets the failures from the testcase_xml
+
+        Returns:
+            list: the list of failures found
+        """
+        if self._failures is None:
+            self._failures = [failure for log in self._zz_test_step_logs for failure in log.failures]
+
+        return self._failures
+
+    @property
+    def status(self):
+        """Gets the status of this test log
+
+        Return:
+            str: the status of this test execution
+        """
+        if self._status is None:
+            statuses = [log.status for log in self._zz_test_step_logs]
+            if any([status == 'FAILED' for status in statuses]):
+                self._status = 'FAILED'
+            elif any([status == 'SKIPPED' for status in statuses]):
+                self._status = 'SKIPPED'
+            else:
+                self._status = 'PASSED'
+
+        return self._status
+
+    @property
+    def stderr(self):
+        """Gets the contents of 'stderr' if captured.
+
+        Return:
+            str: output printed to 'stderr'
+        """
+
+        if self._stderr is None:
+            for log in self._zz_test_step_logs:
+                if log.stderr:
+                    self._stderr = log.stderr
+                    break
+
+        return self._stderr
+
+    @property
+    def stdout(self):
+        """Gets the contents of 'stdout' if captured.
+
+        Return:
+            str: output printed to 'stdout'
+        """
+
+        if self._stdout is None:
+            for log in self._zz_test_step_logs:
+                if log.stdout:
+                    self._stdout = log.stdout
+                    break
+
+        return self._stdout
+
+    @property
+    def failure_output(self):
+        """Gets the failure output of this test log
+
+        Returns:
+            str: The output from failure or error of this test execution
+        """
+        if self._failure_output is None:
+            if self._status == 'FAILED':
+                for log in self._zz_test_step_logs:
+                    if log.status == 'FAILED':
+                        self._failure_output = log.failure_output
+                        break  # take the first failure_output
+            else:
+                self._failure_output = ''
+
+        return self._failure_output
+
+    @property
+    def full_failure_output(self):
+        """Gets the full failure output of this test log
+
+        Returns:
+            str: The output from failure or error of this test execution
+        """
+        if self._full_failure_output is None:
+            if self.status == 'FAILED':
+                for log in self._zz_test_step_logs:
+                    if log.status == 'FAILED':
+                        self._full_failure_output = log.full_failure_output
+                        break  # take the first full_failure_output
+            else:
+                self._full_failure_output = ''
+
+        return self._full_failure_output
 
     @property
     def qtest_test_log(self):
@@ -619,64 +765,138 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
         """
 
         log = super(_ZigZagTestLogWithSteps, self).qtest_test_log
-        log.test_step_logs = self._qtest_test_step_logs
+        log.test_step_logs = self.qtest_test_step_logs
 
         return log
 
-    def _parse(self):
-        """Parse the _testcase_xml
+    @property
+    def start_date(self):
+        """Gets the start date of this test log
+
+        Returns:
+            str: the start date of this test execution
+        """
+        if self._start_date is None:
+            # Start of first step
+            self._start_date = self._zz_test_step_logs[0].start_date
+
+        return self._start_date
+
+    @property
+    def end_date(self):
+        """Gets the end date of this test log
+
+        Returns:
+            str: the end date of this test execution
+        """
+        if self._end_date is None:
+            # End of last step
+            self._end_date = self._zz_test_step_logs[-1].end_date
+
+        return self._end_date
+
+    @property
+    def test_file(self):
+        """Gets the test_file property
+
+        Returns:
+            str: the file containing the test that generated the xml
+        """
+        if self._test_file is None:
+            # All steps have the same file so just pick the first
+            self._test_file = self._zz_test_step_logs[0].test_file
+
+        return self._test_file
+
+    @property
+    def def_line_number(self):
+        """Gets the def_line_number
+
+        Returns:
+            str: the sting that is the def_line_number
+        """
+        if self._def_line_number is None:
+            # Pick line number of first step
+            self._def_line_number = self._zz_test_step_logs[0].def_line_number
+
+        return self._def_line_number
+
+    @property
+    def automation_content(self):
+        """Gets the automation content of this test log
+
+        Returns:
+            str: The UUID that we associate with this Test Case
+        """
+        if self._automation_content is None:
+            # All steps have the same 'test_id'
+            self._automation_content = self._zz_test_step_logs[0].automation_content
+
+        return self._automation_content
+
+    @property
+    def jira_issues(self):
+        """Gets the associated jira issue ids
+
+        Returns:
+            list[str]: A list of jira issue ids
+        """
+        if self._jira_issues is None:
+            # All steps have the same 'jira' issues
+            self._jira_issues = self._zz_test_step_logs[0].jira_issues
+
+        return self._jira_issues
+
+    @property
+    def classname(self):
+        """Gets the classname property
+
+        Returns:
+            str: the classname of the test
+        """
+        if self._classname is None:
+            # Get tricky with the classname by reading the first step and stripping the test name.
+            self._classname = self._teststeps_xml[0].attrib['classname'].replace(".{}".format(self.name), '')
+
+        return self._classname
+
+    @property
+    def qtest_test_step_logs(self):
+        """generates qtest AutomationTestStepLog objects.
 
         Raises:
             RuntimeError: Test case missing required property.
+
+        Returns:
+            list: a list of AutomationTestStepLog
         """
-
-        self._process_test_steps_xml()
-
-        self._exe_start_date = self._zz_test_step_logs[0].start_date   # Start of first step
-        self._exe_end_date = self._zz_test_step_logs[-1].end_date   # End of last step
-        self._test_file = self._zz_test_step_logs[0].test_file  # All steps have the same file so just pick the first
-        self._def_line_number = self._zz_test_step_logs[0].def_line_number  # Pick line number of first step
-        self._automation_content = self._zz_test_step_logs[0].automation_content  # All steps have the same 'test_id'
-        self._jira_issues = self._zz_test_step_logs[0].jira_issues  # All steps have the same 'jira' issues
-
-        # Get tricky with the classname by reading the first step and stripping the test name.
-        self._classname = self._teststeps_xml[0].attrib['classname'].replace(".{}".format(self.name), '')
-
-    def _process_test_steps_xml(self):
-        """Process the test steps XML elements into qtest AutomationTestStepLog objects.
-
-        Raises:
-            RuntimeError: Test case missing required property.
-        """
-
-        # Convert the test steps into test logs for easier post-processing.
-        self._zz_test_step_logs = \
-            [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
-        self._status = 'SKIPPED'
-
+        qtest_test_step_logs = []
         for zz_test_step_log, order in zip(self._zz_test_step_logs, range(len(self._zz_test_step_logs))):
             qtest_test_step_log = swagger_client.AutomationTestStepLog()
+
+            # set the status based on the previous status
+            previous_position = order - 1 if order is not 0 else 0
+            previous_status = self._zz_test_step_logs[previous_position].status
+            if zz_test_step_log.status == 'FAILED':
+                qtest_test_step_log.status = 'FAILED'
+            elif previous_status == 'FAILED' or previous_status == 'SKIPPED' or zz_test_step_log.status == 'SKIPPED':
+                qtest_test_step_log.status = 'SKIPPED'
+            else:
+                qtest_test_step_log.status = 'PASSED'
+
             qtest_test_step_log.order = order
             qtest_test_step_log.description = zz_test_step_log.name
-            qtest_test_step_log.status = zz_test_step_log.status
             qtest_test_step_log.attachments = []
             qtest_test_step_log.expected_result = 'pass'
-            qtest_test_step_log.actual_result = zz_test_step_log.failure_output \
-                if zz_test_step_log.status == 'FAILED' else qtest_test_step_log.status
-
             if zz_test_step_log.status == 'FAILED':
                 # Attach the failure log along with stderr and stdout to the test step if the exist.
                 qtest_test_step_log.attachments = zz_test_step_log.qtest_test_log.attachments[1:]
+                qtest_test_step_log.actual_result = zz_test_step_log.failure_output
+            else:
+                qtest_test_step_log.actual_result = qtest_test_step_log.status
+            qtest_test_step_logs.append(qtest_test_step_log)
 
-                self._stderr = zz_test_step_log.stderr
-                self._stdout = zz_test_step_log.stdout
-                self._failure_output = zz_test_step_log.failure_output
-                self._full_failure_output = zz_test_step_log.full_failure_output
-                self._status = 'FAILED'
-            elif zz_test_step_log.status == 'PASSED' and self._status != 'FAILED':
-                self._status = 'PASSED'
-
-            self._qtest_test_step_logs.append(qtest_test_step_log)
+        return qtest_test_step_logs
 
 
 class ZigZagTestLogs(Sequence):
