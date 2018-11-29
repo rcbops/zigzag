@@ -728,14 +728,12 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
             str: The output from failure or error of this test execution
         """
         if self._failure_output is None:
-            if self._status == 'FAILED':
-                for log in self._zz_test_step_logs:
-                    if log.status == 'FAILED':
-                        self._failure_output = log.failure_output
-                        break  # take the first failure_output
-            else:
-                self._failure_output = ''
+            for log in self._zz_test_step_logs:
+                if log.status == 'FAILED':
+                    self._failure_output = log.failure_output
+                    return self._failure_output  # take the first full_failure_output
 
+        self._failure_output = ''
         return self._failure_output
 
     @property
