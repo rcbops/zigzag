@@ -361,8 +361,10 @@ class _ZigZagTestLog(object):
         Returns:
             list: the list of swagger_client.PropertyResource
         """
+
+        properties = []
+
         if self._qtest_property_resource_list is None:
-            properties = []
             properties.append(swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
                                                               field_value=self.failure_output))
             # Attach all test suite properties to the log
@@ -394,8 +396,10 @@ class _ZigZagTestLog(object):
         Returns:
             list: the list of swagger_client.AttachmentResource
         """
+
+        attachments = []
+
         if self._qtest_attachment_list is None:
-            attachments = []
             attachment_suffix = self._date_time_now.strftime('%Y-%m-%dT%H-%M')
             encoded_xml = b64encode(self._mediator.serialized_junit_xml).decode('UTF-8')
             attachments.append(
@@ -662,7 +666,8 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
                 a single qTest test log.
             mediator (ZigZag): The mediator that stores shared data.
         """
-        super(_ZigZagTestLogWithSteps, self).__init__(None, mediator)
+
+        super(_ZigZagTestLogWithSteps, self).__init__(teststeps_xml[0], mediator)
 
         self._name = testcase_name
         self._teststeps_xml = teststeps_xml
@@ -670,8 +675,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
         self._qtest_test_step_logs = []
 
         # Convert the test steps into test logs for easier post-processing.
-        self._zz_test_step_logs = \
-            [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
+        self._zz_test_step_logs = [_ZigZagTestLog(ts_xml, self._mediator) for ts_xml in self._teststeps_xml]
 
     @property
     def errors(self):
@@ -758,9 +762,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
             for log in self._zz_test_step_logs:
                 if log.status == 'FAILED':
                     self._failure_output = log.failure_output
-                    return self._failure_output  # take the first full_failure_output
 
-        self._failure_output = ''
         return self._failure_output
 
     @property
@@ -819,58 +821,6 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
             self._end_date = self._zz_test_step_logs[-1].end_date
 
         return self._end_date
-
-    @property
-    def test_file(self):
-        """Gets the test_file property
-
-        Returns:
-            str: the file containing the test that generated the xml
-        """
-        if self._test_file is None:
-            # All steps have the same file so just pick the first
-            self._test_file = self._zz_test_step_logs[0].test_file
-
-        return self._test_file
-
-    @property
-    def def_line_number(self):
-        """Gets the def_line_number
-
-        Returns:
-            str: the sting that is the def_line_number
-        """
-        if self._def_line_number is None:
-            # Pick line number of first step
-            self._def_line_number = self._zz_test_step_logs[0].def_line_number
-
-        return self._def_line_number
-
-    @property
-    def automation_content(self):
-        """Gets the automation content of this test log
-
-        Returns:
-            str: The UUID that we associate with this Test Case
-        """
-        if self._automation_content is None:
-            # All steps have the same 'test_id'
-            self._automation_content = self._zz_test_step_logs[0].automation_content
-
-        return self._automation_content
-
-    @property
-    def jira_issues(self):
-        """Gets the associated jira issue ids
-
-        Returns:
-            list[str]: A list of jira issue ids
-        """
-        if self._jira_issues is None:
-            # All steps have the same 'jira' issues
-            self._jira_issues = self._zz_test_step_logs[0].jira_issues
-
-        return self._jira_issues
 
     @property
     def classname(self):
