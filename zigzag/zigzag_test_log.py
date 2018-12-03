@@ -63,6 +63,9 @@ class _ZigZagTestLog(object):
         self._failures = None
 
         self._jira_issues = None
+        self._qtest_property_resource_list = None
+        self._qtest_attachment_list = None
+        self._date_time_now = datetime.utcnow()  # use same time for all operations
 
     @property
     def name(self):
@@ -246,7 +249,8 @@ class _ZigZagTestLog(object):
             try:
                 self._start_date = self._find_property('start_time')
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                date_time_now = datetime.utcnow()
+                self._start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return self._start_date
 
@@ -261,7 +265,8 @@ class _ZigZagTestLog(object):
             try:
                 self._end_date = self._find_property('end_time')
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                date_time_now = datetime.utcnow()
+                self._end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return self._end_date
 
@@ -350,77 +355,99 @@ class _ZigZagTestLog(object):
         return self._def_line_number
 
     @property
+    def qtest_property_resource_list(self):
+        """Gets the list of qtest properties
+
+        Returns:
+            list: the list of swagger_client.PropertyResource
+        """
+        if self._qtest_property_resource_list is None:
+            properties = []
+            properties.append(swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
+                                                              field_value=self.failure_output))
+            # Attach all test suite properties to the log
+            # noinspection PyUnresolvedReferences
+            for name, field in list(self.fields.items()):
+                properties.append(swagger_client.PropertyResource(field_id=field['id'],
+                                                                  field_value=field['value']
+                                                                  ))
+            if self.failure_link_field_id:
+                link = None
+                if self.status == 'FAILED':
+                    link = self.github_failure_link
+                if not link:
+                    link = SWEET_UNICORN_GIF
+                properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
+                                                                  field_value=link))
+            # Attach SHA
+            if self.test_sha_field_id and self.link_generation_facade.git_sha:
+                properties.append(swagger_client.PropertyResource(field_id=self.test_sha_field_id,
+                                                                  field_value=self.link_generation_facade.git_sha))
+            self._qtest_property_resource_list = properties
+
+        return self._qtest_property_resource_list
+
+    @property
+    def qtest_attachment_list(self):
+        """Gets the list of qtest attachments
+
+        Returns:
+            list: the list of swagger_client.AttachmentResource
+        """
+        if self._qtest_attachment_list is None:
+            attachments = []
+            attachment_suffix = self._date_time_now.strftime('%Y-%m-%dT%H-%M')
+            encoded_xml = b64encode(self._mediator.serialized_junit_xml).decode('UTF-8')
+            attachments.append(
+                swagger_client.AttachmentResource(name="junit_{}.xml".format(attachment_suffix),
+                                                  content_type='application/xml',
+                                                  data=encoded_xml,
+                                                  author={}))
+            if self.full_failure_output:
+                encoded_output = b64encode(self.full_failure_output.encode('UTF-8')).decode('UTF-8')
+                attachments.append(
+                    swagger_client.AttachmentResource(name="failure_output_{}.txt".format(attachment_suffix),
+                                                      content_type='text/plain',
+                                                      data=encoded_output,
+                                                      author={}))
+            if self.status == 'FAILED' and self.stderr:
+                encoded_stderr = b64encode(self.stderr.encode('UTF-8')).decode('UTF-8')
+                attachments.append(
+                    swagger_client.AttachmentResource(name="stderr_{}.txt".format(attachment_suffix),
+                                                      content_type='text/plain',
+                                                      data=encoded_stderr,
+                                                      author={}))
+            if self.status == 'FAILED' and self.stdout:
+                encoded_stdout = b64encode(self.stdout.encode('UTF-8')).decode('UTF-8')
+                attachments.append(
+                    swagger_client.AttachmentResource(name="stdout_{}.txt".format(attachment_suffix),
+                                                      content_type='text/plain',
+                                                      data=encoded_stdout,
+                                                      author={}))
+
+        return attachments
+
+    @property
     def qtest_test_log(self):
         """Gets a qTest AutomationTestLogResource
 
         Returns:
             swagger_client.AutomationTestLogResource
         """
-
         date_time_now = datetime.utcnow()
         log = swagger_client.AutomationTestLogResource()
-        log.properties = [
-            swagger_client.PropertyResource(field_id=self.test_run_failure_output_field_id,
-                                            field_value=self.failure_output)]
-        # Attach all test suite properties to the log
-        # noinspection PyUnresolvedReferences
-        for name, field in list(self.fields.items()):
-            log.properties.append(swagger_client.PropertyResource(field_id=field['id'],
-                                                                  field_value=field['value']
-                                                                  ))
-        if self.failure_link_field_id:
-            link = None
-            if self.status == 'FAILED':
-                link = self.github_failure_link
-            if not link:
-                link = SWEET_UNICORN_GIF
-            log.properties.append(swagger_client.PropertyResource(field_id=self.failure_link_field_id,
-                                                                  field_value=link))
-        # Attach SHA
-        if self.test_sha_field_id and self.link_generation_facade.git_sha:
-            log.properties.append(swagger_client.PropertyResource(field_id=self.test_sha_field_id,
-                                                                  field_value=self.link_generation_facade.git_sha))
+        log.properties = self.qtest_property_resource_list
         log.name = self.name
         log.automation_content = self.automation_content
-
-        if self.start_date:
-            log.exe_start_date = self.start_date
-        else:
-            log.exe_start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
-        if self.end_date:
-            log.exe_end_date = self.end_date
-        else:
-            log.exe_end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+        log.exe_start_date = self.start_date
+        log.exe_end_date = self.end_date
         log.build_url = self._mediator.build_url
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
         log.full_fail_log_text = self.full_failure_output
         log.attachment_suffix = date_time_now.strftime('%Y-%m-%dT%H-%M')
         log.status = self.status
-        log.attachments = \
-            [swagger_client.AttachmentResource(name="junit_{}.xml".format(log.attachment_suffix),
-                                               content_type='application/xml',
-                                               data=b64encode(self._mediator.serialized_junit_xml).decode('UTF-8'),
-                                               author={})]
-        if log.full_fail_log_text:
-            log.attachments.append(
-                swagger_client.AttachmentResource(name="failure_output_{}.txt".format(log.attachment_suffix),
-                                                  content_type='text/plain',
-                                                  data=b64encode(
-                                                      log.full_fail_log_text.encode('UTF-8')).decode('UTF-8'),
-                                                  author={}))
-        if self.status == 'FAILED' and self.stderr:
-            log.attachments.append(
-                swagger_client.AttachmentResource(name="stderr_{}.txt".format(log.attachment_suffix),
-                                                  content_type='text/plain',
-                                                  data=b64encode(self.stderr.encode('UTF-8')).decode('UTF-8'),
-                                                  author={}))
-        if self.status == 'FAILED' and self.stdout:
-            log.attachments.append(
-                swagger_client.AttachmentResource(name="stdout_{}.txt".format(log.attachment_suffix),
-                                                  content_type='text/plain',
-                                                  data=b64encode(self.stdout.encode('UTF-8')).decode('UTF-8'),
-                                                  author={}))
+        log.attachments = self.qtest_attachment_list
 
         return log
 
