@@ -266,5 +266,5 @@ class TestSteps(object):
         # Test
         assert len(test_runs) == 1
         assert len(mixed_status_test_steps_for_mk8s.tests) == 3
-        #pytest.helpers.assert_qtest_property(test_runs[0], 'Status', test_run_status_exp)
+        pytest.helpers.assert_qtest_property(test_runs[0], 'Status', test_run_status_exp)
         pytest.helpers.assert_qtest_property_search(test_runs[0], 'Failure Output', test_failure_msg_regex_exp)
