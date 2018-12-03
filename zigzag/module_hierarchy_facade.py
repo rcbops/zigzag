@@ -30,6 +30,8 @@ class ModuleHierarchyFacade(object):
             return self._asc()
         elif self._mediator.ci_environment == 'mk8s':
             return self._mk8s()
+        elif self._mediator.tool == 'tempest':
+            return self._tempest()
         else:
             return self._asc()  # This is the default
 
@@ -78,6 +80,14 @@ class ModuleHierarchyFacade(object):
             module_hierarchy = [self._classname]
 
         return module_hierarchy
+
+    def _tempest(self):
+        """Gets the module hierarchy for tempest test cases
+
+        Returns:
+            list[str]: The strings to use for the module_hierarchy
+        """
+        return ['Tempest']  # this is a placeholder, use something more meaningful
 
     def _set_test_cycle(self, cycle):
         """Sets the test cycle if it has not already been defined"""

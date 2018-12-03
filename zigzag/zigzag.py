@@ -10,6 +10,7 @@ from swagger_client.rest import ApiException
 from zigzag.utility_facade import UtilityFacade
 from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
+from zigzag.zigzag_test_log import ZigZagTestLogError
 
 
 class ZigZag(object):
@@ -52,6 +53,8 @@ class ZigZag(object):
         self._utility_facade = UtilityFacade(self)
         self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
+
+        self._tool = 'pytest-zigzag'  # the default tool assumed by ZigZag
 
     #  properties with only getters
     @property
@@ -116,6 +119,20 @@ class ZigZag(object):
         return self._pprint_on_fail
 
     #  properties with setters and getters
+    @property
+    def tool(self):
+        """Gets the tool used to generate the files to be processed
+
+        Returns:
+            str: the name of the tool used to generate the files to be processed
+        """
+        return self._tool
+
+    @tool.setter
+    def tool(self, value):
+        """Sets the value for tool"""
+        self._tool = value
+
     @property
     def build_url(self):
         """Gets the build_url
@@ -245,7 +262,12 @@ class ZigZag(object):
         """
 
         auto_req = swagger_client.AutomationRequest()
-        auto_req.test_logs = [log.qtest_test_log for log in self._test_logs]
+        auto_req.test_logs = []
+        for log in self.test_logs:
+            try:
+                auto_req.test_logs.append(log.qtest_test_log)
+            except ZigZagTestLogError:
+                pass  # if we cant find automation content this is a bad record
         auto_req.test_cycle = \
             self._utility_facade.discover_parent_test_cycle(self.qtest_test_cycle)
         auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'

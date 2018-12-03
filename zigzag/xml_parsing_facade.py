@@ -31,20 +31,28 @@ class XmlParsingFacade(object):
         sets the property 'build_number' on the mediator
         """
 
-        self._read()
-        self._determine_ci_environment()
-        self._validate()
-        self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
-                                          for p in self._mediator.junit_xml.findall('./properties/property')}
-        self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
-                                                             encoding='UTF-8',
-                                                             xml_declaration=True)
+        if self._mediator.tool == 'pytest-zigzag':
+            self._read()
+            self._determine_ci_environment()
+            self._validate()
+            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
+                                              for p in self._mediator.junit_xml.findall('./properties/property')}
+            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
+                                                                 encoding='UTF-8',
+                                                                 xml_declaration=True)
 
-        try:
-            self._mediator.build_url = self._mediator.testsuite_props['BUILD_URL']
-            self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
-        except KeyError as e:
-            raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
+            try:
+                self._mediator.build_url = self._mediator.testsuite_props['BUILD_URL']
+                self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
+            except KeyError as e:
+                raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
+        elif self._mediator.tool == 'tempest':
+            self._read()
+            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
+                                              for p in self._mediator.junit_xml.findall('./properties/property')}
+            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
+                                                                 encoding='UTF-8',
+                                                                 xml_declaration=True)
 
         ZigZagTestLogs(self._mediator)  # new test logs attach themselves to the mediator
 
