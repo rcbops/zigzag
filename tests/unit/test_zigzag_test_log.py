@@ -1375,7 +1375,7 @@ class TestFailedTestCases(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
-        assert len(tl._failure_output.split('\n')) == 4
+        assert len(tl.failure_output.split('\n')) == 4
 
     def test_truncated_failure_output_with_short_single_line_message(self, short_single_line_failure_message,
                                                                      mock_zigzag):
@@ -1389,7 +1389,7 @@ class TestFailedTestCases(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
-        assert tl._failure_output == 'Short'
+        assert tl.failure_output == 'Short'
 
     def test_truncated_failure_output_with_long_single_line_message(self, long_single_line_failure_message,
                                                                     mock_zigzag):
@@ -1403,7 +1403,7 @@ class TestFailedTestCases(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
-        assert tl._failure_output == LONG_FAILURE_MESSAGE[:120] + '...'
+        assert tl.failure_output == LONG_FAILURE_MESSAGE[:120] + '...'
 
     def test_truncated_failure_output_with_long_multi_line_message(self, long_multi_line_failure_message, mock_zigzag):
         """Verify that a failure output of only one line will NOT be truncated."""
@@ -1416,6 +1416,6 @@ class TestFailedTestCases(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
-        assert len(tl._failure_output.split('\n')) == 4
+        assert len(tl.failure_output.split('\n')) == 4
         assert 'Log truncated' in tl._failure_output
         assert '{}{}'.format(LONG_FAILURE_MESSAGE[:100], '...') in tl._failure_output
