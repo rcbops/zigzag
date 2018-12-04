@@ -251,8 +251,7 @@ class _ZigZagTestLog(object):
             try:
                 self._start_date = self._find_property('start_time')
             except AttributeError:
-                date_time_now = datetime.utcnow()
-                self._start_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+                self._start_date = self._date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return self._start_date
 
@@ -267,8 +266,7 @@ class _ZigZagTestLog(object):
             try:
                 self._end_date = self._find_property('end_time')
             except AttributeError:
-                date_time_now = datetime.utcnow()
-                self._end_date = date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+                self._end_date = self._date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return self._end_date
 
@@ -440,7 +438,6 @@ class _ZigZagTestLog(object):
         Returns:
             swagger_client.AutomationTestLogResource
         """
-        date_time_now = datetime.utcnow()
         log = swagger_client.AutomationTestLogResource()
         log.properties = self.qtest_property_resource_list
         log.name = self.name
@@ -451,7 +448,7 @@ class _ZigZagTestLog(object):
         log.build_number = self._mediator.build_number
         log.module_names = self.module_hierarchy
         log.full_fail_log_text = self.full_failure_output
-        log.attachment_suffix = date_time_now.strftime('%Y-%m-%dT%H-%M')
+        log.attachment_suffix = self._date_time_now.strftime('%Y-%m-%dT%H-%M')
         log.status = self.status
         log.attachments = self.qtest_attachment_list
 
