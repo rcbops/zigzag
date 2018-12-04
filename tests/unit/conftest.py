@@ -699,7 +699,7 @@ def tempest_xml(tmpdir_factory):
             <testcase classname="tempest.api.volume.admin.test_volumes_backup.VolumesBackupsAdminTest" name="test_volume_backup_reset_status[id-47a35425-a891-4e13-961c-c45deea21e94]" time="27.117"/>
             <testcase classname="tempest.scenario.test_server_basic_ops.TestServerBasicOps" name="test_server_basic_ops[compute,id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba,network,smoke]" time="38.366"/>
         </testsuite>
-        """
+        """  # noqa
 
     with open(filename, 'w') as f:
         f.write(junit_xml)

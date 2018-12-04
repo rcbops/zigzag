@@ -1486,5 +1486,5 @@ class TestZigZagTestLogsTempest(object):
         for tl in ZigZagTestLogs(zz):
             try:
                 assert tl.qtest_test_log
-            except ZigZagTestLogError: # case where we do not have a UUID
+            except ZigZagTestLogError:  # case where we do not have a UUID
                 pass
