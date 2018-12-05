@@ -160,3 +160,56 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     assert 1 == result.exit_code
     assert error_msg_exp in result.output
     assert 'Failed!' in result.output
+
+
+def test_test_runner_cli_option_good_values(tempest_xml, mocker):
+    """Verify that valid values will be accepted by the CLI"""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    runner = CliRunner()
+    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
+    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
+
+    # Test
+    for test_runner in ['tempest', 'pytest-zigzag']:
+        cli_arguments = [tempest_xml, project_id, '--test-runner', test_runner]
+        result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+        assert result.exit_code is 0
+
+
+def test_test_runner_short_option(tempest_xml, mocker):
+    """Verify the short option for test-runner"""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    runner = CliRunner()
+    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
+    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
+
+    # Test
+    cli_arguments = [tempest_xml, project_id, '-tr', 'tempest']
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert result.exit_code is 0
+
+
+def test_test_runner_cli_option_bad_value(tempest_xml, mocker):
+    """Verify that an invalid value will fail validation"""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    runner = CliRunner()
+    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
+    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
+
+    # Expectation
+    expected_output = 'Error: Invalid value for "--test-runner" / "-tr": invalid choice'
+
+    # Test
+    cli_arguments = [tempest_xml, project_id, '--test-runner', 'bad-value']
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert result.exit_code is not 0
+    assert expected_output in result.output
