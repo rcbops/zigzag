@@ -14,7 +14,6 @@ from datetime import timedelta
 from future.moves.collections import Sequence
 from zigzag.utility_facade import UtilityFacade
 from zigzag.link_generation_facade import LinkGenerationFacade
-from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 SWEET_UNICORN_GIF = 'https://media.giphy.com/media/g6i1lEax9Pa24/giphy.gif'
 
@@ -44,7 +43,6 @@ class _ZigZagTestLog(object):
 
         self._testcase_xml = testcase_xml
         self._mediator = mediator
-        self._module_hierarchy_facade = None
 
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
@@ -313,10 +311,7 @@ class _ZigZagTestLog(object):
             RuntimeError: the testcase 'classname' attribute is invalid
         """
 
-        if not self._module_hierarchy_facade:
-            self._module_hierarchy_facade = ModuleHierarchyFacade(self.classname, self._mediator)
-
-        return self._module_hierarchy_facade.get_module_hierarchy()
+        return self._mediator.module_hierarchy_facade.get_module_hierarchy(self.classname)
 
     @property
     def test_file(self):
