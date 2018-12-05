@@ -29,7 +29,7 @@ class _ZigZagTestLog(object):
     _fields = 0
     _failure_link_field_id = 0
     _test_sha_field_id = 0
-    _date_time_format = '%Y-%m-%dT%H:%M:%SZ'
+    _date_time_format = '%Y-%m-%dT%H:%M:%SZ'  # the highest degree of accuracy that qtest will accept (no micro seconds)
 
     def __init__(self, testcase_xml, mediator):
         """Create a TestLog object.
@@ -251,7 +251,7 @@ class _ZigZagTestLog(object):
             try:
                 self._start_date = self._find_property('start_time')
             except AttributeError:
-                self._start_date = self._date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+                self._start_date = self._date_time_now.strftime(self._date_time_format)
 
         return self._start_date
 
@@ -266,7 +266,7 @@ class _ZigZagTestLog(object):
             try:
                 self._end_date = self._find_property('end_time')
             except AttributeError:
-                self._end_date = self._date_time_now.strftime('%Y-%m-%dT%H:%M:%SZ')
+                self._end_date = self._date_time_now.strftime(self._date_time_format)
 
         return self._end_date
 
@@ -966,9 +966,9 @@ class ZigZagTestLogs(Sequence):
         self._mediator = mediator
         self._test_logs = []
 
-        if self._mediator.tool == 'tempest':
+        if self._mediator.test_runner == 'tempest':
             self._parse_tempest_test_cases()
-        elif self._mediator.tool == 'pytest-zigzag':
+        elif self._mediator.test_runner == 'pytest-zigzag':
             self._parse_test_cases_with_steps()
             self._parse_test_cases_without_steps()
 
@@ -1067,4 +1067,7 @@ class ZigZagTestLogs(Sequence):
 
 class ZigZagTestLogError(Exception):
     """An Error used by _ZigZagTestLog"""
-    pass  # we are using this to raise in the event we cant find the automation content
+
+    def __init__(self, message):
+        """An error to raise in the event we cant find the automation content"""
+        super(ZigZagTestLogError, self).__init__(message)

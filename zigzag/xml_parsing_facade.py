@@ -31,7 +31,7 @@ class XmlParsingFacade(object):
         sets the property 'build_number' on the mediator
         """
 
-        if self._mediator.tool == 'pytest-zigzag':
+        if self._mediator.test_runner == 'pytest-zigzag':
             self._read()
             self._determine_ci_environment()
             self._validate()
@@ -46,7 +46,7 @@ class XmlParsingFacade(object):
                 self._mediator.build_number = self._mediator.testsuite_props['BUILD_NUMBER']
             except KeyError as e:
                 raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
-        elif self._mediator.tool == 'tempest':
+        elif self._mediator.test_runner == 'tempest':
             self._read()
             self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
                                               for p in self._mediator.junit_xml.findall('./properties/property')}

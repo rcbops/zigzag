@@ -54,7 +54,7 @@ class ZigZag(object):
         self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
 
-        self._tool = 'pytest-zigzag'  # the default tool assumed by ZigZag
+        self._test_runner = 'pytest-zigzag'  # the default test_runner assumed by ZigZag
 
     #  properties with only getters
     @property
@@ -120,18 +120,18 @@ class ZigZag(object):
 
     #  properties with setters and getters
     @property
-    def tool(self):
-        """Gets the tool used to generate the files to be processed
+    def test_runner(self):
+        """Gets the test_runner used to generate the files to be processed
 
         Returns:
-            str: the name of the tool used to generate the files to be processed
+            str: the name of the test_runner used to generate the files to be processed
         """
-        return self._tool
+        return self._test_runner
 
-    @tool.setter
-    def tool(self, value):
-        """Sets the value for tool"""
-        self._tool = value
+    @test_runner.setter
+    def test_runner(self, value):
+        """Sets the value for test_runner"""
+        self._test_runner = value
 
     @property
     def build_url(self):

@@ -81,7 +81,7 @@ class TestModuleHierarchyFacade(object):
 
         # Mock
         zz = mocker.MagicMock()
-        zz.tool = 'tempest'
+        zz.test_runner = 'tempest'
         zz.utility_facade = UtilityFacade(zz)
 
         # Setup

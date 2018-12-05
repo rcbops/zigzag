@@ -30,7 +30,7 @@ class ModuleHierarchyFacade(object):
             return self._asc()
         elif self._mediator.ci_environment == 'mk8s':
             return self._mk8s()
-        elif self._mediator.tool == 'tempest':
+        elif self._mediator.test_runner == 'tempest':
             return self._tempest()
         else:
             return self._asc()  # This is the default

@@ -1434,13 +1434,13 @@ class TestZigZagTestLogsTempest(object):
         # Setup
         mock_zigzag()
         zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
-        zz.tool = 'tempest'
+        zz.test_runner = 'tempest'
         zz.parse()
 
         # Test
         tls = ZigZagTestLogs(zz)
 
-        assert len(tls) == 122  # number of tests parsed
+        assert 8 == len(tls)  # number of tests parsed
 
     def test_calculate_time(self, tempest_xml, mock_zigzag):
         """Verify that we can calculate the end time based on the time attribute"""
@@ -1448,7 +1448,7 @@ class TestZigZagTestLogsTempest(object):
         # Setup
         mock_zigzag()
         zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
-        zz.tool = 'tempest'
+        zz.test_runner = 'tempest'
         zz.parse()
 
         # Test
@@ -1463,7 +1463,7 @@ class TestZigZagTestLogsTempest(object):
         # Setup
         mock_zigzag()
         zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
-        zz.tool = 'tempest'
+        zz.test_runner = 'tempest'
         zz.parse()
 
         # Test
@@ -1479,7 +1479,7 @@ class TestZigZagTestLogsTempest(object):
         # Setup
         mock_zigzag()
         zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
-        zz.tool = 'tempest'
+        zz.test_runner = 'tempest'
         zz.parse()
 
         # Test
