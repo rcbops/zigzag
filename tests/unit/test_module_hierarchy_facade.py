@@ -76,6 +76,21 @@ class TestModuleHierarchyFacade(object):
         mhf = ModuleHierarchyFacade(classname, zz)
         assert mhf.get_module_hierarchy() == ['tests.test_default']
 
+    def test_tempest(self, mocker):
+        """Validate when configured with tempest as tool"""
+
+        # Mock
+        zz = mocker.MagicMock()
+        zz.test_runner = 'tempest'
+        zz.utility_facade = UtilityFacade(zz)
+
+        # Setup
+        classname = 'tests.test_default'
+
+        # Test
+        mhf = ModuleHierarchyFacade(classname, zz)
+        assert mhf.get_module_hierarchy() == ['Tempest']
+
     def test_bad_value(self, mocker):
         """Validate that if a bad value gets in we default to asc"""
         # Mock

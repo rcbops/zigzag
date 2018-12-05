@@ -559,3 +559,35 @@ def invalid_classname_xml(tmpdir_factory,
         f.write(junit_xml)
 
     return filename
+
+
+@pytest.fixture(scope='session')
+def tempest_xml(tmpdir_factory):
+    """The first example of tempest xml results"""
+    filename = tmpdir_factory.mktemp('data').join('tempest.xml').strpath
+    junit_xml = \
+        """
+        <testsuite errors="0" failures="0" name="" tests="8" time="183.872">
+            <testcase classname="tempest.api.identity.admin.v3.test_domains.DefaultDomainTestJSON" name="test_default_domain_exists[id-17a5de24-e6a0-4e4a-a9ee-d85b6e5612b5,smoke]" time="0.029"/>
+            <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_list_user_projects[id-a831e70c-e35b-430b-92ed-81ebbc5437b8]" time="2.098"/>
+            <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
+                <skipped>Security compliance not available.</skipped>
+            </testcase>
+            <testcase classname="tempest.api.identity.admin.v3.test_groups.GroupsV3TestJSON" name="test_list_user_groups[id-64573281-d26a-4a52-b899-503cb0f4e4ec]" time="1.230"/>
+            <testcase classname="" name="setUpClass (tempest.api.identity.admin.v3.test_trusts.TrustsV3TestJSON)" time="0.000">
+                <skipped>Trusts aren't enabled</skipped>
+            </testcase>
+            <testcase classname="tempest.api.identity.v3.test_users.IdentityV3UsersTest" name="test_password_history_check_self_service_api[id-941784ee-5342-4571-959b-b80dd2cea516]" time="0.000">
+                <skipped>Security compliance not available.</skipped>
+            </testcase>
+            <testcase classname="tempest.api.identity.v3.test_users.IdentityV3UsersTest" name="test_user_account_lockout[id-a7ad8bbf-2cff-4520-8c1d-96332e151658]" time="0.000">
+                <skipped>Security compliance not available.</skipped>
+            </testcase>
+            <testcase classname="tempest.scenario.test_server_basic_ops.TestServerBasicOps" name="test_server_basic_ops[compute,id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba,network,smoke]" time="38.366"/>
+        </testsuite>
+        """  # noqa
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
