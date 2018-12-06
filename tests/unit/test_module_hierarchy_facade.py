@@ -148,7 +148,7 @@ class TestDiscoverParentTestCycle(object):
         mhf = ModuleHierarchyFacade(zz)
 
         # Test
-        assert test_cycle_pid_exp == mhf.discover_parent_test_cycle(test_cycle_name)
+        assert test_cycle_pid_exp == mhf.discover_root_test_cycle(test_cycle_name)
 
     def test_discover_existing_test_cycle_with_case_change(self, single_passing_xml, mocker):
         """Verify that the PID for an existing test cycle can be discovered when using a different case for search."""
@@ -176,7 +176,7 @@ class TestDiscoverParentTestCycle(object):
         mhf = ModuleHierarchyFacade(zz)
 
         # Test
-        assert test_cycle_pid_exp == mhf.discover_parent_test_cycle(test_cycle_name)
+        assert test_cycle_pid_exp == mhf.discover_root_test_cycle(test_cycle_name)
 
     def test_create_test_cycle(self, single_passing_xml, mocker):
         """Verify that a new test cycle will be created when the desired cycle name cannot be found."""
@@ -209,7 +209,7 @@ class TestDiscoverParentTestCycle(object):
         mhf = ModuleHierarchyFacade(zz)
 
         # Test
-        assert test_cycle_pid_exp == mhf.discover_parent_test_cycle(test_cycle_name)
+        assert test_cycle_pid_exp == mhf.discover_root_test_cycle(test_cycle_name)
 
     def test_mismatched_test_cycle_name_case(self, single_passing_xml, mocker):
         """Verify that a mismatch in case does not cause a failure"""
@@ -237,7 +237,7 @@ class TestDiscoverParentTestCycle(object):
         mhf = ModuleHierarchyFacade(zz)
 
         # Test
-        assert test_cycle_pid_exp == mhf.discover_parent_test_cycle(test_cycle_name)
+        assert test_cycle_pid_exp == mhf.discover_root_test_cycle(test_cycle_name)
 
     def test_failure_to_get_test_cycles(self, single_passing_xml, mocker):
         """Verify that API failure when retrieving test cycles is caught."""
@@ -260,7 +260,7 @@ class TestDiscoverParentTestCycle(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            mhf.discover_parent_test_cycle(test_cycle_name)
+            mhf.discover_root_test_cycle(test_cycle_name)
 
     def test_failure_to_create_test_cycle(self, single_passing_xml, mocker):
         """Verify that API failure when creating a test cycle is caught."""
@@ -287,4 +287,4 @@ class TestDiscoverParentTestCycle(object):
 
         # Test
         with pytest.raises(RuntimeError):
-            mhf.discover_parent_test_cycle(test_cycle_name)
+            mhf.discover_root_test_cycle(test_cycle_name)

@@ -58,7 +58,7 @@ class ModuleHierarchyFacade(object):
         else:
             return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
 
-    def discover_parent_test_cycle(self, test_cycle_name):
+    def discover_root_test_cycle(self, test_cycle_name):
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
         matching test cycle name is not found then a test cycle will be created with the given name.
 

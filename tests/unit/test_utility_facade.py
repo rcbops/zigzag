@@ -3,11 +3,9 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-import pytest
 import swagger_client
 from zigzag.zigzag import ZigZag
 from zigzag.utility_facade import UtilityFacade
-from swagger_client.rest import ApiException
 import requests
 import json
 

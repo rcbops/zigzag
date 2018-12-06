@@ -14,7 +14,6 @@ from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 
-
 class ZigZag(object):
 
     def __init__(self,
@@ -39,7 +38,7 @@ class ZigZag(object):
         self._qtest_api_token = qtest_api_token
         self._junit_xml_file_path = junit_xml_file_path
         self._qtest_project_id = qtest_project_id
-        self._qtest_test_cycle = qtest_test_cycle
+        self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
         self._test_logs = []
 
@@ -109,15 +108,15 @@ class ZigZag(object):
         return self._qtest_project_id
 
     @property
-    def qtest_test_cycle(self):
+    def qtest_test_cycle_name(self):
         """Gets the qTest test cycle
 
         Returns:
             str: The qTest test cycle
         """
-        if self._qtest_test_cycle is None:
-            self._qtest_test_cycle = self._module_hierarchy_facade.get_test_cycle_name()
-        return self._qtest_test_cycle
+        if self._qtest_test_cycle_name is None:
+            self._qtest_test_cycle_name = self._module_hierarchy_facade.get_test_cycle_name()
+        return self._qtest_test_cycle_name
 
     @property
     def qtest_test_cycle_pid(self):
