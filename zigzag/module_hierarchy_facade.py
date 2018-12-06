@@ -111,7 +111,7 @@ class ModuleHierarchyFacade(object):
             match: the regex match object
         """
         if self._pr_match is None:
-            self._pr_match = re.match(self._pr_regex, self._mediator.testsuite_props['GIT_BRANCH'])
+            self._pr_match = re.match(self._pr_regex, self._mediator.testsuite_props['BRANCH_NAME'])
 
         return self._pr_match
 

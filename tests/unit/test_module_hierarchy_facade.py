@@ -57,8 +57,7 @@ class TestModuleHierarchyFacade(object):
         zz.ci_environment = 'mk8s'
         zz.utility_facade = UtilityFacade(zz)
         zz.testsuite_props = {
-            'BRANCH_NAME': 'asc-123/master/stuff',
-            'GIT_BRANCH': 'PR-123'
+            'BRANCH_NAME': 'PR-123',
         }
 
         # Setup
@@ -77,7 +76,6 @@ class TestModuleHierarchyFacade(object):
         zz.utility_facade = UtilityFacade(zz)
         zz.testsuite_props = {
             'BRANCH_NAME': 'master',
-            'GIT_BRANCH': 'master'
         }
 
         # Setup
