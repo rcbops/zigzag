@@ -11,6 +11,7 @@ from zigzag.utility_facade import UtilityFacade
 from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
+from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 
 
 class ZigZag(object):
@@ -37,7 +38,7 @@ class ZigZag(object):
         self._qtest_api_token = qtest_api_token
         self._junit_xml_file_path = junit_xml_file_path
         self._qtest_project_id = qtest_project_id
-        self._qtest_test_cycle = qtest_test_cycle
+        self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
         self._test_logs = []
 
@@ -49,10 +50,12 @@ class ZigZag(object):
         self._serialized_junit_xml = None
         self._junit_xml = None
         self._junit_xml_doc = None
+        self._qtest_test_cycle_pid = None
 
         self._utility_facade = UtilityFacade(self)
         self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
+        self._module_hierarchy_facade = ModuleHierarchyFacade(self)
 
         self._test_runner = 'pytest-zigzag'  # the default test_runner assumed by ZigZag
 
@@ -66,6 +69,16 @@ class ZigZag(object):
         """
 
         return self._utility_facade
+
+    @property
+    def module_hierarchy_facade(self):
+        """Gets the attached module_hierarchy_facade
+
+        Returns:
+            ModuleHierarchyFacade
+        """
+
+        return self._module_hierarchy_facade
 
     @property
     def qtest_api_token(self):
@@ -95,19 +108,27 @@ class ZigZag(object):
         return self._qtest_project_id
 
     @property
-    def qtest_test_cycle(self):
+    def qtest_test_cycle_name(self):
         """Gets the qTest test cycle
 
         Returns:
             str: The qTest test cycle
         """
-        return self._qtest_test_cycle
+        if self._qtest_test_cycle_name is None:
+            self._qtest_test_cycle_name = self._module_hierarchy_facade.get_test_cycle_name()
+        return self._qtest_test_cycle_name
 
-    @qtest_test_cycle.setter
-    def qtest_test_cycle(self, value):
-        """Sets the qTest test cycle
+    @property
+    def qtest_test_cycle_pid(self):
+        """Gets the PID for the qtest_test_cycle that zigzag will attempt to load to
+
+        Returns:
+            str: The PID of the test_cycle
         """
-        self._qtest_test_cycle = value
+        if self._qtest_test_cycle_pid is None:
+            self._qtest_test_cycle_pid = self._module_hierarchy_facade.discover_root_test_cycle(
+                self.qtest_test_cycle_name)
+        return self._qtest_test_cycle_pid
 
     @property
     def pprint_on_fail(self):
@@ -268,8 +289,7 @@ class ZigZag(object):
                 auto_req.test_logs.append(log.qtest_test_log)
             except ZigZagTestLogError:
                 pass  # if we cant find automation content this is a bad record
-        auto_req.test_cycle = \
-            self._utility_facade.discover_parent_test_cycle(self.qtest_test_cycle)
+        auto_req.test_cycle = self.qtest_test_cycle_pid
         auto_req.execution_date = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')   # UTC timezone 'Zulu'
 
         return auto_req
