@@ -286,3 +286,53 @@ class TestDiscoverParentTestCycle(object):
         # Test
         with pytest.raises(RuntimeError):
             mhf.discover_root_test_cycle(test_cycle_name)
+
+
+class TestCycleName(object):
+    """Tests for the logic that controles default cycle names"""
+
+    def test_tempest_cycle(self, mocker):
+        """Test the default test cycle for tempest tests"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        zz.test_runner = 'tempest'
+
+        # Test
+        assert 'Tempest' == ModuleHierarchyFacade(zz).get_test_cycle_name()
+
+    def test_asc_cycle(self, mocker):
+        """Verify the default test cycle for asc tests"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'asc'
+        release = 'Pike'
+        zz.testsuite_props = {'RPC_PRODUCT_RELEASE': release}
+
+        # Test
+        assert release == ModuleHierarchyFacade(zz).get_test_cycle_name()
+
+    def test_mk8s_pr_cycle(self, mocker):
+        """Verify that mk8s pr test cycle gets set correctly"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'mk8s'
+        branch = 'PR-123'
+        zz.testsuite_props = {'BRANCH_NAME': branch}
+
+        # Test
+        assert 'PR' == ModuleHierarchyFacade(zz).get_test_cycle_name()
+
+    def test_mk8s_non_pr_cycle(self, mocker):
+        """Verify that non PR tests use the branch name"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        zz.ci_environment = 'mk8s'
+        branch = 'Master'
+        zz.testsuite_props = {'BRANCH_NAME': branch}
+
+        # Test
+        assert branch == ModuleHierarchyFacade(zz).get_test_cycle_name()
