@@ -64,6 +64,28 @@ def mock_zigzag(mocker):
 
 
 @pytest.fixture(scope='module')
+def single_passing_with_job_config_attribs(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single passing test that does not have 'system-out' or 'system-err' testcase elements."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
+            name="test_pass[_foo_bar_baz]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
 def single_passing_no_sys_capture_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """A single passing test that does not have 'system-out' or 'system-err' testcase elements."""
 
@@ -883,6 +905,50 @@ class TestZigZagTestLog(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.qtest_testcase_id is None
+
+    def test_lookup_job_config_attributes_not_found(self, single_passing_xml, mock_zigzag):
+        """Test for _lookup_ids
+        Ask for a test ID that does not exist yet
+        """
+
+        # Setup
+        search_response = {
+            "links": [],
+            "page": 1,
+            "page_size": 100,
+            "total": 0,
+            "items": []
+        }
+        mock_zigzag(search_response)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.job_config_attributes == []
+
+    def test_lookup_job_config_attributes_found(self, single_passing_with_job_config_attribs, mock_zigzag):
+        """Test for _lookup_ids
+        Ask for a test ID that does not exist yet
+        """
+
+        # Setup
+        search_response = {
+            "links": [],
+            "page": 1,
+            "page_size": 100,
+            "total": 0,
+            "items": []
+        }
+        mock_zigzag(search_response)
+#         zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_with_job_config_attribs, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.job_config_attributes == ['foo', 'bar', 'baz']
+
 
     def test_lookup_requirements_not_found(self, single_passing_xml, mock_zigzag):
         """Test for _lookup_requirements
