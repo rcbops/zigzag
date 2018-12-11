@@ -47,7 +47,7 @@ class _ZigZagTestLog(object):
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
-        self._job_config_attributes = None
+        self._testcase_config_attributes = None
 
         self._stdout = None
         self._stderr = None
@@ -103,9 +103,9 @@ class _ZigZagTestLog(object):
         Returns:
             List: of job attributes.
         """
-        if self._job_config_attributes is None:
-             self._job_config_attributes = self._lookup_job_config_attributes()
-        return self._job_config_attributes
+        if self._testcase_config_attributes is None:
+             self._testcase_config_attributes = self._lookup_job_config_attributes()
+        return self._testcase_config_attributes
 
     @property
     def jira_issues(self):
