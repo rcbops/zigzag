@@ -548,7 +548,7 @@ class _ZigZagTestLog(object):
         Returns:
             List: of job config attributes.
         """
-        full_name = self._testcase_xml.items()[3][1]
+        full_name = self._testcase_xml.attrib['name']
         under_delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
         job_config_attribute_list = under_delimited_list.split("_")
         return job_config_attribute_list[1:]
