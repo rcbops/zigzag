@@ -47,6 +47,7 @@ class _ZigZagTestLog(object):
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
+        self._job_config_attributes = None
 
         self._stdout = None
         self._stderr = None
@@ -93,6 +94,18 @@ class _ZigZagTestLog(object):
         if self._qtest_testcase_id is None:
             self._lookup_ids()
         return self._qtest_testcase_id
+
+    @property
+    def job_config_attributes(self):
+        """ Gets the array of job config attributes
+            annotated at the end of a job name.
+
+        Returns:
+            List: of job attributes.
+        """
+        if self._job_config_attributes is None:
+             self._job_config_attributes = self._lookup_job_config_attributes()
+        return self._job_config_attributes
 
     @property
     def jira_issues(self):
@@ -528,6 +541,21 @@ class _ZigZagTestLog(object):
             self._qtest_testcase_id = parsed['items'][0]['id']
         except IndexError:  # test case has not been created yet in qTest
             pass
+
+    def _lookup_job_config_attributes(self):
+        """ Finds the array of job config attributes on the end of the job name.
+
+        Returns:
+            List: of job config attributes.
+        """
+        logs = self._mediator.junit_xml.findall('testcase')
+        test_name = self.name
+        for l in logs:
+            full_name = l.items()[3][1]
+            if test_name in full_name:
+                under_delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
+                job_config_attribute_list = under_delimited_list.split("_")
+                return job_config_attribute_list[1:]
 
     def _lookup_requirements(self):
         """finds an exact matches for all requirements imported from jira associated with this log
