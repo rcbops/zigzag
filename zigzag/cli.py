@@ -23,9 +23,13 @@ from zigzag.zigzag import ZigZag
               type=click.STRING,
               default=None,
               help='Specify a test cycle to use as a parent for results.')
+@click.option('--test-runner', '-tr',
+              type=click.Choice(['pytest-zigzag', 'tempest']),
+              default='pytest-zigzag',
+              help='Specify the tool that generated the xml to be processed')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
-def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
+def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail, test_runner):
     """Upload JUnitXML results to qTest manager.
 
     \b
@@ -50,6 +54,7 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail):
                     qtest_test_cycle,
                     pprint_on_fail)
 
+        zz.test_runner = test_runner
         zz.parse()
         job_id = zz.upload_test_results()
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
