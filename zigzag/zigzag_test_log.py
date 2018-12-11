@@ -548,14 +548,10 @@ class _ZigZagTestLog(object):
         Returns:
             List: of job config attributes.
         """
-        logs = self._mediator.junit_xml.findall('testcase')
-        test_name = self.name
-        for l in logs:
-            full_name = l.items()[3][1]
-            if test_name in full_name:
-                under_delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
-                job_config_attribute_list = under_delimited_list.split("_")
-                return job_config_attribute_list[1:]
+        full_name = self._testcase_xml.items()[3][1]
+        under_delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
+        job_config_attribute_list = under_delimited_list.split("_")
+        return job_config_attribute_list[1:]
 
     def _lookup_requirements(self):
         """finds an exact matches for all requirements imported from jira associated with this log
