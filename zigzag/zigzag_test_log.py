@@ -47,7 +47,7 @@ class _ZigZagTestLog(object):
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
-        self._testcase_config_attributes = None
+        self._test_execution_parameters = []
 
         self._stdout = None
         self._stderr = None
@@ -96,16 +96,16 @@ class _ZigZagTestLog(object):
         return self._qtest_testcase_id
 
     @property
-    def job_config_attributes(self):
+    def test_execution_parameters(self):
         """ Gets the array of job config attributes
             annotated at the end of a job name.
 
         Returns:
             List: of job attributes.
         """
-        if self._testcase_config_attributes is None:
-             self._testcase_config_attributes = self._lookup_job_config_attributes()
-        return self._testcase_config_attributes
+        if self._test_execution_parameters == []:
+             self._test_execution_parameters = self._lookup_test_execution_parameters("_")
+        return self._test_execution_parameters
 
     @property
     def jira_issues(self):
@@ -542,16 +542,16 @@ class _ZigZagTestLog(object):
         except IndexError:  # test case has not been created yet in qTest
             pass
 
-    def _lookup_job_config_attributes(self):
+    def _lookup_test_execution_parameters(self, delimiter):
         """ Finds the array of job config attributes on the end of the job name.
 
         Returns:
             List: of job config attributes.
         """
         full_name = self._testcase_xml.attrib['name']
-        under_delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
-        job_config_attribute_list = under_delimited_list.split("_")
-        return job_config_attribute_list[1:]
+        delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
+        test_execution_parameter_list = delimited_list.split(delimiter)
+        return test_execution_parameter_list[1:]
 
     def _lookup_requirements(self):
         """finds an exact matches for all requirements imported from jira associated with this log
@@ -934,6 +934,18 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
                 raise ZigZagTestLogError('OHH snap there is no UUID!!!')
 
         return self._automation_content
+
+    @property
+    def test_execution_parameters(self):
+        """ Gets the array of job config attributes
+            annotated at the end of a job name.
+
+        Returns:
+            List: of job attributes.
+        """
+        if self._test_execution_parameters == []:
+             self._test_execution_parameters = self._lookup_test_execution_parameters(',')
+        return self._test_execution_parameters
 
     @property
     def end_date(self):
