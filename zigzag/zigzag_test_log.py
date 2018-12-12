@@ -543,15 +543,19 @@ class _ZigZagTestLog(object):
             pass
 
     def _lookup_test_execution_parameters(self, delimiter):
-        """ Finds the array of job config attributes on the end of the job name.
+        """ Finds the array of job config attributes on the end of the job name. In some cases,
+            a test runner will place a leading delmiter before the elements. If that's the case,
+            we drop the frist caracter in the string before we split it.
 
         Returns:
             List: of job config attributes.
         """
         full_name = self._testcase_xml.attrib['name']
         delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
+        if delimited_list[0] == delimiter:
+            delimited_list = delimited_list[1:]
         test_execution_parameter_list = delimited_list.split(delimiter)
-        return test_execution_parameter_list[1:]
+        return test_execution_parameter_list
 
     def _lookup_requirements(self):
         """finds an exact matches for all requirements imported from jira associated with this log
