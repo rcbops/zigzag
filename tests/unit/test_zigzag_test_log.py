@@ -10,9 +10,12 @@ import swagger_client
 from zigzag.zigzag import ZigZag
 from zigzag.zigzag_test_log import ZigZagTestLogs
 from zigzag.zigzag_test_log import _ZigZagTestLog
+from zigzag.zigzag_test_log import _ZigZagTestLogTempest
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from datetime import datetime
+from datetime import timedelta
 from uuid import UUID
+from lxml import etree
 
 
 # ======================================================================================================================
@@ -771,6 +774,56 @@ def multiple_tests_with_and_without_steps_xml(tmpdir_factory, default_global_pro
     return filename
 
 
+@pytest.fixture(scope='module')
+def tempest_case_xml_passed():
+    """Tempest XML from a passed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000"></testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_case_xml_failed():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_case_xml_error():
+    """Tempest XML from a error case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
+                <error>Something bad happened here yo!</error>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_case_xml_skip():
+    """Tempest XML from a skipped case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
+                <skipped>Security compliance not available.</skipped>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
@@ -904,6 +957,71 @@ class TestZigZagTestLog(object):
         assert isinstance(tl.qtest_test_log.attachments, list)
         assert len(tl.qtest_test_log.attachments) == 1
         assert tl.qtest_test_log.attachments[0].content_type == 'application/xml'
+
+    def test_status_pass(self, single_passing_xml, mocker):
+        """Verify the status property when we expect a pass"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        junit_xml_doc = etree.parse(single_passing_xml)
+        junit_xml = junit_xml_doc.getroot()
+        xml = junit_xml.find('testcase')
+
+        zztl = _ZigZagTestLog(xml, zz)
+
+        assert 'PASSED' == zztl.status
+
+    def test_status_error(self, single_error_xml, mocker):
+        """Verify the status property when we expect a error"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        junit_xml_doc = etree.parse(single_error_xml)
+        junit_xml = junit_xml_doc.getroot()
+        xml = junit_xml.find('testcase')
+
+        zztl = _ZigZagTestLog(xml, zz)
+
+        assert 'FAILED' == zztl.status
+
+    def test_status_skip(self, single_skip_xml, mocker):
+        """Verify the status property when we expect a skip"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        junit_xml_doc = etree.parse(single_skip_xml)
+        junit_xml = junit_xml_doc.getroot()
+        xml = junit_xml.find('testcase')
+
+        zztl = _ZigZagTestLog(xml, zz)
+
+        assert 'SKIPPED' == zztl.status
+
+    def test_status_failed(self, single_fail_xml, mocker):
+        """Verify the status property when we expect a failure"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        junit_xml_doc = etree.parse(single_fail_xml)
+        junit_xml = junit_xml_doc.getroot()
+        xml = junit_xml.find('testcase')
+
+        zztl = _ZigZagTestLog(xml, zz)
+
+        assert 'FAILED' == zztl.status
+
+    def test_name_property(self, single_passing_xml, mocker):
+        """Verify the name property"""
+
+        # Setup
+        zz = mocker.MagicMock()
+        junit_xml_doc = etree.parse(single_passing_xml)
+        junit_xml = junit_xml_doc.getroot()
+        xml = junit_xml.find('testcase')
+
+        zztl = _ZigZagTestLog(xml, zz)
+
+        assert 'test_pass' == zztl.name
 
 
 class TestZigZagTestLogWithSteps(object):
@@ -1466,6 +1584,20 @@ class TestZigZagTestLogsTempest(object):
             end = datetime.strptime(tl.end_date, _ZigZagTestLog._date_time_format)
             assert end > start
 
+    def test_start_date(self, tempest_case_xml_passed, mocker):
+        """Verify that start_date will be now for tempest"""
+
+        zz = mocker.MagicMock()
+        zz._start_date = None  # set to none to allow lazy load
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_passed, zz)
+
+        start = datetime.strptime(zztlt.start_date, _ZigZagTestLog._date_time_format)
+        now = datetime.utcnow()
+        margin = timedelta(seconds=2)
+
+        # test that the start_date is within +-2 seconds of now
+        assert now - margin <= start <= now + margin
+
     def test_automation_content(self, tempest_xml, mock_zigzag):
         """Verify that we can get the UUID from the XML or we get none back"""
 
@@ -1482,6 +1614,14 @@ class TestZigZagTestLogsTempest(object):
             except ZigZagTestLogError:  # case where we do not have a UUID
                 pass
 
+    def test_name_property(self, tempest_case_xml_passed, mocker):
+        """Verify that we can correctly derive the name from the xml"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_passed, zz)
+
+        assert 'test_password_history_not_enforced_in_admin_reset' == zztlt.name
+
     def test_qtest_test_log_generation(self, tempest_xml, mock_zigzag):
         """Verify that we can generate qtest_test_log objects"""
 
@@ -1497,3 +1637,35 @@ class TestZigZagTestLogsTempest(object):
                 assert tl.qtest_test_log
             except ZigZagTestLogError:  # case where we do not have a UUID
                 pass
+
+    def test_status_skip(self, tempest_case_xml_skip, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_skip, zz)
+
+        assert 'SKIPPED' == zztlt.status
+
+    def test_status_passed(self, tempest_case_xml_passed, mocker):
+        """Verify the status property when we expect a pass"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_passed, zz)
+
+        assert 'PASSED' == zztlt.status
+
+    def test_status_error(self, tempest_case_xml_error, mocker):
+        """Verify the status property when we expect a error"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_error, zz)
+
+        assert 'FAILED' == zztlt.status
+
+    def test_status_failed(self, tempest_case_xml_failed, mocker):
+        """Verify the status property when we expect a error"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_failed, zz)
+
+        assert 'FAILED' == zztlt.status
