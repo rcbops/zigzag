@@ -104,7 +104,7 @@ class _ZigZagTestLog(object):
             List: of job attributes.
         """
         if self._test_execution_parameters is None:
-            self._test_execution_parameters = self._lookup_test_execution_parameters("_")
+            self._test_execution_parameters = self._lookup_test_execution_parameters(",")
         return self._test_execution_parameters
 
     @property
@@ -552,8 +552,6 @@ class _ZigZagTestLog(object):
         """
         full_name = self._testcase_xml.attrib['name']
         delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
-        if delimited_list[0] == delimiter:
-            delimited_list = delimited_list[1:]
         test_execution_parameter_list = delimited_list.split(delimiter)
         return test_execution_parameter_list
 
