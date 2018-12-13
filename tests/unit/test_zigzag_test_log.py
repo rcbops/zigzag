@@ -885,6 +885,32 @@ def tempest_xml_with_some_none_exec_params():
     return xml
 
 
+@pytest.fixture(scope='module')
+def tempest_xml_with_no_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops[]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_xml_with_none_for_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
@@ -1657,6 +1683,22 @@ class TestFailedTestCases(object):
 
 class TestZigZagTestLogsTempest(object):
     """Tests for the TestLog class"""
+
+    def test_tempest_xml_with_none_for_execution_parameters(self, tempest_xml_with_none_for_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_xml_with_none_for_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == []
+
+    def test_tempest_xml_with_no_execution_parameters(self, tempest_xml_with_no_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_xml_with_no_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == ['']
 
     def test_tempest_xml_with_some_none_execution_parameters(self, tempest_xml_with_some_none_exec_params, mocker):
         """Verify the status property when we expect a skip"""
