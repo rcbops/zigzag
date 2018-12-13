@@ -104,7 +104,7 @@ class _ZigZagTestLog(object):
             List: of job attributes.
         """
         if self._test_execution_parameters == []:
-             self._test_execution_parameters = self._lookup_test_execution_parameters("_")
+            self._test_execution_parameters = self._lookup_test_execution_parameters("_")
         return self._test_execution_parameters
 
     @property
@@ -948,7 +948,7 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
             List: of job attributes.
         """
         if self._test_execution_parameters == []:
-             self._test_execution_parameters = self._lookup_test_execution_parameters(',')
+            self._test_execution_parameters = self._lookup_test_execution_parameters(',')
         return self._test_execution_parameters
 
     @property
