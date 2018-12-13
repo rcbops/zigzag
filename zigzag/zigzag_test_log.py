@@ -47,7 +47,7 @@ class _ZigZagTestLog(object):
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
-        self._test_execution_parameters = []
+        self._test_execution_parameters = None
 
         self._stdout = None
         self._stderr = None
@@ -103,7 +103,7 @@ class _ZigZagTestLog(object):
         Returns:
             List: of job attributes.
         """
-        if self._test_execution_parameters == []:
+        if self._test_execution_parameters is None:
             self._test_execution_parameters = self._lookup_test_execution_parameters("_")
         return self._test_execution_parameters
 
@@ -947,7 +947,7 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
         Returns:
             List: of job attributes.
         """
-        if self._test_execution_parameters == []:
+        if self._test_execution_parameters is None:
             self._test_execution_parameters = self._lookup_test_execution_parameters(',')
         return self._test_execution_parameters
 
