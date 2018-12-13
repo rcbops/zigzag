@@ -552,7 +552,7 @@ class _ZigZagTestLog(object):
         """
         full_name = self._testcase_xml.attrib['name']
         delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
-        test_execution_parameter_list = delimited_list.split(delimiter)
+        test_execution_parameter_list = delimited_list.split(delimiter) if "[" in full_name else []
         return test_execution_parameter_list
 
     def _lookup_requirements(self):
