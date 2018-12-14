@@ -44,7 +44,7 @@ class LinkGenerationFacade(object):
                     self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
             self._scheme = split.scheme
             self._netloc = split.netloc
-        except KeyError:
+        except(KeyError, UnboundLocalError):
             pass  # If we dont have the info to generate links we want to silently fail
 
     def github_testlog_failure_link(self, test_log):

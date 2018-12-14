@@ -790,7 +790,7 @@ def tempest_case_xml_failed():
     """Tempest XML from a failed case"""
     xml = """
     <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
-                <failed>It's a failure yo!</failed>
+                <failure>It's a failure yo!</failure>
     </testcase>
     """  # noqa
     xml = etree.fromstring(xml)

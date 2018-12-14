@@ -939,7 +939,7 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
             str: the status of this test execution
         """
         if self._status is None:
-            status_tags = ['skipped', 'error', 'failed']
+            status_tags = ['skipped', 'error', 'failure']
             if all([self._testcase_xml.find(tag) is None for tag in status_tags]):
                 self._status = 'PASSED'
             elif self._testcase_xml.find('skipped') is not None:
