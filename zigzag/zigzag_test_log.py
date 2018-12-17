@@ -47,6 +47,7 @@ class _ZigZagTestLog(object):
         # this is data that will be collected from qTest
         self._qtest_requirements = []  # lazy loaded & simple cache
         self._qtest_testcase_id = None
+        self._test_execution_parameters = None
 
         self._stdout = None
         self._stderr = None
@@ -93,6 +94,18 @@ class _ZigZagTestLog(object):
         if self._qtest_testcase_id is None:
             self._lookup_ids()
         return self._qtest_testcase_id
+
+    @property
+    def test_execution_parameters(self):
+        """ Gets the array of job config attributes
+            annotated at the end of a job name.
+
+        Returns:
+            List: of job attributes.
+        """
+        if self._test_execution_parameters is None:
+            self._test_execution_parameters = self._lookup_test_execution_parameters(",")
+        return self._test_execution_parameters
 
     @property
     def jira_issues(self):
@@ -528,6 +541,19 @@ class _ZigZagTestLog(object):
             self._qtest_testcase_id = parsed['items'][0]['id']
         except IndexError:  # test case has not been created yet in qTest
             pass
+
+    def _lookup_test_execution_parameters(self, delimiter):
+        """ Finds the array of job config attributes on the end of the job name. In some cases,
+            a test runner will place a leading delmiter before the elements. If that's the case,
+            we drop the frist caracter in the string before we split it.
+
+        Returns:
+            List: of job config attributes.
+        """
+        full_name = self._testcase_xml.attrib['name']
+        delimited_list = full_name[full_name.find("[")+1:full_name.find("]")]
+        test_execution_parameter_list = delimited_list.split(delimiter) if "[" in full_name else []
+        return test_execution_parameter_list
 
     def _lookup_requirements(self):
         """finds an exact matches for all requirements imported from jira associated with this log

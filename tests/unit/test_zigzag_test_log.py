@@ -64,6 +64,28 @@ def mock_zigzag(mocker):
 
 
 @pytest.fixture(scope='module')
+def test_execution_parameters(tmpdir_factory, default_global_properties, default_testcase_properties):
+    """A single passing test that does not have 'system-out' or 'system-err' testcase elements."""
+
+    filename = tmpdir_factory.mktemp('data').join('single_passing.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuite errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+            <testcase classname="tests.test_default" file="tests/test_default.py" line="8"
+            name="test_assign_floating_ip_to_instance[_testinfra_host0]" time="0.00372695922852">
+                {testcase_properties}
+            </testcase>
+        </testsuite>
+        """.format(global_properties=default_global_properties, testcase_properties=default_testcase_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='module')
 def single_passing_no_sys_capture_xml(tmpdir_factory, default_global_properties, default_testcase_properties):
     """A single passing test that does not have 'system-out' or 'system-err' testcase elements."""
 
@@ -824,6 +846,71 @@ def tempest_case_xml_skip():
     return xml
 
 
+@pytest.fixture(scope='module')
+def tempest_case_xml_with_execution_parameters():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops[compute,id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba,network,smoke]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_case_xml_with_empty_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops[,,,]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_xml_with_some_none_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops[foo,,bar,]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_xml_with_no_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops[]" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
+@pytest.fixture(scope='module')
+def tempest_xml_with_none_for_exec_params():
+    """Tempest XML from a failed case"""
+    xml = """
+    <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_server_basic_ops" time="0.000">
+                <failed>It's a failure yo!</failed>
+    </testcase>
+    """  # noqa
+    xml = etree.fromstring(xml)
+
+    return xml
+
+
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
@@ -883,6 +970,48 @@ class TestZigZagTestLog(object):
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.qtest_testcase_id is None
+
+    def test_lookup_test_execution_parameters_not_found(self, single_passing_xml, mock_zigzag):
+        """Test for _lookup_ids
+        Ask for a test ID that does not exist yet
+        """
+
+        # Setup
+        search_response = {
+            "links": [],
+            "page": 1,
+            "page_size": 100,
+            "total": 0,
+            "items": []
+        }
+        mock_zigzag(search_response)
+        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.test_execution_parameters == ['ansible://localhost']
+
+    def test_lookup_test_execution_parameters_found(self, test_execution_parameters, mock_zigzag):
+        """Test for _lookup_ids
+        Ask for a test ID that does not exist yet
+        """
+
+        # Setup
+        search_response = {
+            "links": [],
+            "page": 1,
+            "page_size": 100,
+            "total": 0,
+            "items": []
+        }
+        mock_zigzag(search_response)
+        zz = ZigZag(test_execution_parameters, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz.parse()
+
+        # Test
+        tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
+        assert tl.test_execution_parameters == ['_testinfra_host0']
 
     def test_lookup_requirements_not_found(self, single_passing_xml, mock_zigzag):
         """Test for _lookup_requirements
@@ -1554,6 +1683,49 @@ class TestFailedTestCases(object):
 
 class TestZigZagTestLogsTempest(object):
     """Tests for the TestLog class"""
+
+    def test_tempest_xml_with_none_for_execution_parameters(self, tempest_xml_with_none_for_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_xml_with_none_for_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == []
+
+    def test_tempest_xml_with_no_execution_parameters(self, tempest_xml_with_no_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_xml_with_no_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == ['']
+
+    def test_tempest_xml_with_some_none_execution_parameters(self, tempest_xml_with_some_none_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_xml_with_some_none_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == ['foo', '', 'bar', '']
+
+    def test_sample_tempest_xml_with_empty_execution_parameters(self, tempest_case_xml_with_empty_exec_params, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_with_empty_exec_params, zz)
+
+        assert zztlt.test_execution_parameters == ['', '', '', '']
+
+    def test_sample_tempest_xml_with_execution_parameters(self, tempest_case_xml_with_execution_parameters, mocker):
+        """Verify the status property when we expect a skip"""
+
+        zz = mocker.MagicMock()
+        zztlt = _ZigZagTestLogTempest(tempest_case_xml_with_execution_parameters, zz)
+
+        assert zztlt.test_execution_parameters == ['compute',
+                                                   'id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba',
+                                                   'network',
+                                                   'smoke']
 
     def test_sample_tempest_xml(self, tempest_xml, mock_zigzag):
         """Verify that we can parse xml generated by tempest"""
