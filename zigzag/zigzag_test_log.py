@@ -938,18 +938,6 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
         return self._automation_content
 
     @property
-    def test_execution_parameters(self):
-        """ Gets the array of job config attributes
-            annotated at the end of a job name.
-
-        Returns:
-            List: of job attributes.
-        """
-        if self._test_execution_parameters is None:
-            self._test_execution_parameters = self._lookup_test_execution_parameters(',')
-        return self._test_execution_parameters
-
-    @property
     def end_date(self):
         """Gets the end date of this test log
 
