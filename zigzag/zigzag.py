@@ -12,6 +12,11 @@ from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
+from json import loads
+from jinja2 import Template
+from pkg_resources import resource_stream
+from jsonschema import validate, ValidationError
+
 
 
 class ZigZag(object):
@@ -41,6 +46,7 @@ class ZigZag(object):
         self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
         self._test_logs = []
+        self._config_dict = {}
 
         # properties that will be written to an instance of this class as a mediator
         self._ci_environment = None
@@ -330,3 +336,23 @@ class ZigZag(object):
         """Parse the xml"""
 
         self._parsing_facade.parse()  # this was moved from the init method
+
+    def load_config(self, BUILTIN_CONFIGS, config_file):
+        """Validate and load the contents of a 'zigzag' config file into memory.
+
+        Args:
+            config_file (str): The name of the built-in config (e.g. 'asc') or the path to a valid zigzag
+                config file.
+        """
+        config_dict = {}
+        schema = loads(resource_stream('zigzag', 'data/schema/zigzag-config.schema.json').read().decode())
+        props = self.junit_xml.getchildren()[0]
+        try:
+           conf_template = open(config_file, 'r')
+           template = Template(conf_template.read())
+           props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
+           self._config_dict = template.render(props_d)
+        except (OSError, IOError):
+            print("Failed to load '{}' config file!".format(config_file))
+        except ValueError as e:
+            print("The '{}' config file is not valid JSON: {}".format(config_file, str(e)))

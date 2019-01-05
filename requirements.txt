@@ -14,3 +14,4 @@ requests
 rpc-qtest-swagger-client
 tox
 twine
+jsonschema

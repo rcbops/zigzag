@@ -6,6 +6,7 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 import os
+from jinja2 import Template
 import sys
 import click
 from zigzag.zigzag import ZigZag
@@ -29,13 +30,15 @@ from zigzag.zigzag import ZigZag
               help='Specify the tool that generated the xml to be processed')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
-def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail, test_runner):
+@click.argument('zigzag_config_file', type=click.Path(exists=True))
+def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycle, pprint_on_fail, test_runner):
     """Upload JUnitXML results to qTest manager.
 
     \b
     Required Arguments:
         JUNIT_INPUT_FILE        A valid JUnit XML results file.
         QTEST_PROJECT_ID        The the target qTest Project ID for results
+        ZIGZAG_CONFIG_FILE      The path to a zigzag config file.
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization
@@ -48,17 +51,35 @@ def main(junit_input_file, qtest_project_id, qtest_test_cycle, pprint_on_fail, t
             raise RuntimeError('The "{}" environment variable is not defined! '
                                'See help for more details.'.format(api_token_env_var))
 
+        BUILTIN_CONFIGS = ('test', 'asc', 'mk8s', 'jenkins')
+
+        junit_input_file = "/tmp/test_asc.xml"
+        qtest_project_id = 71096
+        zigzag_config_file = "./zigzag/data/configs/zigzag-config2.json"
+
+        qtest_test_cycle = None
+        pprint_on_fail = True
+        test_runner = 'pytest-zigzag'
+        api_token_env_var = 'QTEST_API_TOKEN'
         zz = ZigZag(junit_input_file,
                     os.environ[api_token_env_var],
                     qtest_project_id,
                     qtest_test_cycle,
                     pprint_on_fail)
-
         zz.test_runner = test_runner
+
         zz.parse()
+
+        zz.load_config(BUILTIN_CONFIGS, zigzag_config_file)
+
+        zz._config_dict
+
         job_id = zz.upload_test_results()
+
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
+
         click.echo(click.style("\nSuccess!", fg='green'))
+
     except RuntimeError as e:
         click.echo(click.style(str(e), fg='red'))
         click.echo(click.style("\nFailed!", fg='red'))
