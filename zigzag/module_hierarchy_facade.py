@@ -5,6 +5,7 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 import re
+import ast
 import swagger_client
 from swagger_client.rest import ApiException
 
@@ -32,7 +33,9 @@ class ModuleHierarchyFacade(object):
             list[str]: The strings to use for the module_hierarchy
         """
 
-        if self._mediator.ci_environment == 'asc':
+        if self._mediator._config_dict['module_hierarchy']:
+            return ast.literal_eval(self._mediator._config_dict['module_hierarchy'])
+        elif self._mediator.ci_environment == 'asc':
             return self._asc(classname)
         elif self._mediator.ci_environment == 'mk8s':
             return self._mk8s(classname)
@@ -47,7 +50,9 @@ class ModuleHierarchyFacade(object):
         Returns:
             str: The test_cycle name
         """
-        if self._mediator.ci_environment == 'asc':
+        if self._mediator._config_dict['test_cycle']:
+            return self._mediator._config_dict['test_cycle']
+        elif self._mediator.ci_environment == 'asc':
             return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
         elif self._mediator.ci_environment == 'mk8s':
             # organize all PR related testing by pr number ex: 'PR-123'

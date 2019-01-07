@@ -51,16 +51,8 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
             raise RuntimeError('The "{}" environment variable is not defined! '
                                'See help for more details.'.format(api_token_env_var))
 
-        BUILTIN_CONFIGS = ('test', 'asc', 'mk8s', 'jenkins')
+        BUILTIN_CONFIGS = ('asc', 'mk8s', 'jenkins')
 
-        junit_input_file = "/tmp/test_asc.xml"
-        qtest_project_id = 71096
-        zigzag_config_file = "./zigzag/data/configs/zigzag-config2.json"
-
-        qtest_test_cycle = None
-        pprint_on_fail = True
-        test_runner = 'pytest-zigzag'
-        api_token_env_var = 'QTEST_API_TOKEN'
         zz = ZigZag(junit_input_file,
                     os.environ[api_token_env_var],
                     qtest_project_id,
@@ -71,8 +63,6 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
         zz.parse()
 
         zz.load_config(BUILTIN_CONFIGS, zigzag_config_file)
-
-        zz._config_dict
 
         job_id = zz.upload_test_results()
 

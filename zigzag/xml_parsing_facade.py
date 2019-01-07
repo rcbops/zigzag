@@ -103,7 +103,6 @@ class XmlParsingFacade(object):
         file_path = self._mediator.junit_xml_file_path
 
         try:
-#             import ipdb; ipdb.set_trace()   # XXX
             xmlschema = etree.XMLSchema(etree.parse(junit_xsd))
             xmlschema.assertValid(self._mediator.junit_xml_doc)
         except etree.DocumentInvalid as e:
@@ -140,5 +139,4 @@ class XmlParsingFacade(object):
         elif ci_environment == 'mk8s':
             return pkg_resources.resource_stream('zigzag', 'data/mk8s_junit.xsd')
         else:
-            return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')
-#             raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))
+            raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))

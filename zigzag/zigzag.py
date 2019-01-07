@@ -14,9 +14,6 @@ from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from json import loads
 from jinja2 import Template
-from pkg_resources import resource_stream
-from jsonschema import validate, ValidationError
-
 
 
 class ZigZag(object):
@@ -344,14 +341,13 @@ class ZigZag(object):
             config_file (str): The name of the built-in config (e.g. 'asc') or the path to a valid zigzag
                 config file.
         """
-        config_dict = {}
-        schema = loads(resource_stream('zigzag', 'data/schema/zigzag-config.schema.json').read().decode())
         props = self.junit_xml.getchildren()[0]
         try:
-           conf_template = open(config_file, 'r')
-           template = Template(conf_template.read())
-           props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
-           self._config_dict = template.render(props_d)
+            conf_template = open(config_file, 'r')
+            template = Template(conf_template.read())
+            props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
+            rendered_zigzag_config_str = template.render(props_d)
+            self._config_dict = loads(rendered_zigzag_config_str)
         except (OSError, IOError):
             print("Failed to load '{}' config file!".format(config_file))
         except ValueError as e:

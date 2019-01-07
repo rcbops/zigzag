@@ -30,7 +30,7 @@
 
     <!--Global properties element containing at least one sub-element.-->
     <xs:complexType name="globalPropertiesType">
-        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:sequence maxOccurs="unbounded">
             <xs:element name="property" type="globalPropertyType" />
         </xs:sequence>
     </xs:complexType>
