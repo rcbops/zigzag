@@ -6,7 +6,6 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 import os
-from jinja2 import Template
 import sys
 import click
 from zigzag.zigzag import ZigZag
@@ -51,18 +50,14 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
             raise RuntimeError('The "{}" environment variable is not defined! '
                                'See help for more details.'.format(api_token_env_var))
 
-        BUILTIN_CONFIGS = ('asc', 'mk8s', 'jenkins')
-
         zz = ZigZag(junit_input_file,
                     os.environ[api_token_env_var],
                     qtest_project_id,
                     qtest_test_cycle,
                     pprint_on_fail)
         zz.test_runner = test_runner
-
         zz.parse()
-
-        zz.load_config(BUILTIN_CONFIGS, zigzag_config_file)
+        zz.load_config(zigzag_config_file)
 
         job_id = zz.upload_test_results()
 

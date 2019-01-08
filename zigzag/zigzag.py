@@ -334,7 +334,7 @@ class ZigZag(object):
 
         self._parsing_facade.parse()  # this was moved from the init method
 
-    def load_config(self, BUILTIN_CONFIGS, config_file):
+    def load_config(self, config_file):
         """Validate and load the contents of a 'zigzag' config file into memory.
 
         Args:
