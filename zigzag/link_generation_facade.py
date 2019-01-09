@@ -58,7 +58,7 @@ class LinkGenerationFacade(object):
             str: The string containing the link to the line that failed
         """
         try:
-            if self._mediator._config_dict['failure_link']:
+            if 'failure_link' in self._mediator._config_dict.keys():
                 return self._mediator._config_dict['failure_link']
             if self._mediator.ci_environment == 'asc':
                 # for Molecule repo of repos pattern

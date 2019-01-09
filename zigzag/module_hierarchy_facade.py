@@ -33,7 +33,7 @@ class ModuleHierarchyFacade(object):
             list[str]: The strings to use for the module_hierarchy
         """
 
-        if self._mediator._config_dict['module_hierarchy']:
+        if 'module_hierarchy' in self._mediator._config_dict.keys():
             return ast.literal_eval(self._mediator._config_dict['module_hierarchy'])
         elif self._mediator.ci_environment == 'asc':
             return self._asc(classname)
@@ -50,7 +50,7 @@ class ModuleHierarchyFacade(object):
         Returns:
             str: The test_cycle name
         """
-        if self._mediator._config_dict['test_cycle']:
+        if 'test_cycle' in self._mediator._config_dict.keys():
             return self._mediator._config_dict['test_cycle']
         elif self._mediator.ci_environment == 'asc':
             return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']

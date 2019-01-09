@@ -341,14 +341,15 @@ class ZigZag(object):
             config_file (str): The name of the built-in config (e.g. 'asc') or the path to a valid zigzag
                 config file.
         """
-        props = self.junit_xml.getchildren()[0]
-        try:
-            conf_template = open(config_file, 'r')
-            template = Template(conf_template.read())
-            props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
-            rendered_zigzag_config_str = template.render(props_d)
-            self._config_dict = loads(rendered_zigzag_config_str)
-        except (OSError, IOError):
-            print("Failed to load '{}' config file!".format(config_file))
-        except ValueError as e:
-            print("The '{}' config file is not valid JSON: {}".format(config_file, str(e)))
+        if config_file:
+            props = self.junit_xml.getchildren()[0]
+            try:
+                conf_template = open(config_file, 'r')
+                template = Template(conf_template.read())
+                props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
+                rendered_zigzag_config_str = template.render(props_d)
+                self._config_dict = loads(rendered_zigzag_config_str)
+            except (OSError, IOError):
+                print("Failed to load '{}' config file!".format(config_file))
+            except ValueError as e:
+                print("The '{}' config file is not valid JSON: {}".format(config_file, str(e)))

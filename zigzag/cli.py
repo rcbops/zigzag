@@ -23,13 +23,16 @@ from zigzag.zigzag import ZigZag
               type=click.STRING,
               default=None,
               help='Specify a test cycle to use as a parent for results.')
+@click.option('--zigzag_config_file', '-c',
+              type=click.Path(exists=True),
+              default=None,
+              help='Path to a zigzag config file')
 @click.option('--test-runner', '-tr',
               type=click.Choice(['pytest-zigzag', 'tempest']),
               default='pytest-zigzag',
               help='Specify the tool that generated the xml to be processed')
 @click.argument('junit_input_file', type=click.Path(exists=True))
 @click.argument('qtest_project_id', type=click.INT)
-@click.argument('zigzag_config_file', type=click.Path(exists=True))
 def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycle, pprint_on_fail, test_runner):
     """Upload JUnitXML results to qTest manager.
 
@@ -37,7 +40,6 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
     Required Arguments:
         JUNIT_INPUT_FILE        A valid JUnit XML results file.
         QTEST_PROJECT_ID        The the target qTest Project ID for results
-        ZIGZAG_CONFIG_FILE      The path to a zigzag config file.
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization
