@@ -34,7 +34,9 @@ class ModuleHierarchyFacade(object):
         """
 
         if 'module_hierarchy' in self._mediator._config_dict.keys():
-            return ast.literal_eval(self._mediator._config_dict['module_hierarchy'])
+            defined_hierarchy = ast.literal_eval(self._mediator._config_dict['module_hierarchy'])
+            test_file_name = classname[classname.rfind(".")+1:]
+            return defined_hierarchy + [test_file_name]
         elif self._mediator.ci_environment == 'asc':
             return self._asc(classname)
         elif self._mediator.ci_environment == 'mk8s':
