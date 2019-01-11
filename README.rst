@@ -14,7 +14,6 @@ Quick Start Guide
 
 1. Install ``zigzag`` from PyPI with pip::
 
-    $ pip install -e git+git://github.com/ryan-rs/qtest-swagger-client.git@master#egg=swagger-client-1.0.0
     $ pip install rpc-zigzag
 
 2. For more information on using the Zigzag launch help by::
