@@ -162,6 +162,123 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     assert 'Failed!' in result.output
 
 
+def test_cli_config_option(valid_config_file, single_passing_xml, mocker):
+    """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    test_cycle_name = 'pike'
+    test_cycle_pid = 'CL-1'
+
+    runner = CliRunner()
+    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + valid_config_file]
+
+    # Expectation
+    job_id = '54321'
+
+    # Mock
+    response = {'items': [{'name': 'insert name here', 'id': 12345}], 'total': 1}
+    mock_post_response = mocker.Mock(spec=requests.Response)
+    mock_post_response.text = json.dumps(response)
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
+    mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
+    mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+    mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
+    mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
+
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
+    mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
+    mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+    mocker.patch('requests.post', return_value=mock_post_response)
+    mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
+
+    # Test
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert 0 == result.exit_code
+    assert 'Queue Job ID: {}'.format(job_id) in result.output
+    assert 'Success!' in result.output
+
+
+def test_cli_malformed_config(invalid_config_file, single_passing_xml, mocker):
+    """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    test_cycle_name = 'pike'
+    test_cycle_pid = 'CL-1'
+
+    runner = CliRunner()
+    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + invalid_config_file]
+
+    # Expectation
+    job_id = '54321'
+
+    # Mock
+    response = {'items': [{'name': 'insert name here', 'id': 12345}], 'total': 1}
+    mock_post_response = mocker.Mock(spec=requests.Response)
+    mock_post_response.text = json.dumps(response)
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
+    mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
+    mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+    mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
+    mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
+
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
+    mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
+    mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+    mocker.patch('requests.post', return_value=mock_post_response)
+    mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
+
+    # Test
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert 'config file is not valid JSON' in result.output
+
+
+def test_cli_missing_config(valid_config_file, single_passing_xml, mocker):
+    """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
+
+    # Setup
+    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
+    project_id = '12345'
+    test_cycle_name = 'pike'
+    test_cycle_pid = 'CL-1'
+
+    runner = CliRunner()
+    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + valid_config_file + '_missing']
+
+    # Expectation
+    job_id = '54321'
+
+    # Mock
+    response = {'items': [{'name': 'insert name here', 'id': 12345}], 'total': 1}
+    mock_post_response = mocker.Mock(spec=requests.Response)
+    mock_post_response.text = json.dumps(response)
+    mock_field_resp = mocker.Mock(spec=swagger_client.FieldResource)
+    mock_field_resp.id = 12345
+    mock_field_resp.label = 'Failure Output'
+    mock_queue_resp = mocker.Mock(state='IN_WAITING', id=job_id)
+    mock_tc_resp = mocker.Mock(spec=swagger_client.TestCycleResource)
+    mock_tc_resp.to_dict.return_value = {'name': test_cycle_name, 'pid': test_cycle_pid}
+    mock_link_response = mocker.Mock(spec=swagger_client.LinkedArtifactContainer)
+
+    mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
+    mocker.patch('swagger_client.TestlogApi.submit_automation_test_logs_0', return_value=mock_queue_resp)
+    mocker.patch('swagger_client.TestcycleApi.get_test_cycles', return_value=[mock_tc_resp])
+    mocker.patch('requests.post', return_value=mock_post_response)
+    mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
+
+    # Test
+    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
+    assert 'Invalid value for "--zigzag_config_file"' in result.output
+    assert 'config_file.xml_missing" does not exist.' in result.output
+
+
 def test_test_runner_cli_option_good_values(tempest_xml, mocker):
     """Verify that valid values will be accepted by the CLI"""
 
