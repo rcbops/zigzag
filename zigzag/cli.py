@@ -60,13 +60,9 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
         zz.test_runner = test_runner
         zz.parse()
         zz.load_config(zigzag_config_file)
-
         job_id = zz.upload_test_results()
-
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
-
         click.echo(click.style("\nSuccess!", fg='green'))
-
     except RuntimeError as e:
         click.echo(click.style(str(e), fg='red'))
         click.echo(click.style("\nFailed!", fg='red'))
