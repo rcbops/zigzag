@@ -203,7 +203,7 @@ def test_cli_config_option(valid_config_file, single_passing_xml, mocker):
 
 
 def test_cli_malformed_config(invalid_config_file, single_passing_xml, mocker):
-    """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
+    """Ensure that when given an invalid config, that we fail with a 'not valid JSON' error."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
@@ -241,7 +241,7 @@ def test_cli_malformed_config(invalid_config_file, single_passing_xml, mocker):
 
 
 def test_cli_missing_config(valid_config_file, single_passing_xml, mocker):
-    """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
+    """Ensure that config file option is required."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}

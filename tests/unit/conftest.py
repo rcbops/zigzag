@@ -161,9 +161,8 @@ def valid_config_file(tmpdir_factory,
     filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
     config_json = \
         """{
-             "environment_variables": {
+             "pytest_zigzag_env_vars": {
                "BUILD_URL": "url",
-               "MODULE_HIERARCHY": ["test_root", "test_sub1", "test_sub2"],
                "BUILD_NUMBER": null,
                "RE_JOB_ACTION": null,
                "RE_JOB_IMAGE": null,
