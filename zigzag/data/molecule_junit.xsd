@@ -45,7 +45,7 @@
     <!--Note: since sometimes either 'start_time' or 'end_time' might not be present because of setup/teardown
     failure we allow one less than the five possible test case properties.-->
     <xs:complexType name="testCasePropertiesType">
-        <xs:sequence minOccurs="0" maxOccurs="unbounded">
+        <xs:sequence minOccurs="4" maxOccurs="unbounded">
             <xs:element name="property" type="testCasePropertyType" />
         </xs:sequence>
     </xs:complexType>

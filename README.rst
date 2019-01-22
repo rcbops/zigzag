@@ -40,7 +40,7 @@ Quick Start Guide
         test_cycle: A string name of the root node of the hierarchy for storing test results in qtest.
         module_hierarchy: A list, of length => 0, of hierarchical nodes where test results will be stored in qtest.
         path_to_test_exec_dir: A string representing an arbitrary path between the root of the project being tested and the directory
-            where tests will be executed. This is used
+            where tests will be executed. This is used in failure link generation.
 
 4. Here is an example of uploading a results JUnitXML file from Molecule::
 
