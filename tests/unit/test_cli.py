@@ -10,18 +10,17 @@ import requests
 import json
 
 
-def test_cli_happy_path(single_passing_xml, mocker):
+def test_cli_happy_path(single_passing_xml, simple_json_config, mocker):
     """Verify that the CLI will process required arguments and environment variables. (All uploading of test
     results has been mocked)"""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     test_cycle_name = 'pike'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id]
+    cli_arguments = (simple_json_config, single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -51,16 +50,15 @@ def test_cli_happy_path(single_passing_xml, mocker):
     assert 'Success!' in result.output
 
 
-def test_cli_missing_api_token(single_passing_xml, mocker):
+def test_cli_missing_api_token(single_passing_xml, simple_json_config, mocker):
     """Verify that the CLI will gracefully fail if the expected API token env var is not set."""
 
     # Setup
-    project_id = '12345'
     test_cycle_name = 'RPC_PRODUCT_RELEASE'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id]
+    cli_arguments = (simple_json_config, single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -85,17 +83,16 @@ def test_cli_missing_api_token(single_passing_xml, mocker):
     assert 'Failed!' in result.output
 
 
-def test_specify_test_cycle(single_passing_xml, mocker):
+def test_specify_test_cycle(single_passing_xml, simple_json_config, mocker):
     """Verify that the CLI will allow the user to set the '--pprint-on-fail' flag for debug printing."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     test_cycle_pid = 'CL-1'
-    test_cycle_name = 'foo'
+    test_cycle_name = 'RPC_PRODUCT_RELEASE'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id, '--qtest-test-cycle={}'.format(test_cycle_pid)]
+    cli_arguments = (simple_json_config, single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -127,18 +124,17 @@ def test_specify_test_cycle(single_passing_xml, mocker):
     assert 'Success!' in result.output
 
 
-def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
+def test_cli_pprint_on_fail(missing_test_id_xml, simple_json_config, mocker):
     """Verify that the CLI will allow the user to set the '--pprint-on-fail' flag for debug printing."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     job_id = '54321'
     test_cycle_name = 'RPC_PRODUCT_RELEASE'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [missing_test_id_xml, project_id, '--pprint-on-fail']
+    cli_arguments = (simple_json_config, missing_test_id_xml, "--pprint-on-fail")
 
     # Expectations
     error_msg_exp = '---DEBUG XML PRETTY PRINT---'
@@ -162,17 +158,16 @@ def test_cli_pprint_on_fail(missing_test_id_xml, mocker):
     assert 'Failed!' in result.output
 
 
-def test_cli_config_option(valid_config_file, single_passing_xml, mocker):
+def test_cli_config_option(simple_json_config, single_passing_xml, mocker):
     """Verify that the CLI will allow the user to set the '--zigzag_config_file' option."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     test_cycle_name = 'pike'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + valid_config_file]
+    cli_arguments = (simple_json_config, single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -202,17 +197,16 @@ def test_cli_config_option(valid_config_file, single_passing_xml, mocker):
     assert 'Success!' in result.output
 
 
-def test_cli_malformed_config(invalid_config_file, single_passing_xml, mocker):
+def test_cli_malformed_config(invalid_json_config, single_passing_xml, mocker):
     """Ensure that when given an invalid config, that we fail with a 'not valid JSON' error."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     test_cycle_name = 'pike'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + invalid_config_file]
+    cli_arguments = (invalid_json_config, single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -240,17 +234,16 @@ def test_cli_malformed_config(invalid_config_file, single_passing_xml, mocker):
     assert 'config file is not valid JSON' in result.output
 
 
-def test_cli_missing_config(valid_config_file, single_passing_xml, mocker):
+def test_cli_missing_config(simple_json_config, single_passing_xml, mocker):
     """Ensure that config file option is required."""
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
     test_cycle_name = 'pike'
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = [single_passing_xml, project_id, '--zigzag_config_file=' + valid_config_file + '_missing']
+    cli_arguments = (simple_json_config + '_invalid', single_passing_xml)
 
     # Expectation
     job_id = '54321'
@@ -275,58 +268,5 @@ def test_cli_missing_config(valid_config_file, single_passing_xml, mocker):
 
     # Test
     result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
-    assert 'Invalid value for "--zigzag_config_file"' in result.output
-    assert 'config_file.xml_missing" does not exist.' in result.output
-
-
-def test_test_runner_cli_option_good_values(tempest_xml, mocker):
-    """Verify that valid values will be accepted by the CLI"""
-
-    # Setup
-    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
-    runner = CliRunner()
-    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
-    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
-
-    # Test
-    for test_runner in ['tempest', 'pytest-zigzag']:
-        cli_arguments = [tempest_xml, project_id, '--test-runner', test_runner]
-        result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
-        assert result.exit_code is 0
-
-
-def test_test_runner_short_option(tempest_xml, mocker):
-    """Verify the short option for test-runner"""
-
-    # Setup
-    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
-    runner = CliRunner()
-    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
-    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
-
-    # Test
-    cli_arguments = [tempest_xml, project_id, '-tr', 'tempest']
-    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
-    assert result.exit_code is 0
-
-
-def test_test_runner_cli_option_bad_value(tempest_xml, mocker):
-    """Verify that an invalid value will fail validation"""
-
-    # Setup
-    env_vars = {'QTEST_API_TOKEN': 'valid_token'}
-    project_id = '12345'
-    runner = CliRunner()
-    mocker.patch('zigzag.zigzag.ZigZag.parse', return_value=None)
-    mocker.patch('zigzag.zigzag.ZigZag.upload_test_results', return_value=54321)
-
-    # Expectation
-    expected_output = 'Error: Invalid value for "--test-runner" / "-tr": invalid choice'
-
-    # Test
-    cli_arguments = [tempest_xml, project_id, '--test-runner', 'bad-value']
-    result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
-    assert result.exit_code is not 0
-    assert expected_output in result.output
+    assert 'Error: Invalid value for "ZIGZAG_CONFIG_FILE"' in result.output
+    assert 'conf.json_invalid" does not exist.\n' in result.output

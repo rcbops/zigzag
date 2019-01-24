@@ -20,8 +20,8 @@ class ZigZag(object):
 
     def __init__(self,
                  junit_xml_file_path,
+                 config_file,
                  qtest_api_token,
-                 qtest_project_id,
                  qtest_test_cycle=None,  # if None this will be assigned by the module_hierarchy_facade
                  pprint_on_fail=False):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
@@ -39,9 +39,9 @@ class ZigZag(object):
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
         self._qtest_api_token = qtest_api_token
         self._junit_xml_file_path = junit_xml_file_path
-        self._qtest_project_id = qtest_project_id
         self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
+        self._config_file = config_file
         self._test_logs = []
         self._config_dict = {}
 
@@ -54,6 +54,7 @@ class ZigZag(object):
         self._junit_xml = None
         self._junit_xml_doc = None
         self._qtest_test_cycle_pid = None
+        self._qtest_project_id = None
 
         self._utility_facade = UtilityFacade(self)
         self._parsing_facade = XmlParsingFacade(self)
@@ -109,6 +110,12 @@ class ZigZag(object):
              int: The qTest project ID
         """
         return self._qtest_project_id
+
+    @qtest_project_id.setter
+    def qtest_project_id(self, value):
+        """Sets the value for qtest_project_id
+        """
+        self._qtest_project_id = value
 
     @property
     def qtest_test_cycle_name(self):
@@ -308,6 +315,8 @@ class ZigZag(object):
             RuntimeError: Failed to upload test results to qTest Manager.
         """
 
+        project_id = self._config_dict['project_id']
+        self.qtest_project_id = project_id
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()
 
@@ -332,24 +341,23 @@ class ZigZag(object):
     def parse(self):
         """Parse the xml"""
 
-        self._parsing_facade.parse()  # this was moved from the init method
+        self._parsing_facade.parse(self._junit_xml_file_path)  # this was moved from the init method
 
-    def load_config(self, config_file):
+    def load_config(self):
         """Validate and load the contents of a 'zigzag' config file into memory.
 
         Args:
             config_file (str): The name of the built-in config (e.g. 'asc') or the path to a valid zigzag
                 config file.
         """
-        if config_file:
-            props = self.junit_xml.getchildren()[0]
-            try:
-                conf_template = open(config_file, 'r')
-                template = Template(conf_template.read())
-                props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
-                rendered_zigzag_config_str = template.render(props_d)
-                self._config_dict = loads(rendered_zigzag_config_str)
-            except (OSError, IOError):
-                print("Failed to load '{}' config file!".format(config_file))
-            except ValueError as e:
-                print("The '{}' config file is not valid JSON: {}".format(config_file, str(e)))
+        props = self.junit_xml.getchildren()[0]
+        try:
+            conf_template = open(self._config_file, 'r')
+            template = Template(conf_template.read())
+            props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
+            rendered_zigzag_config_str = template.render(props_d)
+            self._config_dict = loads(rendered_zigzag_config_str)
+        except (OSError, IOError):
+            print("Failed to load '{}' config file!".format(self._config_file))
+        except ValueError as e:
+            print("The '{}' config file is not valid JSON: {}".format(self._config_file, str(e)))

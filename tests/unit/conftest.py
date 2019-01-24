@@ -104,6 +104,54 @@ def default_testcase_elements():
 
 
 @pytest.fixture(scope='session')
+def invalid_json_config(tmpdir_factory,
+                        default_global_properties,
+                        default_testcase_properties,
+                        default_testcase_elements):
+    """config sample"""
+    config = \
+"""
+{
+    "test_cycle": "pike",
+    "project_id": 12345,
+    "module_hierarchy": ["one","two","three"],
+    "path_to_test_exec_dir
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
+def simple_json_config(tmpdir_factory,
+                       default_global_properties,
+                       default_testcase_properties,
+                       default_testcase_elements):
+    """config sample"""
+    config = \
+"""
+{
+    "test_cycle": "pike",
+    "project_id": 12345,
+    "module_hierarchy": ["one","two","three"],
+    "path_to_test_exec_dir": "{{ '' }}"
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
 def single_passing_xml(tmpdir_factory,
                        default_global_properties,
                        default_testcase_properties,

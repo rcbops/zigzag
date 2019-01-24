@@ -23,17 +23,13 @@ from zigzag.zigzag import ZigZag
               type=click.STRING,
               default=None,
               help='Specify a test cycle to use as a parent for results.')
-@click.option('--zigzag_config_file', '-c',
-              type=click.Path(exists=True),
-              default=None,
-              help='Path to a zigzag config file')
 @click.option('--test-runner', '-tr',
               type=click.Choice(['pytest-zigzag', 'tempest']),
               default='pytest-zigzag',
               help='Specify the tool that generated the xml to be processed')
+@click.argument('zigzag_config_file', type=click.Path(exists=True))
 @click.argument('junit_input_file', type=click.Path(exists=True))
-@click.argument('qtest_project_id', type=click.INT)
-def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycle, pprint_on_fail, test_runner):
+def main(junit_input_file, zigzag_config_file, qtest_test_cycle, pprint_on_fail, test_runner):
     """Upload JUnitXML results to qTest manager.
 
     \b
@@ -53,14 +49,16 @@ def main(junit_input_file, qtest_project_id, zigzag_config_file, qtest_test_cycl
                                'See help for more details.'.format(api_token_env_var))
 
         zz = ZigZag(junit_input_file,
+                    zigzag_config_file,
                     os.environ[api_token_env_var],
-                    qtest_project_id,
                     qtest_test_cycle,
                     pprint_on_fail)
         zz.test_runner = test_runner
         zz.parse()
-        zz.load_config(zigzag_config_file)
+        zz.load_config()
+
         job_id = zz.upload_test_results()
+
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
         click.echo(click.style("\nSuccess!", fg='green'))
     except RuntimeError as e:

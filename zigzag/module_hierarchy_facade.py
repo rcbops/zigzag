@@ -5,7 +5,6 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 import re
-import ast
 import swagger_client
 from swagger_client.rest import ApiException
 
@@ -33,18 +32,16 @@ class ModuleHierarchyFacade(object):
             list[str]: The strings to use for the module_hierarchy
         """
 
-        if 'module_hierarchy' in self._mediator._config_dict.keys():
-            defined_hierarchy = ast.literal_eval(self._mediator._config_dict['module_hierarchy'])
-            test_file_name = classname[classname.rfind(".")+1:]
-            return defined_hierarchy + [test_file_name]
-        elif self._mediator.ci_environment == 'asc':
-            return self._asc(classname)
-        elif self._mediator.ci_environment == 'mk8s':
-            return self._mk8s(classname)
-        elif self._mediator.test_runner == 'tempest':
-            return self._tempest(classname)
-        else:
-            return self._asc(classname)  # This is the default
+        modhierarchy = []
+        defined_hierarchy = self._mediator._config_dict['module_hierarchy']
+        test_file_name = classname[classname.rfind(".")+1:]
+        try:
+            re.search("(^[a-zA-Z_][a-zA-Z0-9_]*$)", test_file_name).groups()
+            modhierarchy = [str(h) for h in defined_hierarchy]
+            modhierarchy.append(test_file_name)
+        except AttributeError:
+            raise RuntimeError("Test case '{}' has an invalid 'classname' attribute!".format(classname))
+        return modhierarchy
 
     def get_test_cycle_name(self):
         """Gets the test_cycle name
@@ -52,18 +49,7 @@ class ModuleHierarchyFacade(object):
         Returns:
             str: The test_cycle name
         """
-        if 'test_cycle' in self._mediator._config_dict.keys():
-            return self._mediator._config_dict['test_cycle']
-        elif self._mediator.ci_environment == 'asc':
-            return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
-        elif self._mediator.ci_environment == 'mk8s':
-            # organize all PR related testing by pr number ex: 'PR-123'
-            # organize all non PR related testing by branch name
-            return 'PR' if self.pr_match else self._mediator.testsuite_props['BRANCH_NAME']
-        elif self._mediator.test_runner == 'tempest':
-            return 'Tempest'
-        else:
-            return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
+        return self._mediator._config_dict['test_cycle']
 
     def discover_root_test_cycle(self, test_cycle_name):
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
