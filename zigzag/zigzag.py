@@ -22,7 +22,6 @@ class ZigZag(object):
                  junit_xml_file_path,
                  config_file,
                  qtest_api_token,
-                 qtest_test_cycle=None,  # if None this will be assigned by the module_hierarchy_facade
                  pprint_on_fail=False):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
         subsystems and sub Facades.
@@ -39,13 +38,13 @@ class ZigZag(object):
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
         self._qtest_api_token = qtest_api_token
         self._junit_xml_file_path = junit_xml_file_path
-        self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
         self._config_file = config_file
         self._test_logs = []
         self._config_dict = {}
 
         # properties that will be written to an instance of this class as a mediator
+        self._qtest_test_cycle_name = None
         self._ci_environment = None
         self._build_number = None
         self._build_url = None
