@@ -29,14 +29,14 @@ Quick Start Guide
     Any test suite property from the incoming junit.xml can be interpolated, by
     name, into the template. (See the example.)
 
-    The config file can be specified by passing the --zigzag_config_file option with
-    a path to the file.
+    The config file must be specified at execution time.
 
     Because the template is rendered using jinja2, arbitrary python
     code can be used to inform the values. You could have a module hierarchy with
     one of the nodes set to the datetime of the zigzag execution, for instance.
 
-    Presently there are three supported config properties:
+    Presently there are three required config properties:
+        project_id: The qtest project id to reference when uploading test results.
         test_cycle: A string name of the root node of the hierarchy for storing test results in qtest.
         module_hierarchy: A list, of length => 0, of hierarchical nodes where test results will be stored in qtest.
         path_to_test_exec_dir: A string representing an arbitrary path between the root of the project being tested and the directory
@@ -45,20 +45,9 @@ Quick Start Guide
 4. Here is an example of uploading a results JUnitXML file from Molecule::
 
     $ export QTEST_API_TOKEN="SECRET"
-    $ zigzag junit.xml 12345
+    $ zigzag junit.xml config.json
 
 4. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
-
-Choosing a Parent Test Cycle
-----------------------------
-
-By default, ``zigzag`` will discover the appropriate parent test cycle by inspecting the provided JUnitXML. However,
-a test cycle can be specified manually by using the ``--qtest-test-cycle`` command-line option. It should be noted that
-the intended parent test cycle should be named after the product release code name. (e.g. Queens)
-
-It is assumed that this test cycle was created beforehand if you're using the ``--qtest-test-cycle`` command-line
-option. By using a test cycle with a product release code name the resulting execution result hierarchy will group
-results ina sensible manner.
 
 Contributing
 ------------
