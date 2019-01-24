@@ -19,19 +19,15 @@ from zigzag.zigzag import ZigZag
               is_flag=True,
               default=False,
               help='Pretty print XML on schema violations to stdout')
-@click.option('--test-runner', '-tr',
-              type=click.Choice(['pytest-zigzag', 'tempest']),
-              default='pytest-zigzag',
-              help='Specify the tool that generated the xml to be processed')
 @click.argument('zigzag_config_file', type=click.Path(exists=True))
 @click.argument('junit_input_file', type=click.Path(exists=True))
-def main(junit_input_file, zigzag_config_file, pprint_on_fail, test_runner):
+def main(junit_input_file, zigzag_config_file, pprint_on_fail):
     """Upload JUnitXML results to qTest manager.
 
     \b
     Required Arguments:
         JUNIT_INPUT_FILE        A valid JUnit XML results file.
-        QTEST_PROJECT_ID        The the target qTest Project ID for results
+        ZIGZAG_CONFIG_FILE      A valid json config file for zigzag.
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization
@@ -48,7 +44,6 @@ def main(junit_input_file, zigzag_config_file, pprint_on_fail, test_runner):
                     zigzag_config_file,
                     os.environ[api_token_env_var],
                     pprint_on_fail)
-        zz.test_runner = test_runner
         zz.parse()
         zz.load_config()
 
