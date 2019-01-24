@@ -136,5 +136,5 @@ class XmlParsingFacade(object):
             return pkg_resources.resource_stream('zigzag', 'data/mk8s_junit.xsd')
         else:
             # TODO: custom configs should be validated against a more permissive xsd that
-            # only ensures that we are dealing with valid junit xml.
+            # only ensures that we are dealing with valid junit xml. (see ASC-1443)
             return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')
