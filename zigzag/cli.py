@@ -21,13 +21,13 @@ from zigzag.zigzag import ZigZag
               help='Pretty print XML on schema violations to stdout')
 @click.argument('zigzag_config_file', type=click.Path(exists=True))
 @click.argument('junit_input_file', type=click.Path(exists=True))
-def main(junit_input_file, zigzag_config_file, pprint_on_fail):
+def main(zigzag_config_file, junit_input_file, pprint_on_fail):
     """Upload JUnitXML results to qTest manager.
 
     \b
     Required Arguments:
-        JUNIT_INPUT_FILE        A valid JUnit XML results file.
         ZIGZAG_CONFIG_FILE      A valid json config file for zigzag.
+        JUNIT_INPUT_FILE        A valid JUnit XML results file.
     \b
     Required Environment Variables:
         QTEST_API_TOKEN         The qTest API token to use for authorization

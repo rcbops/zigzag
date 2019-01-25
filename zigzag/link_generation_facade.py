@@ -20,7 +20,7 @@ class LinkGenerationFacade(object):
         self._git_sha = None
         self._mediator = mediator
         try:
-            if 'path_to_test_exec_dir' in self._mediator._config_dict.keys() or mediator.ci_environment == 'asc':
+            if 'path_to_test_exec_dir' in self._mediator.config_dict.keys() or mediator.ci_environment == 'asc':
                 self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
                 split = urlsplit(self._get_testsuite_prop('REPO_URL'))
                 path = self._strip_git_ending(split.path)
@@ -58,8 +58,8 @@ class LinkGenerationFacade(object):
             str: The string containing the link to the line that failed
         """
         try:
-            if 'path_to_test_exec_dir' in self._mediator._config_dict.keys():
-                base_dir = self._mediator._config_dict['path_to_test_exec_dir']
+            if 'path_to_test_exec_dir' in self._mediator.config_dict.keys():
+                base_dir = self._mediator.config_dict['path_to_test_exec_dir']
                 path = "/{}/{}/tree/{}/{}{}".format(self._repo_fork,
                                                     self._repo_name,
                                                     self._git_sha,

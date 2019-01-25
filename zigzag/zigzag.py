@@ -102,6 +102,21 @@ class ZigZag(object):
         return self._junit_xml_file_path
 
     @property
+    def config_dict(self):
+        """Gets the config dictionary
+
+        Returns:
+             Dict: The zigzag config dictionary
+        """
+        return self._config_dict
+
+    @config_dict.setter
+    def config_dict(self, value):
+        """Sets the value for the config_dictionary
+        """
+        self.load_config()
+
+    @property
     def qtest_project_id(self):
         """Gets the qTest project ID
 
@@ -314,7 +329,7 @@ class ZigZag(object):
             RuntimeError: Failed to upload test results to qTest Manager.
         """
 
-        project_id = self._config_dict['project_id']
+        project_id = self.config_dict['project_id']
         self.qtest_project_id = project_id
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()
