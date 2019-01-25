@@ -180,10 +180,10 @@ def single_passing_xml(tmpdir_factory,
 
 
 @pytest.fixture(scope='session')
-def invalid_config_file(tmpdir_factory,
-                        default_global_properties,
-                        default_testcase_properties,
-                        default_testcase_elements):
+def invalid_zigzag_config_file(tmpdir_factory,
+                               default_global_properties,
+                               default_testcase_properties,
+                               default_testcase_elements):
     """JUnitXML sample representing a single passing test."""
 
     filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
@@ -200,10 +200,10 @@ def invalid_config_file(tmpdir_factory,
 
 
 @pytest.fixture(scope='session')
-def valid_config_file(tmpdir_factory,
-                      default_global_properties,
-                      default_testcase_properties,
-                      default_testcase_elements):
+def valid_zigzag_config_file(tmpdir_factory,
+                             default_global_properties,
+                             default_testcase_properties,
+                             default_testcase_elements):
     """JUnitXML sample representing a single passing test."""
 
     filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
