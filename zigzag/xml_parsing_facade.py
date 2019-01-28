@@ -24,7 +24,7 @@ class XmlParsingFacade(object):
         """
         self._mediator = mediator
 
-    def parse(self):
+    def parse(self, file_path):
         """Parse the xml that is attached to the mediator
         All results are attached the mediator passed in on instantiation
         sets the property 'build_url' on the mediator
@@ -32,7 +32,7 @@ class XmlParsingFacade(object):
         """
 
         if self._mediator.test_runner == 'pytest-zigzag':
-            self._read()
+            self._read(file_path)
             self._determine_ci_environment()
             self._validate()
             self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
@@ -47,7 +47,7 @@ class XmlParsingFacade(object):
             except KeyError as e:
                 raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
         elif self._mediator.test_runner == 'tempest':
-            self._read()
+            self._read(file_path)
             self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
                                               for p in self._mediator.junit_xml.findall('./properties/property')}
             self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
@@ -65,7 +65,7 @@ class XmlParsingFacade(object):
         except AttributeError:
             self._mediator.ci_environment = 'asc'  # hard code this here
 
-    def _read(self):
+    def _read(self, file_path):
         """Read the input file contents
         sets the property 'serialized_junit_xml' & 'junit_xml'on the mediator
 
@@ -75,7 +75,6 @@ class XmlParsingFacade(object):
             RuntimeError: Test suite is missing the required property!
         """
 
-        file_path = self._mediator.junit_xml_file_path
         try:
             junit_xml_doc = etree.parse(file_path)
             junit_xml = junit_xml_doc.getroot()
@@ -121,7 +120,7 @@ class XmlParsingFacade(object):
                 file_path, root_element))
 
     @staticmethod
-    def _get_xsd(ci_environment='asc'):
+    def _get_xsd(ci_environment):
         """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
 
         Args:
@@ -129,9 +128,6 @@ class XmlParsingFacade(object):
 
         Returns:
             io.BytesIO: A file like stream object.
-
-        Raises:
-            RuntimeError: 'Unknown ci-environment'
         """
 
         if ci_environment == 'asc':
@@ -139,4 +135,6 @@ class XmlParsingFacade(object):
         elif ci_environment == 'mk8s':
             return pkg_resources.resource_stream('zigzag', 'data/mk8s_junit.xsd')
         else:
-            raise RuntimeError("Unknown ci-environment '{}'".format(ci_environment))
+            # TODO: custom configs should be validated against a more permissive xsd that
+            # only ensures that we are dealing with valid junit xml. (see ASC-1443)
+            return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')

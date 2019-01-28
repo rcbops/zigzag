@@ -918,13 +918,14 @@ def tempest_xml_with_none_for_exec_params():
 class TestZigZagTestLog(object):
     """Tests for the _ZigZagTestLog class through the ZigZagTestLogs public class."""
 
-    def test_single_passing_no_sys_capture(self, single_passing_no_sys_capture_xml, mock_zigzag):
+    def test_single_passing_no_sys_capture(self, single_passing_no_sys_capture_xml, simple_json_config, mock_zigzag):
         """Test that nothing blows up if the JUnitXML testcase element lacks 'system-out' and 'system-err' elements."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_passing_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -935,13 +936,14 @@ class TestZigZagTestLog(object):
         assert not tl.stdout
         assert tl.qtest_testcase_id == qtest_id_exp
 
-    def test_lookup_ids(self, single_passing_xml, mock_zigzag):
+    def test_lookup_ids(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test for _lookup_ids happy path"""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -950,7 +952,7 @@ class TestZigZagTestLog(object):
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.qtest_testcase_id == qtest_id_exp
 
-    def test_lookup_ids_not_found(self, single_passing_xml, mock_zigzag):
+    def test_lookup_ids_not_found(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test for _lookup_ids
         Ask for a test ID that does not exist yet
         """
@@ -964,14 +966,15 @@ class TestZigZagTestLog(object):
             "items": []
         }
         mock_zigzag(search_response)
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.qtest_testcase_id is None
 
-    def test_lookup_test_execution_parameters_not_found(self, single_passing_xml, mock_zigzag):
+    def test_lookup_test_execution_parameters_not_found(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test for _lookup_ids
         Ask for a test ID that does not exist yet
         """
@@ -985,14 +988,15 @@ class TestZigZagTestLog(object):
             "items": []
         }
         mock_zigzag(search_response)
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.test_execution_parameters == ['ansible://localhost']
 
-    def test_lookup_test_execution_parameters_found(self, test_execution_parameters, mock_zigzag):
+    def test_lookup_test_execution_parameters_found(self, test_execution_parameters, simple_json_config, mock_zigzag):
         """Test for _lookup_ids
         Ask for a test ID that does not exist yet
         """
@@ -1006,14 +1010,15 @@ class TestZigZagTestLog(object):
             "items": []
         }
         mock_zigzag(search_response)
-        zz = ZigZag(test_execution_parameters, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(test_execution_parameters, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert tl.test_execution_parameters == ['_testinfra_host0']
 
-    def test_lookup_requirements_not_found(self, single_passing_xml, mock_zigzag):
+    def test_lookup_requirements_not_found(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test for _lookup_requirements
         Ask for a requirements that have not been imported from jira yet
         """
@@ -1027,15 +1032,16 @@ class TestZigZagTestLog(object):
             "items": []
         }
         mock_zigzag(search_response)
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
         assert isinstance(tl.qtest_requirements, list)
         assert not len(tl.qtest_requirements)
 
-    def test_lookup_requirements(self, single_passing_xml, mock_zigzag):
+    def test_lookup_requirements(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test for _lookup_requirements
         Ask for two requirements that correspond to jira ids
         """
@@ -1057,8 +1063,9 @@ class TestZigZagTestLog(object):
             ]
         }
         mock_zigzag(search_response)
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1066,15 +1073,16 @@ class TestZigZagTestLog(object):
         # there should be two requirements since xml has two jira marks
         assert tl.qtest_requirements == [qtest_id_exp, qtest_id_exp]
 
-    def test_successful_test_case_attachments(self, single_passing_xml, mock_zigzag):
+    def test_successful_test_case_attachments(self, single_passing_xml, simple_json_config, mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached
         Ensure that there is only one attachment (junit.xml) in the passing case.
         """
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_passing_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1156,13 +1164,14 @@ class TestZigZagTestLog(object):
 class TestZigZagTestLogWithSteps(object):
     """Tests for the _ZigZagTestLog class through the ZigZagTestLogs public class."""
 
-    def test_single_test_multiple_steps(self, single_test_with_mixed_status_steps_xml, mock_zigzag):
+    def test_single_test_multiple_steps(self, single_test_with_mixed_status_steps_xml, simple_json_config, mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         test_step_log_exps = \
@@ -1197,13 +1206,17 @@ class TestZigZagTestLogWithSteps(object):
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(ts_log_exp, ts_log_actual.to_dict())
 
-    def test_single_test_multiple_skipping_steps(self, single_test_with_multiple_skipping_steps_xml, mock_zigzag):
+    def test_single_test_multiple_skipping_steps(self,
+                                                 single_test_with_multiple_skipping_steps_xml,
+                                                 simple_json_config,
+                                                 mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_multiple_skipping_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_multiple_skipping_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'SKIPPED',
@@ -1222,13 +1235,17 @@ class TestZigZagTestLogWithSteps(object):
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(test_step_log_exp, ts_log.to_dict())
 
-    def test_single_test_multiple_passing_steps(self, single_test_with_multiple_passing_steps_xml, mock_zigzag):
+    def test_single_test_multiple_passing_steps(self,
+                                                single_test_with_multiple_passing_steps_xml,
+                                                simple_json_config,
+                                                mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_multiple_passing_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_multiple_passing_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'PASSED',
@@ -1247,13 +1264,14 @@ class TestZigZagTestLogWithSteps(object):
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(test_step_log_exp, ts_log.to_dict())
 
-    def test_multiple_tests_with_step(self, multiple_mixed_status_tests_with_step_xml, mock_zigzag):
+    def test_multiple_tests_with_step(self, multiple_mixed_status_tests_with_step_xml, simple_json_config, mock_zigzag):
         """Verify a multiple test case with a single test step each are handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_mixed_status_tests_with_step_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(multiple_mixed_status_tests_with_step_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1284,13 +1302,17 @@ class TestZigZagTestLogWithSteps(object):
             assert pytest.helpers.is_sub_dict(tl_details_exps[test_case_name],
                                               tl_details[test_case_name].qtest_test_log.test_step_logs[0].to_dict())
 
-    def test_multiple_tests_with_multiple_steps(self, multiple_mixed_status_tests_with_steps_xml, mock_zigzag):
+    def test_multiple_tests_with_multiple_steps(self,
+                                                multiple_mixed_status_tests_with_steps_xml,
+                                                simple_json_config,
+                                                mock_zigzag):
         """Verify a multiple test cases with multiple test steps are handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_mixed_status_tests_with_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(multiple_mixed_status_tests_with_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1347,13 +1369,14 @@ class TestZigZagTestLogWithSteps(object):
 class TestZigZagTestLogs(object):
     """Tests for the TestLog class"""
 
-    def test_mix_of_test_logs(self, multiple_tests_with_and_without_steps_xml, mock_zigzag):
+    def test_mix_of_test_logs(self, multiple_tests_with_and_without_steps_xml, simple_json_config, mock_zigzag):
         """Verify that a test suite with a mix of tests with and without steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_tests_with_and_without_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(multiple_tests_with_and_without_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Expectations
         ts_detail_exp = {'actual_result': 'PASSED',
@@ -1380,7 +1403,7 @@ class TestZigZagTestLogs(object):
 class TestFailedTestCases(object):
     """Tests for failure output messagage and failure log attachment."""
 
-    def test_failed_test_case_attachments(self, single_fail_xml, mock_zigzag):
+    def test_failed_test_case_attachments(self, single_fail_xml, simple_json_config, mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached
         Ensure that there are two attachments, one of type xml and one of type
         text.
@@ -1388,8 +1411,9 @@ class TestFailedTestCases(object):
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_fail_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1405,15 +1429,19 @@ class TestFailedTestCases(object):
         for test_log_attachment in tl.qtest_test_log.attachments[1:]:
             assert test_log_attachment.content_type == 'text/plain'
 
-    def test_failed_test_case_attachments_no_sys_capture(self, single_failing_no_sys_capture_xml, mock_zigzag):
+    def test_failed_test_case_attachments_no_sys_capture(self,
+                                                         single_failing_no_sys_capture_xml,
+                                                         simple_json_config,
+                                                         mock_zigzag):
         """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
         not contain 'system-err' or 'system-out' elements.
         """
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_failing_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_failing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1429,6 +1457,7 @@ class TestFailedTestCases(object):
 
     def test_failed_test_case_attachments_duplicate_sys_capture(self,
                                                                 single_failing_duplicate_sys_capture_xml,
+                                                                simple_json_config,
                                                                 mock_zigzag):
         """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element has
         duplicate 'system-err' and 'system-out' elements. Expected behavior is to select the first set of elements for
@@ -1437,8 +1466,9 @@ class TestFailedTestCases(object):
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_failing_duplicate_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_failing_duplicate_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1454,15 +1484,19 @@ class TestFailedTestCases(object):
         for test_log_attachment in tl.qtest_test_log.attachments[1:]:
             assert test_log_attachment.content_type == 'text/plain'
 
-    def test_failed_test_case_attachments_missing_sys_err(self, single_failing_missing_sys_err_xml, mock_zigzag):
+    def test_failed_test_case_attachments_missing_sys_err(self,
+                                                          single_failing_missing_sys_err_xml,
+                                                          simple_json_config,
+                                                          mock_zigzag):
         """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
         not contain the 'system-err' element.
         """
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_failing_missing_sys_err_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_failing_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1478,15 +1512,19 @@ class TestFailedTestCases(object):
         for test_log_attachment in tl.qtest_test_log.attachments[1:]:
             assert test_log_attachment.content_type == 'text/plain'
 
-    def test_failed_test_case_attachments_missing_sys_out(self, single_failing_missing_sys_out_xml, mock_zigzag):
+    def test_failed_test_case_attachments_missing_sys_out(self,
+                                                          single_failing_missing_sys_out_xml,
+                                                          simple_json_config,
+                                                          mock_zigzag):
         """Test to ensure that the correct test artifacts are being attached when the JUnitXML testcase element does
         not contain the 'system-out' element.
         """
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_failing_missing_sys_out_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_failing_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1502,13 +1540,17 @@ class TestFailedTestCases(object):
         for test_log_attachment in tl.qtest_test_log.attachments[1:]:
             assert test_log_attachment.content_type == 'text/plain'
 
-    def test_failed_test_step_attachments(self, single_test_with_mixed_status_steps_xml, mock_zigzag):
+    def test_failed_test_step_attachments(self,
+                                          single_test_with_mixed_status_steps_xml,
+                                          simple_json_config,
+                                          mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1532,13 +1574,15 @@ class TestFailedTestCases(object):
 
     def test_failed_test_step_attachments_no_sys_capture(self,
                                                          single_test_with_mixed_status_steps_no_sys_capture_xml,
+                                                         simple_json_config,
                                                          mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_no_sys_capture_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_mixed_status_steps_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1557,13 +1601,15 @@ class TestFailedTestCases(object):
 
     def test_failed_test_step_attachments_missing_sys_err_xml(self,
                                                               single_test_with_mixed_status_steps_missing_sys_err_xml,
+                                                              simple_json_config,
                                                               mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_err_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1587,13 +1633,15 @@ class TestFailedTestCases(object):
 
     def test_failed_test_step_attachments_missing_sys_out_xml(self,
                                                               single_test_with_mixed_status_steps_missing_sys_out_xml,
+                                                              simple_json_config,
                                                               mock_zigzag):
         """Test to ensure that test artifacts are being correctly attached to test steps upon failure."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_out_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1615,53 +1663,63 @@ class TestFailedTestCases(object):
         for failing_test_log_attachment in failing_step.attachments:
             assert failing_test_log_attachment.content_type == 'text/plain'
 
-    def test_truncated_failure_output(self, single_fail_xml, mock_zigzag):
+    def test_truncated_failure_output(self, single_fail_xml, simple_json_config, mock_zigzag):
         """Test to ensure that log messages are truncated correctly"""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_fail_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
         assert len(tl.failure_output.split('\n')) == 4
 
-    def test_truncated_failure_output_with_short_single_line_message(self, short_single_line_failure_message,
+    def test_truncated_failure_output_with_short_single_line_message(self,
+                                                                     short_single_line_failure_message,
+                                                                     simple_json_config,
                                                                      mock_zigzag):
         """Verify that a failure output of only one line will NOT be truncated."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(short_single_line_failure_message, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(short_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
         assert tl.failure_output == 'Short'
 
-    def test_truncated_failure_output_with_long_single_line_message(self, long_single_line_failure_message,
+    def test_truncated_failure_output_with_long_single_line_message(self,
+                                                                    long_single_line_failure_message,
+                                                                    simple_json_config,
                                                                     mock_zigzag):
         """Verify that a failure output of only one line will NOT be truncated."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(long_single_line_failure_message, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(long_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
+        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
 
         assert tl.failure_output == LONG_FAILURE_MESSAGE[:120] + '...'
 
-    def test_truncated_failure_output_with_long_multi_line_message(self, long_multi_line_failure_message, mock_zigzag):
+    def test_truncated_failure_output_with_long_multi_line_message(self,
+                                                                   long_multi_line_failure_message,
+                                                                   simple_json_config,
+                                                                   mock_zigzag):
         """Verify that a failure output of only one line will NOT be truncated."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(long_multi_line_failure_message, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(long_multi_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
 
         # Test
@@ -1671,84 +1729,24 @@ class TestFailedTestCases(object):
         assert 'Log truncated' in tl._failure_output
         assert '{}{}'.format(LONG_FAILURE_MESSAGE[:100], '...') in tl._failure_output
 
-    def test_attempt_parse_old_xml(self, test_without_test_step, mock_zigzag):
+    def test_attempt_parse_old_xml(self, test_without_test_step, simple_json_config, mock_zigzag):
         """Verify that an error will be raised when we attempt to raise an parse xml generated by an old tool"""
         # Setup
         mock_zigzag()
-        zz = ZigZag(test_without_test_step, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(test_without_test_step, simple_json_config, TOKEN)
 
         with pytest.raises(ZigZagTestLogError, message='Test found without test_step property'):
             zz.parse()
 
-
-class TestZigZagTestLogsTempest(object):
-    """Tests for the TestLog class"""
-
-    def test_tempest_xml_with_none_for_execution_parameters(self, tempest_xml_with_none_for_exec_params, mocker):
-        """Verify the status property when we expect a skip"""
-
-        zz = mocker.MagicMock()
-        zztlt = _ZigZagTestLogTempest(tempest_xml_with_none_for_exec_params, zz)
-
-        assert zztlt.test_execution_parameters == []
-
-    def test_tempest_xml_with_no_execution_parameters(self, tempest_xml_with_no_exec_params, mocker):
-        """Verify the status property when we expect a skip"""
-
-        zz = mocker.MagicMock()
-        zztlt = _ZigZagTestLogTempest(tempest_xml_with_no_exec_params, zz)
-
-        assert zztlt.test_execution_parameters == ['']
-
-    def test_tempest_xml_with_some_none_execution_parameters(self, tempest_xml_with_some_none_exec_params, mocker):
-        """Verify the status property when we expect a skip"""
-
-        zz = mocker.MagicMock()
-        zztlt = _ZigZagTestLogTempest(tempest_xml_with_some_none_exec_params, zz)
-
-        assert zztlt.test_execution_parameters == ['foo', '', 'bar', '']
-
-    def test_sample_tempest_xml_with_empty_execution_parameters(self, tempest_case_xml_with_empty_exec_params, mocker):
-        """Verify the status property when we expect a skip"""
-
-        zz = mocker.MagicMock()
-        zztlt = _ZigZagTestLogTempest(tempest_case_xml_with_empty_exec_params, zz)
-
-        assert zztlt.test_execution_parameters == ['', '', '', '']
-
-    def test_sample_tempest_xml_with_execution_parameters(self, tempest_case_xml_with_execution_parameters, mocker):
-        """Verify the status property when we expect a skip"""
-
-        zz = mocker.MagicMock()
-        zztlt = _ZigZagTestLogTempest(tempest_case_xml_with_execution_parameters, zz)
-
-        assert zztlt.test_execution_parameters == ['compute',
-                                                   'id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba',
-                                                   'network',
-                                                   'smoke']
-
-    def test_sample_tempest_xml(self, tempest_xml, mock_zigzag):
-        """Verify that we can parse xml generated by tempest"""
-
-        # Setup
-        mock_zigzag()
-        zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
-        zz.test_runner = 'tempest'
-        zz.parse()
-
-        # Test
-        tls = ZigZagTestLogs(zz)
-
-        assert 8 == len(tls)  # number of tests parsed
-
-    def test_calculate_time(self, tempest_xml, mock_zigzag):
+    def test_calculate_time(self, tempest_xml, simple_json_config, mock_zigzag):
         """Verify that we can calculate the end time based on the time attribute"""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
+        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1770,14 +1768,15 @@ class TestZigZagTestLogsTempest(object):
         # test that the start_date is within +-2 seconds of now
         assert now - margin <= start <= now + margin
 
-    def test_automation_content(self, tempest_xml, mock_zigzag):
+    def test_automation_content(self, tempest_xml, simple_json_config, mock_zigzag):
         """Verify that we can get the UUID from the XML or we get none back"""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
+        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1794,14 +1793,15 @@ class TestZigZagTestLogsTempest(object):
 
         assert 'test_password_history_not_enforced_in_admin_reset' == zztlt.name
 
-    def test_qtest_test_log_generation(self, tempest_xml, mock_zigzag):
+    def test_qtest_test_log_generation(self, tempest_xml, simple_json_config, mock_zigzag):
         """Verify that we can generate qtest_test_log objects"""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(tempest_xml, TOKEN, PROJECT_ID, TEST_CYCLE)
+        zz = ZigZag(tempest_xml, simple_json_config, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
+        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):

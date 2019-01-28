@@ -104,6 +104,54 @@ def default_testcase_elements():
 
 
 @pytest.fixture(scope='session')
+def invalid_json_config(tmpdir_factory,
+                        default_global_properties,
+                        default_testcase_properties,
+                        default_testcase_elements):
+    """config sample"""
+    config = \
+"""
+{
+    "test_cycle": "pike",
+    "project_id": 12345,
+    "module_hierarchy": ["one","two","three"],
+    "path_to_test_exec_dir
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
+def simple_json_config(tmpdir_factory,
+                       default_global_properties,
+                       default_testcase_properties,
+                       default_testcase_elements):
+    """config sample"""
+    config = \
+"""
+{
+    "test_cycle": "pike",
+    "project_id": 12345,
+    "module_hierarchy": ["one","two","three"],
+    "path_to_test_exec_dir": "{{ '' }}"
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
 def single_passing_xml(tmpdir_factory,
                        default_global_properties,
                        default_testcase_properties,
@@ -127,6 +175,65 @@ def single_passing_xml(tmpdir_factory,
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def invalid_zigzag_config_file(tmpdir_factory,
+                               default_global_properties,
+                               default_testcase_properties,
+                               default_testcase_elements):
+    """JUnitXML sample representing a single passing test."""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
+    config_json = \
+        """{
+             "environment_variables": {
+               "BUILD_URL": "url",
+           """
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def valid_zigzag_config_file(tmpdir_factory,
+                             default_global_properties,
+                             default_testcase_properties,
+                             default_testcase_elements):
+    """JUnitXML sample representing a single passing test."""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
+    config_json = \
+        """{
+             "pytest_zigzag_env_vars": {
+               "BUILD_URL": "url",
+               "BUILD_NUMBER": null,
+               "RE_JOB_ACTION": null,
+               "RE_JOB_IMAGE": null,
+               "RE_JOB_SCENARIO": null,
+               "RE_JOB_BRANCH": null,
+               "RPC_RELEASE": null,
+               "RPC_PRODUCT_RELEASE": null,
+               "OS_ARTIFACT_SHA": null,
+               "PYTHON_ARTIFACT_SHA": null,
+               "APT_ARTIFACT_SHA": null,
+               "REPO_URL": "https://github.com/rcbops/zigzag_asc",
+               "GIT_URL": "https://github.com/rcbops/zigzag_mk8s",
+               "JOB_NAME": null,
+               "MOLECULE_TEST_REPO": "pytest-zigzag",
+               "MOLECULE_SCENARIO_NAME": "molecule_scenario",
+               "PATH_TO_TEST_EXEC_DIR": "custom_test_dir/",
+               "MOLECULE_GIT_COMMIT": "8216c9449ef99216c922f2f2fd01f28e412cfe87",
+               "GIT_COMMIT": "mk8s_gitsha"
+             }
+           }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
 
     return filename
 
