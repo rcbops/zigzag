@@ -40,7 +40,7 @@ Quick Start Guide
 4. Here is an example of uploading a results JUnitXML file from Molecule::
 
     $ export QTEST_API_TOKEN="SECRET"
-    $ zigzag junit.xml config.json
+    $ zigzag /path/to/config.json /path/to/junit.xml
 
 5. Checkout QA Symphony's website for more details on configuring `qTest Manager API`_ access.
 
