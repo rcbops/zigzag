@@ -98,7 +98,7 @@ class XmlParsingFacade(object):
         """
 
         root_element = 'testsuite'
-        junit_xsd = self._get_xsd(self._mediator.ci_environment)
+        junit_xsd = self._get_xsd()
         file_path = self._mediator.junit_xml_file_path
 
         try:
@@ -120,21 +120,10 @@ class XmlParsingFacade(object):
                 file_path, root_element))
 
     @staticmethod
-    def _get_xsd(ci_environment):
+    def _get_xsd():
         """Retrieve a XSD for validating JUnitXML results produced by this plug-in.
-
-        Args:
-            ci_environment (str): the value found in the ci-environment global property from the XML
 
         Returns:
             io.BytesIO: A file like stream object.
         """
-
-        if ci_environment == 'asc':
-            return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')
-        elif ci_environment == 'mk8s':
-            return pkg_resources.resource_stream('zigzag', 'data/mk8s_junit.xsd')
-        else:
-            # TODO: custom configs should be validated against a more permissive xsd that
-            # only ensures that we are dealing with valid junit xml. (see ASC-1443)
-            return pkg_resources.resource_stream('zigzag', 'data/molecule_junit.xsd')
+        return pkg_resources.resource_stream('zigzag', 'data/junit.xsd')

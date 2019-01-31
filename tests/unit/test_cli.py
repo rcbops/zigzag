@@ -124,8 +124,10 @@ def test_specify_test_cycle(single_passing_xml, simple_json_config, mocker):
     assert 'Success!' in result.output
 
 
-def test_cli_pprint_on_fail(missing_test_id_xml, simple_json_config, mocker):
-    """Verify that the CLI will allow the user to set the '--pprint-on-fail' flag for debug printing."""
+def test_cli_pprint_on_fail(xml_with_unknown_elements, simple_json_config, mocker):
+    """Verify that the CLI will allow the user to set the '--pprint-on-fail' flag for debug printing.
+    This test tests when an xml document does not validate the xsd
+    """
 
     # Setup
     env_vars = {'QTEST_API_TOKEN': 'valid_token'}
@@ -134,7 +136,7 @@ def test_cli_pprint_on_fail(missing_test_id_xml, simple_json_config, mocker):
     test_cycle_pid = 'CL-1'
 
     runner = CliRunner()
-    cli_arguments = (simple_json_config, missing_test_id_xml, "--pprint-on-fail")
+    cli_arguments = (simple_json_config, xml_with_unknown_elements, "--pprint-on-fail")
 
     # Expectations
     error_msg_exp = '---DEBUG XML PRETTY PRINT---'
@@ -268,5 +270,5 @@ def test_cli_missing_config(simple_json_config, single_passing_xml, mocker):
 
     # Test
     result = runner.invoke(cli.main, args=cli_arguments, env=env_vars)
-    assert 'Error: Invalid value for "ZIGZAG_CONFIG_FILE"' in result.output
+    assert 'Error: Invalid value for "ZIGZAG_CONFIG_FILE"'.lower() in result.output.lower()
     assert 'conf.json_invalid" does not exist.\n' in result.output
