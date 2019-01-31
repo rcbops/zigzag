@@ -930,9 +930,10 @@ class _ZigZagTestLogTempest(_ZigZagTestLog):
         """
         if self._automation_content is None:
             try:
-                self._automation_content = _ZigZagTestLogTempest._TEMPEST_UUID_RGX.search(
-                    self._testcase_xml.attrib['name']).group(0)
-            except AttributeError:
+                automation_content = list(filter(_ZigZagTestLogTempest._TEMPEST_UUID_RGX.search,
+                                                 self.test_execution_parameters))[0]
+                self._automation_content = _ZigZagTestLogTempest._TEMPEST_UUID_RGX.search(automation_content).group(0)
+            except IndexError:  # happens when we filter to an empty list
                 raise ZigZagTestLogError('OHH snap there is no UUID!!!')
 
         return self._automation_content
