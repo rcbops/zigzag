@@ -12,9 +12,6 @@ from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
-from zigzag.zigzag_error import ZigZagConfigError
-from json import loads
-from jinja2 import Template
 from zigzag.zigzag_config import ZigZagConfig
 
 
