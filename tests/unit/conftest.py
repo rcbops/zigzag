@@ -575,6 +575,24 @@ def missing_test_id_xml(tmpdir_factory, default_global_properties, default_testc
 
 
 @pytest.fixture(scope='session')
+def xml_with_unknown_elements(tmpdir_factory, default_global_properties):
+    """JUnitXML sample representing an xml document missing testcases."""
+
+    filename = tmpdir_factory.mktemp('data').join('missing_test_id.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuitefoo errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+        </testsuitefoo>
+        """.format(global_properties=default_global_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def missing_build_url_xml(tmpdir_factory, default_testcase_properties, default_testcase_elements):
     """JUnitXML sample representing a test suite that is missing the "BUILD_URL" property."""
 

@@ -870,7 +870,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
             qtest_test_step_log = swagger_client.AutomationTestStepLog()
 
             # set the status based on the previous status
-            previous_position = order - 1 if order is not 0 else 0
+            previous_position = order - 1 if order != 0 else 0
             previous_status = self._zz_test_step_logs[previous_position].status
             if zz_test_step_log.status == 'FAILED':
                 qtest_test_step_log.status = 'FAILED'
