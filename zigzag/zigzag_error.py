@@ -3,3 +3,10 @@ class ZigZagError(Exception):
 
     def __init__(self, message):
         super(ZigZagError, self).__init__(message)
+
+
+class ZigZagConfigError(ZigZagError):
+    """An Error raised in loading and accessing ZigZag's config file"""
+
+    def __init__(self, message):
+        super(ZigZagConfigError, self).__init__(message)

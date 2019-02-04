@@ -925,7 +925,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -943,7 +942,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -968,7 +966,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -990,7 +987,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1012,7 +1008,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(test_execution_parameters, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1034,7 +1029,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1065,7 +1059,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1082,7 +1075,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1171,7 +1163,6 @@ class TestZigZagTestLogWithSteps(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exps = \
@@ -1216,7 +1207,6 @@ class TestZigZagTestLogWithSteps(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_multiple_skipping_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'SKIPPED',
@@ -1245,7 +1235,6 @@ class TestZigZagTestLogWithSteps(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_multiple_passing_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'PASSED',
@@ -1271,7 +1260,6 @@ class TestZigZagTestLogWithSteps(object):
         mock_zigzag()
         zz = ZigZag(multiple_mixed_status_tests_with_step_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1312,7 +1300,6 @@ class TestZigZagTestLogWithSteps(object):
         mock_zigzag()
         zz = ZigZag(multiple_mixed_status_tests_with_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1376,7 +1363,6 @@ class TestZigZagTestLogs(object):
         mock_zigzag()
         zz = ZigZag(multiple_tests_with_and_without_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         ts_detail_exp = {'actual_result': 'PASSED',
@@ -1413,7 +1399,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1441,7 +1426,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1468,7 +1452,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_duplicate_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1496,7 +1479,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1524,7 +1506,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1550,7 +1531,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1582,7 +1562,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1609,7 +1588,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1641,7 +1619,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1670,7 +1647,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1687,7 +1663,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(short_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1704,7 +1679,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(long_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1746,7 +1720,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1776,7 +1749,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1801,7 +1773,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):

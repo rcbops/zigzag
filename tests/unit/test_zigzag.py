@@ -53,7 +53,6 @@ class TestZigZag(object):
         # Setup
         zz = ZigZag(flat_all_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         assert 12345 == zz.config_dict['project_id']
@@ -417,7 +416,6 @@ class TestParseXMLtoTestLogs(object):
         # Setup
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
         # noinspection PyUnresolvedReferences
         test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
@@ -453,7 +451,6 @@ class TestParseXMLtoTestLogs(object):
         # Setup
         zz = ZigZag(classname_with_dashes_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
         # noinspection PyUnresolvedReferences
         test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
@@ -490,7 +487,6 @@ class TestParseXMLtoTestLogs(object):
         # Setup
         zz = ZigZag(invalid_classname_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         with pytest.raises(RuntimeError):
@@ -531,7 +527,6 @@ class TestGenerateAutoRequest(object):
         # Setup
         zz = ZigZag(flat_mix_status_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
         auto_req_dict = zz._generate_auto_request().to_dict()
 
         # Expectation
@@ -582,7 +577,6 @@ class TestUploadTestResults(object):
         # Setup
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         response = zz.upload_test_results()
@@ -608,7 +602,6 @@ class TestUploadTestResults(object):
         # Setup
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         with pytest.raises(RuntimeError):
@@ -632,7 +625,6 @@ class TestUploadTestResults(object):
         # Setup
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         with pytest.raises(RuntimeError):

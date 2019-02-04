@@ -9,6 +9,7 @@ import os
 import sys
 import click
 from zigzag.zigzag import ZigZag
+from zigzag.zigzag_error import ZigZagError
 
 
 # ======================================================================================================================
@@ -45,13 +46,12 @@ def main(zigzag_config_file, junit_input_file, pprint_on_fail):
                     os.environ[api_token_env_var],
                     pprint_on_fail)
         zz.parse()
-        zz.load_config()
 
         job_id = zz.upload_test_results()
 
         click.echo(click.style("\nQueue Job ID: {}".format(str(job_id))))
         click.echo(click.style("\nSuccess!", fg='green'))
-    except RuntimeError as e:
+    except(RuntimeError, ZigZagError) as e:
         click.echo(click.style(str(e), fg='red'))
         click.echo(click.style("\nFailed!", fg='red'))
 
