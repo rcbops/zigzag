@@ -31,11 +31,27 @@ Quick Start Guide
 
     Because the template is rendered using jinja2, arbitrary python code can be used to inform the values. You could have a module hierarchy with one of the nodes set to the datetime of the zigzag execution, for instance.
 
-    Presently there are three required config properties
-    - project_id: The qtest project id to reference when uploading test results.
-    - test_cycle:  A string name of the root node of the hierarchy for storing test results in qtest.
-    - module_hierarchy: A list, of length => 0, of hierarchical nodes where test results will be stored in qtest.
+
+    - project_id: (Required) The qtest project id to reference when uploading test results.
+    - test_cycle:  (Required) A string name of the root node of the hierarchy for storing test results in qtest.
+    - module_hierarchy: (Required) A list, of length => 0, of hierarchical nodes where test results will be stored in qtest.
     - path_to_test_exec_dir: A string representing an arbitrary path between the root of the project being tested and the directory where tests will be executed. This is used in failure link generation.
+    - build_url: The URL of the build that generated the XML to be processed
+    - build_number: The build number from the CI system
+
+    The following configs are project specific, these values should be accurate for the version of the project under test.
+    - project_repo_name: The name of the repo of the project under test
+    - project_branch: The branch of the project under test
+    - project_fork: The fork of the project under test
+    - project_commit: The commit sha of the project under test
+
+    The following configs are test specific, these values should be accurate for the version of the tests that generated the XML.
+    If your tests are located in the same repo as your project these values will be the same as above.
+    - test_repo_name: The name of the repo that containing the tests used to generate the XML
+    - test_branch: The branch of the repository that contains the tests used to generate the XML
+    - test_fork: The fork of the repository that contains the tests used to generate the XML
+    - test_commit: The commit sha of the the repository that contains the tests used to generate the XML
+
 
 4. Here is an example of uploading a results JUnitXML file from Molecule::
 
