@@ -79,7 +79,7 @@ class _ZigZagTestLog(object):
             try:
                 self._name = _ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                raise RuntimeError("Test case '{}' is missing the required property name!".format(self._name))
 
         return self._name
 
@@ -292,7 +292,7 @@ class _ZigZagTestLog(object):
             try:
                 self._automation_content = self._find_property('test_id')
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                raise ZigZagTestLogError("Test case '{}' is missing the required property! automation content".format(self._name))
         return self._automation_content
 
     @property
@@ -324,7 +324,7 @@ class _ZigZagTestLog(object):
             RuntimeError: the testcase 'classname' attribute is invalid
         """
 
-        return self._mediator.module_hierarchy_facade.get_module_hierarchy(self.classname)
+        return self._mediator.config_dict.get_config('module_hierarchy', self)
 
     @property
     def test_file(self):
@@ -1074,7 +1074,10 @@ class ZigZagTestLogs(Sequence):
         """Parse the JUnitXML for test cases that are NOT marked as steps."""
 
         for testcase_xml in self._find_test_step_test_cases(False):
-            self._test_logs.append(_ZigZagTestLog(testcase_xml, self._mediator))
+            try:
+                self._test_logs.append(_ZigZagTestLog(testcase_xml, self._mediator))
+            except ZigZagTestLogError:
+                pass  # TODO log this error because we cant process this log
 
     def _find_test_step_test_cases(self, test_step_property_value):
         """Find test_step testcases

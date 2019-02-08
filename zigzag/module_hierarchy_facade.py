@@ -33,7 +33,7 @@ class ModuleHierarchyFacade(object):
         """
 
         modhierarchy = []
-        defined_hierarchy = self._mediator.config_dict['module_hierarchy']
+        defined_hierarchy = self._mediator.config_dict.get_config('module_hierarchy')
         test_file_name = classname[classname.rfind(".")+1:]
         try:
             re.search("(^[a-zA-Z_][a-zA-Z0-9_]*$)", test_file_name).groups()
@@ -49,7 +49,7 @@ class ModuleHierarchyFacade(object):
         Returns:
             str: The test_cycle name
         """
-        return self._mediator.config_dict['test_cycle']
+        return self._mediator.config_dict.get_config('test_cycle')
 
     def discover_root_test_cycle(self, test_cycle_name):
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a

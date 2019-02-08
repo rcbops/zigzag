@@ -323,7 +323,7 @@ class ZigZag(object):
             RuntimeError: Failed to upload test results to qTest Manager.
         """
 
-        project_id = self.config_dict['project_id']
+        project_id = self.config_dict.get_config('project_id')
         self.qtest_project_id = project_id
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()

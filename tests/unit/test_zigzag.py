@@ -55,7 +55,7 @@ class TestZigZag(object):
         zz.parse()
 
         # Test
-        assert 12345 == zz.config_dict['project_id']
+        assert 12345 == zz.config_dict.get_config('project_id')
         assert len(zz.test_logs)
         assert 'https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/' == zz.build_url  # noqa
         assert zz.junit_xml is not None
