@@ -26,6 +26,7 @@ class ZigZagConfig(object):
         try:
             self._config_dict = loads(open(config_file_path, 'r').read())
             self._global_props = global_props
+            # TODO validate the schema
 
         except (OSError, IOError):
             raise ZigZagConfigError("Failed to load '{}' config file!".format(config_file_path))
@@ -55,10 +56,10 @@ class ZigZagConfig(object):
                 props = self._global_props
 
             props['strftime'] = time.strftime
-            pre_render_config_value = self._config_dict[config_name]
+            pre_render_config_value = self._config_dict['zigzag'][config_name]
             value_type = type(pre_render_config_value)
             if any([value_type is str, value_type is unicode]):
-                value = Template(self._config_dict[config_name]).render(props)
+                value = Template(self._config_dict['zigzag'][config_name]).render(props)
             elif value_type is list:
                 # try to render each object
                 value = [Template(v).render(props) for v in pre_render_config_value]

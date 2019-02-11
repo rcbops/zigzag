@@ -20,18 +20,25 @@
     "MOLECULE_GIT_COMMIT": null,
     "GIT_COMMIT": null
   },
-  "test_cycle": "{{ RPC_PRODUCT_RELEASE }}",
-  "project_id": "12345",
-  "module_hierarchy": ["{{RPC_RELEASE}}", "{{JOB_NAME}}", "{{MOLECULE_TEST_REPO}}", "{{zz_testcase_class}}"],
-  "path_to_test_exec_dir": "/molecule/default/tests",
-  "build_url": "{{ BUILD_URL }}",
-  "build_number": "{{ BUILD_NUMBER }}",
-  "project_repo_name": "rpc-openstack",
-  "project_branch": "{{ RE_JOB_BRANCH }}",
-  "project_fork": "rcbops",
-  "project_commit": null,
-  "test_repo_name": "{{ MOLECULE_TEST_REPO }}",
-  "test_branch": "{{ RE_JOB_BRANCH }}",
-  "test_fork": "rcbops",
-  "test_commit": "{{ MOLECULE_GIT_COMMIT }}"
+  "zigzag": {
+    "test_cycle": "{{ RPC_PRODUCT_RELEASE }}",
+    "project_id": "12345",
+    "module_hierarchy": [
+      "{{RPC_RELEASE}}",
+      "{{JOB_NAME}}",
+      "{{MOLECULE_TEST_REPO}}",
+      "{{zz_testcase_class}}"
+    ],
+    "path_to_test_exec_dir": "/molecule/default/tests",
+    "build_url": "{{ BUILD_URL }}",
+    "build_number": "{{ BUILD_NUMBER }}",
+    "project_repo_name": "rpc-openstack",
+    "project_branch": "{{ RE_JOB_BRANCH }}",
+    "project_fork": "rcbops",
+    "project_commit": null,
+    "test_repo_name": "{{ MOLECULE_TEST_REPO }}",
+    "test_branch": "{{ RE_JOB_BRANCH }}",
+    "test_fork": "rcbops",
+    "test_commit": "{{ MOLECULE_GIT_COMMIT }}"
+  }
 }

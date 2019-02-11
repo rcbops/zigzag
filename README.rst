@@ -34,7 +34,7 @@ Quick Start Guide
 
     - project_id: (Required) The qtest project id to reference when uploading test results.
     - test_cycle:  (Required) A string name of the root node of the hierarchy for storing test results in qtest.
-    - module_hierarchy: (Required) A list, of length => 0, of hierarchical nodes where test results will be stored in qtest.
+    - module_hierarchy: (Required) A list, of length => 0, of hierarchical nodes where test results will be stored in qtest. This config option has access to the strftime module.  A special variable is made avalable to this option 'zz_testcase_class', it will interpolate to the value of the fully qualified class name for a given test.  An example of these being used can be found in `molecule-config-example.json`_
     - path_to_test_exec_dir: A string representing an arbitrary path between the root of the project being tested and the directory where tests will be executed. This is used in failure link generation.
     - build_url: The URL of the build that generated the XML to be processed
     - build_number: The build number from the CI system
@@ -81,3 +81,4 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _qTest Manager API: https://support.qasymphony.com/hc/en-us/articles/115002958146-qTest-API-Specification
+.. _molecule-config-example.json: zigzag/data/configs/molecule-config-example.json

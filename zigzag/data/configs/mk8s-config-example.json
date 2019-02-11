@@ -30,18 +30,22 @@
     "PWD": null,
     "STAGE_NAME": null
   },
-  "test_cycle": "{{ 'PR' if CHANGE_BRANCH else BRANCH_NAME }}",
-  "project_id": "12345",
-  "module_hierarchy": ["{{ zz_testcase_class }}"],
-  "path_to_test_exec_dir": "tools/installer",
-  "build_url": "{{ BUILD_URL }}",
-  "build_number": "{{ BUILD_NUMBER }}",
-  "project_repo_name": "mk8s",
-  "project_branch": "{{ CHANGE_BRANCH }}",
-  "project_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
-  "project_commit": "{{ GIT_COMMIT }}",
-  "test_repo_name": "mk8s",
-  "test_branch": "{{ CHANGE_BRANCH }}",
-  "test_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
-  "test_commit": "{{ GIT_COMMIT }}"
+  "zigzag": {
+    "test_cycle": "{{ 'PR' if CHANGE_BRANCH else BRANCH_NAME }}",
+    "project_id": "12345",
+    "module_hierarchy": [
+      "{{ zz_testcase_class }}"
+    ],
+    "path_to_test_exec_dir": "tools/installer",
+    "build_url": "{{ BUILD_URL }}",
+    "build_number": "{{ BUILD_NUMBER }}",
+    "project_repo_name": "mk8s",
+    "project_branch": "{{ CHANGE_BRANCH }}",
+    "project_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+    "project_commit": "{{ GIT_COMMIT }}",
+    "test_repo_name": "mk8s",
+    "test_branch": "{{ CHANGE_BRANCH }}",
+    "test_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+    "test_commit": "{{ GIT_COMMIT }}"
+  }
 }
