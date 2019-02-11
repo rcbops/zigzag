@@ -5,6 +5,8 @@
 # ======================================================================================================================
 from __future__ import absolute_import
 from zigzag.zigzag_error import ZigZagConfigError
+from pkg_resources import resource_stream
+from jsonschema import validate, ValidationError
 from json import loads
 from jinja2 import Template
 import time
@@ -24,21 +26,26 @@ class ZigZagConfig(object):
             global_props (dict): the props from the XML
         """
         try:
-            self._config_dict = loads(open(config_file_path, 'r').read())
+            with open(config_file_path, 'r') as f:
+                self._config_dict = loads(f.read())
             self._global_props = global_props
-            # TODO validate the schema
+            schema = loads(resource_stream('zigzag',
+                                           'data/schema/zigzag-config.schema.json').read().decode())
+            validate(self._config_dict, schema)
 
         except (OSError, IOError):
             raise ZigZagConfigError("Failed to load '{}' config file!".format(config_file_path))
         except ValueError as e:
             raise ZigZagConfigError("The '{}' config file is not valid JSON: {}".format(config_file_path, str(e)))
+        except ValidationError as e:
+            raise ZigZagConfigError("Config file '{}' does not comply with schema: {}".format(config_file_path, str(e)))
 
     def get_config(self, config_name, test_log=None):
         """Gets a config can be evaluated with optional test_log
 
         Args:
             config_name (str): the name of the config to get
-            test_log (ZigZagTestLog): an optional test log to evaluate specal test specific variables
+            test_log (ZigZagTestLog): an optional test log to evaluate special test specific variables
 
         Returns:
             str : any type that can be represented in JSON
