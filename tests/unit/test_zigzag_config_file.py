@@ -10,6 +10,8 @@ from zigzag.zigzag_error import ZigZagConfigError
 # ======================================================================================================================
 # Fixtures
 # ======================================================================================================================
+
+
 @pytest.fixture(scope='session')
 def config_with_interpolation(tmpdir_factory):
     """config with one value in a jinga template"""
@@ -31,6 +33,7 @@ def config_with_interpolation(tmpdir_factory):
         f.write(config)
 
     return config_path
+
 
 @pytest.fixture(scope='session')
 def config_with_zz_variable(tmpdir_factory):
@@ -54,6 +57,7 @@ def config_with_zz_variable(tmpdir_factory):
 
     return config_path
 
+
 @pytest.fixture(scope='session')
 def config_missing_zigzag_key(tmpdir_factory):
     """config with one value in a jinga template"""
@@ -73,6 +77,7 @@ def config_missing_zigzag_key(tmpdir_factory):
         f.write(config)
 
     return config_path
+
 
 @pytest.fixture(scope='session')
 def config_missing_project_id_key(tmpdir_factory):
@@ -144,7 +149,7 @@ class TestZigZagConfig(object):
     def test_missing_zigzag_key(self, config_missing_zigzag_key):
         """Provide json that should not pass the validation"""
         properties = {}
-        expected_message = "does not comply with schema: u'zigzag' is a required property"
+        expected_message = "'zigzag' is a required property"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             ZigZagConfig(config_missing_zigzag_key, properties)
@@ -152,7 +157,7 @@ class TestZigZagConfig(object):
     def test_missing_required_config(self, config_missing_project_id_key):
         """Provide json that should not pass the validation"""
         properties = {}
-        expected_message = "does not comply with schema: u'project_id' is a required property"
+        expected_message = "'project_id' is a required property"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             ZigZagConfig(config_missing_project_id_key, properties)

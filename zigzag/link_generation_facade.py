@@ -5,7 +5,7 @@
 # ======================================================================================================================
 
 from __future__ import absolute_import
-from future.moves.urllib.parse import urlsplit, urlunsplit
+from future.moves.urllib.parse import urlunsplit
 from zigzag.zigzag_error import ZigZagConfigError
 import re
 
@@ -32,11 +32,13 @@ class LinkGenerationFacade(object):
             str: The string containing the link to the line that failed
         """
         try:
-            path = "/{fork}/{repo_name}/tree/{sha}/{base_dir}{test_file}"
+            base_dir = self._mediator.config_dict.get_config('path_to_test_exec_dir')
+            base_dir = '/'.join([path for path in base_dir.split('/') if path])  # sanitize the path
+            path = "/{fork}/{repo_name}/tree/{sha}/{base_dir}/{test_file}"
             path = path.format(fork=self._mediator.config_dict.get_config('test_fork'),
                                repo_name=self._mediator.config_dict.get_config('test_repo_name'),
                                sha=self._mediator.config_dict.get_config('test_commit'),
-                               base_dir=self._mediator.config_dict.get_config('path_to_test_exec_dir'),
+                               base_dir=base_dir,
                                test_file=test_log.test_file)
             failure_line_number = self._get_line_number_from_failure_output(test_log)
             line = failure_line_number or test_log.def_line_number or ''

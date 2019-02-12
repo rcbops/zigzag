@@ -10,3 +10,10 @@ class ZigZagConfigError(ZigZagError):
 
     def __init__(self, message):
         super(ZigZagConfigError, self).__init__(message)
+
+
+class ZigZagRequiredPropertyError(ZigZagError):
+    """An Error raised when a required property can not be found"""
+
+    def __init__(self, message):
+        super(ZigZagConfigError, self).__init__(message)

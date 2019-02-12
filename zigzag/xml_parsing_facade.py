@@ -8,6 +8,7 @@ import os
 import pkg_resources
 from lxml import etree
 from zigzag.zigzag_test_log import ZigZagTestLogs
+from zigzag.zigzag_error import ZigZagConfigError
 
 
 class XmlParsingFacade(object):
@@ -42,9 +43,10 @@ class XmlParsingFacade(object):
                                                                  xml_declaration=True)
 
             try:
-                self._mediator.build_url = self._mediator.config_dict.get_config('build_url') #  testsuite_props['BUILD_URL']
-                self._mediator.build_number = self._mediator.config_dict.get_config('build_number') #  testsuite_props['BUILD_NUMBER']
-            except KeyError as e:
+                # TODO move this logic into lazy load properties
+                self._mediator.build_url = self._mediator.config_dict.get_config('build_url')
+                self._mediator.build_number = self._mediator.config_dict.get_config('build_number')
+            except (KeyError, ZigZagConfigError) as e:
                 raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
         elif self._mediator.test_runner == 'tempest':
             self._read(file_path)
@@ -82,7 +84,7 @@ class XmlParsingFacade(object):
                 raise RuntimeError("Input file '{}' is larger than allowed max file size!".format(file_path))
         except (IOError, OSError):
             raise RuntimeError("Invalid path '{}' for JUnitXML results file!".format(file_path))
-        except etree.ParseError as e:
+        except etree.ParseError:
             raise RuntimeError("The file '{}' does not contain valid XML!".format(file_path))
 
         self._mediator.junit_xml = junit_xml

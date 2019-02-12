@@ -36,7 +36,7 @@
     "module_hierarchy": [
       "{{ zz_testcase_class }}"
     ],
-    "path_to_test_exec_dir": "tools/installer",
+    "path_to_test_exec_dir": "tools/installer/tests",
     "build_url": "{{ BUILD_URL }}",
     "build_number": "{{ BUILD_NUMBER }}",
     "project_repo_name": "mk8s",

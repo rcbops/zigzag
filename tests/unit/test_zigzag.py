@@ -18,10 +18,10 @@ import json
 # Shared expectations
 SHARED_TEST_LOG_EXP = {'build_url': 'https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/',  # noqa
                        'build_number': '78',
-                       'module_names': ['one',
-                                        'two',
-                                        'three',
-                                        'test_default'],
+                       'module_names': ['r16.2.0',
+                                        'PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system',
+                                        'molecule-validate-neutron-deploy',
+                                        'tests.test_default'],
                        'automation_content': '1',
                        'exe_start_date': '2018-04-10T21:38:18Z',
                        'exe_end_date': '2018-04-10T21:38:19Z'}
@@ -35,7 +35,7 @@ TOKEN = 'VALID_TOKEN'
 class TestZigZag(object):
     """Test cases for ZigZag as a moderator object"""
 
-    def test_data_stored_on_mediator(self, simple_json_config, flat_all_passing_xml, mocker):
+    def test_data_stored_on_mediator(self, asc_zigzag_config_file, flat_all_passing_xml, mocker):
         """verify that the ZigZag object stores properties after initialization"""
 
         # Mock
@@ -51,11 +51,11 @@ class TestZigZag(object):
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
 
         # Setup
-        zz = ZigZag(flat_all_passing_xml, simple_json_config, TOKEN)
+        zz = ZigZag(flat_all_passing_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
 
         # Test
-        assert 12345 == zz.config_dict.get_config('project_id')
+        assert "12345" == zz.config_dict.get_config('project_id')
         assert len(zz.test_logs)
         assert 'https://rpc.jenkins.cit.rackspace.net/job/PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system/78/' == zz.build_url  # noqa
         assert zz.junit_xml is not None
@@ -140,6 +140,7 @@ class TestLoadingInputJunitXMLFile(object):
             zz = ZigZag(bad_junit_root, simple_json_config, TOKEN)
             zz.parse()
 
+    @pytest.mark.skip(reason="BUILD_URL is not required anymore")
     def test_missing_build_url_xml(self, missing_build_url_xml, simple_json_config, mocker):
         """Verify that JUnitXML that is missing the test suite 'BUILD_URL' property element causes a RuntimeError."""
 
@@ -429,7 +430,7 @@ class TestParseXMLtoTestLogs(object):
         assert attachment_exp_content_type == test_log_dict['attachments'][0]['content_type']
         assert attachment_exp_data_md5 == md5(test_log_dict['attachments'][0]['data'].encode('UTF-8')).hexdigest()
 
-    def test_classname_containing_dashes(self, classname_with_dashes_xml, simple_json_config, mocker):
+    def test_classname_containing_dashes(self, classname_with_dashes_xml, asc_zigzag_config_file, mocker):
         """Verify that JUnitXML that has a 'classname' containing dashes (captured from the py.test filename) is
         validated correctly.
         """
@@ -449,17 +450,17 @@ class TestParseXMLtoTestLogs(object):
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
 
         # Setup
-        zz = ZigZag(classname_with_dashes_xml, simple_json_config, TOKEN)
+        zz = ZigZag(classname_with_dashes_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
         # noinspection PyUnresolvedReferences
         test_log_dict = zz.test_logs[0].qtest_test_log.to_dict()
 
         # Expectation
         test_name = 'test_verify_kibana_horizon_access_with_no_ssh'
-        module_names = ['one',
-                        'two',
-                        'three',
-                        'TestForRPC10PlusPostDeploymentQCProcess']
+        module_names = ['r16.2.0',
+                        'PM_rpc-openstack-pike-rc-xenial_mnaio_no_artifacts-swift-system',
+                        'molecule-validate-neutron-deploy',
+                        'test.tests.test_for_acs-150.TestForRPC10PlusPostDeploymentQCProcess']
         test_log_exp = pytest.helpers.merge_dicts(SHARED_TEST_LOG_EXP, {'name': test_name,
                                                                         'status': 'PASSED',
                                                                         'module_names': module_names})
@@ -468,7 +469,8 @@ class TestParseXMLtoTestLogs(object):
         for exp in test_log_exp:
             assert test_log_exp[exp] == test_log_dict[exp]
 
-    def test_invalid_classname(self, invalid_classname_xml, simple_json_config, mocker):
+    @pytest.mark.skip(reason="I dont think that we should be limiting what the classname is")
+    def test_invalid_classname(self, invalid_classname_xml, asc_zigzag_config_file, mocker):
         """Verify that JUnitXML that has an invalid 'classname' attribute for a testcase raises a RuntimeError."""
 
         object_id = 12345
@@ -485,7 +487,7 @@ class TestParseXMLtoTestLogs(object):
         mocker.patch('swagger_client.FieldApi.get_fields', return_value=[mock_field_resp])
         mocker.patch('swagger_client.ObjectlinkApi.link_artifacts', return_value=[mock_link_response])
         # Setup
-        zz = ZigZag(invalid_classname_xml, simple_json_config, TOKEN)
+        zz = ZigZag(invalid_classname_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
 
         # Test
@@ -499,7 +501,7 @@ class TestGenerateAutoRequest(object):
     """Test cases for the '_generate_auto_request' function"""
 
     # noinspection PyProtectedMember
-    def test_mix_status(self, flat_mix_status_xml, simple_json_config, mocker):
+    def test_mix_status(self, flat_mix_status_xml, asc_zigzag_config_file, mocker):
         """Verify that a valid qTest 'AutomationRequest' swagger model is generated from a JUnitXML file
         that contains multiple tests with different status results
         """
@@ -525,7 +527,7 @@ class TestGenerateAutoRequest(object):
         mocker.patch('swagger_client.TestcycleApi.create_cycle', return_value=mock_create_tc_resp)
 
         # Setup
-        zz = ZigZag(flat_mix_status_xml, simple_json_config, TOKEN)
+        zz = ZigZag(flat_mix_status_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
         auto_req_dict = zz._generate_auto_request().to_dict()
 

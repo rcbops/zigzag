@@ -292,7 +292,8 @@ class _ZigZagTestLog(object):
             try:
                 self._automation_content = self._find_property('test_id')
             except AttributeError:
-                raise ZigZagTestLogError("Test case '{}' is missing the required property! automation content".format(self._name))
+                message = "Test case '{}' is missing the required property! automation content".format(self._name)
+                raise ZigZagTestLogError(message)
         return self._automation_content
 
     @property

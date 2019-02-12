@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from zigzag.zigzag_error import ZigZagConfigError
 from pkg_resources import resource_stream
 from jsonschema import validate, ValidationError
+from six import string_types
 from json import loads
 from jinja2 import Template
 import time
@@ -64,13 +65,14 @@ class ZigZagConfig(object):
 
             props['strftime'] = time.strftime
             pre_render_config_value = self._config_dict['zigzag'][config_name]
-            value_type = type(pre_render_config_value)
-            if any([value_type is str, value_type is unicode]):
+            if isinstance(pre_render_config_value, string_types):
                 value = Template(self._config_dict['zigzag'][config_name]).render(props)
-            elif value_type is list:
+            elif isinstance(pre_render_config_value, list):
                 # try to render each object
                 value = [Template(v).render(props) for v in pre_render_config_value]
-            elif any([value_type is None, value_type is int, value_type is float]):
+            elif any([isinstance(pre_render_config_value, None),
+                      isinstance(pre_render_config_value, int),
+                      isinstance(pre_render_config_value, float)]):
                 value = pre_render_config_value
 
         except KeyError:
