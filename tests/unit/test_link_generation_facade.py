@@ -4,10 +4,12 @@
 # Imports
 # ======================================================================================================================
 from zigzag.link_generation_facade import LinkGenerationFacade
+from zigzag.zigzag_config import ZigZagConfig
+import pytest
 
 LINE_NUMBER = '42'
 SHA = '36d8d764f9bac665b21837259247bd4cbaf0c674'
-TEST_FILE = 'tests/totally_real/verify_I_am_good_link.py'
+TEST_FILE = 'totally_real/verify_I_am_good_link.py'
 
 # This failure output contains two different line numbers
 # We want the first one
@@ -69,24 +71,28 @@ tests/test-cases/test-k8s/test_cinder_integration.py:94: AssertionError
 class TestLinkGenerationFacade(object):
     """Tests for the LinkGenerationFacade"""
 
-    def test_asc_failure_link(self, mocker):
+    def test_asc_failure_link(self, asc_zigzag_config_file, mocker):
         """Validate when configured with asc as ci-environment"""
+
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
-
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        zz.testsuite_props = {
+        testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
             'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
+        # mock
+        zz = mocker.MagicMock()
         zztl = mocker.MagicMock()
+        zztl._mediator = zz
+
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = FAILURE_OUTPUT
+
+        zz.config_dict = ZigZagConfig(asc_zigzag_config_file, testsuite_props)
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
@@ -94,33 +100,36 @@ class TestLinkGenerationFacade(object):
                                 'rcbops/'
                                 '{}/'
                                 'tree/{}/'
-                                'molecule/{}/'
+                                'molecule/{}/tests/'
                                 '{}#L{}'.format(molecule_test_repo,
                                                 SHA,
                                                 molecule_scenario_name,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
 
-    def test_asc_def_link(self, mocker):
+    def test_asc_def_link(self, asc_zigzag_config_file, mocker):
         """Validate fallback to def line number"""
+
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
         def_line_num = '88'
-
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        zz.testsuite_props = {
+        testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
             'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
+        # Mock
+        zz = mocker.MagicMock()
         zztl = mocker.MagicMock()
+
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = 'I dont contain an assert message'
         zztl.def_line_number = def_line_num
+
+        zz.config_dict = ZigZagConfig(asc_zigzag_config_file, testsuite_props)
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
@@ -128,32 +137,35 @@ class TestLinkGenerationFacade(object):
                                 'rcbops/'
                                 '{}/'
                                 'tree/{}/'
-                                'molecule/{}/'
+                                'molecule/{}/tests/'
                                 '{}#L{}'.format(molecule_test_repo,
                                                 SHA,
                                                 molecule_scenario_name,
                                                 TEST_FILE,
                                                 def_line_num))
 
-    def test_asc_file_link(self, mocker):
+    def test_asc_file_link(self, asc_zigzag_config_file, mocker):
         """Validate fallback to file with no line number"""
+
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
-
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        zz.testsuite_props = {
+        testsuite_props = {
             'REPO_URL': 'https://github.com/rcbops/rpc-openstack',
             'MOLECULE_GIT_COMMIT': SHA,
             'MOLECULE_TEST_REPO': molecule_test_repo,
             'MOLECULE_SCENARIO_NAME': molecule_scenario_name,
         }
 
+        # Mock
+        zz = mocker.MagicMock()
         zztl = mocker.MagicMock()
+
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = 'I dont contain an assert message'
         zztl.def_line_number = ''
+
+        zz.config_dict = ZigZagConfig(asc_zigzag_config_file, testsuite_props)
 
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
@@ -161,18 +173,17 @@ class TestLinkGenerationFacade(object):
                                 'rcbops/'
                                 '{}/'
                                 'tree/{}/'
-                                'molecule/{}/'
+                                'molecule/{}/tests/'
                                 '{}'.format(molecule_test_repo,
                                             SHA,
                                             molecule_scenario_name,
                                             TEST_FILE))
 
-    def test_mk8s_master_branch(self, mocker):
+    def test_mk8s_master_branch(self, mk8s_zigzag_config_file, mocker):
         """Validate when configured with mk8s as ci-environment"""
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        zz.testsuite_props = {
+        testsuite_props = {
             'GIT_URL': 'https://github.com/rcbops/mk8s.git',
             'GIT_COMMIT': SHA,
         }
@@ -182,55 +193,58 @@ class TestLinkGenerationFacade(object):
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = FAILURE_OUTPUT
 
+        zz.config_dict = ZigZagConfig(mk8s_zigzag_config_file, testsuite_props)
+
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 'rcbops/'
                                 'mk8s/'
                                 'tree/{}/'
-                                'tools/installer/'
+                                'tools/installer/tests/'
                                 '{}#L{}'.format(SHA,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
 
-    def test_mk8s_missing_data(self, mocker):
+    def test_mk8s_missing_data(self, mk8s_zigzag_config_file, mocker):
         """Failure link should be None when it cant be calculated"""
         zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        zz.testsuite_props = {}
+        testsuite_props = {}
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = FAILURE_OUTPUT
 
+        zz.config_dict = ZigZagConfig(mk8s_zigzag_config_file, testsuite_props)
+
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link is None
 
-    def test_asc_missing_data(self, mocker):
+    def test_asc_missing_data(self, asc_zigzag_config_file, mocker):
         """Failure link should be None when it cant be calculated"""
         zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        zz.testsuite_props = {}
 
         zztl = mocker.MagicMock()
         zztl.test_file = TEST_FILE
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = FAILURE_OUTPUT
 
+        zz.config_dict = ZigZagConfig(asc_zigzag_config_file, {})
+
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link is None
 
-    def test_mk8s_pr_testing(self, mocker):
+    def test_mk8s_pr_testing(self, mk8s_zigzag_config_file, mocker):
         """Validate when configured with mk8s as ci-environment testing a PR"""
         change_branch = 'asc-123/master/this_is_my_feature'
         change_fork = 'zreichert'
 
         zz = mocker.MagicMock()
         zz.ci_environment = 'mk8s'
-        zz.testsuite_props = {
+        testsuite_props = {
             'GIT_URL': 'https://github.com/rcbops/mk8s.git',
             'GIT_COMMIT': SHA,
             'CHANGE_BRANCH': change_branch,
@@ -242,18 +256,21 @@ class TestLinkGenerationFacade(object):
         zztl.failure_output = 'This property contains truncated content......'
         zztl.full_failure_output = FAILURE_OUTPUT
 
+        zz.config_dict = ZigZagConfig(mk8s_zigzag_config_file, testsuite_props)
+
         lgf = LinkGenerationFacade(zz)
         failure_link = lgf.github_testlog_failure_link(zztl)
         assert failure_link == ('https://github.com/'
                                 '{}/'
                                 'mk8s/'
                                 'tree/{}/'
-                                'tools/installer/'
+                                'tools/installer/tests/'
                                 '{}#L{}'.format(change_fork,
                                                 SHA,
                                                 TEST_FILE,
                                                 LINE_NUMBER))
 
+    @pytest.mark.skip(reason="This method is not used in production, perhaps should be eliminated")
     def test_asc_diff_link(self, mocker):
         """Validate when configured with asc as ci-environment"""
         molecule_test_repo = 'molecule-validate-neutron-deploy'
@@ -284,6 +301,7 @@ class TestLinkGenerationFacade(object):
                                                  pass_fork,
                                                  pass_base))
 
+    @pytest.mark.skip(reason="This method is not used in production, perhaps should be eliminated")
     def test_mk8s_diff_link(self, mocker):
         """Validate when configured with mk8s as ci-environment"""
         fork = 'rcbops'

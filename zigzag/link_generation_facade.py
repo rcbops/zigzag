@@ -5,7 +5,8 @@
 # ======================================================================================================================
 
 from __future__ import absolute_import
-from future.moves.urllib.parse import urlsplit, urlunsplit
+from future.moves.urllib.parse import urlunsplit
+from zigzag.zigzag_error import ZigZagConfigError
 import re
 
 
@@ -17,35 +18,8 @@ class LinkGenerationFacade(object):
         Args:
             mediator (ZigZag): the mediator that stores shared data
         """
-        self._git_sha = None
+        self._git_sha = None  # TODO refactor this out
         self._mediator = mediator
-        try:
-            if 'path_to_test_exec_dir' in self._mediator.config_dict.keys() or mediator.ci_environment == 'asc':
-                self._git_sha = self._get_testsuite_prop('MOLECULE_GIT_COMMIT')
-                split = urlsplit(self._get_testsuite_prop('REPO_URL'))
-                path = self._strip_git_ending(split.path)
-                self._molecule_scenario = self._get_testsuite_prop('MOLECULE_SCENARIO_NAME')
-                self._repo_fork = list(filter(None, path.split('/')))[0]
-                self._repo_name = self._get_testsuite_prop('MOLECULE_TEST_REPO')
-            elif mediator.ci_environment == 'mk8s':
-                self._git_sha = self._get_testsuite_prop('GIT_COMMIT')
-                split = urlsplit(self._get_testsuite_prop('GIT_URL'))
-                path = self._strip_git_ending(split.path)
-
-                pr_testing = None  # Assume we are not testing a PR
-                if 'CHANGE_BRANCH' in mediator.testsuite_props:
-                    if not re.match(r'unknown', mediator.testsuite_props['CHANGE_BRANCH'], re.IGNORECASE):
-                        pr_testing = True
-
-                if pr_testing:
-                    self._repo_fork = self._get_testsuite_prop('CHANGE_FORK')
-                    self._repo_name = list(filter(None, path.split('/')))[1]
-                else:  # Branch testing on a set cadence
-                    self._repo_fork, self._repo_name = list(filter(None, path.split('/')))
-            self._scheme = split.scheme
-            self._netloc = split.netloc
-        except(KeyError, UnboundLocalError):
-            pass  # If we dont have the info to generate links we want to silently fail
 
     def github_testlog_failure_link(self, test_log):
         """Generates a link to test case failure in GitHub
@@ -58,33 +32,20 @@ class LinkGenerationFacade(object):
             str: The string containing the link to the line that failed
         """
         try:
-            if 'path_to_test_exec_dir' in self._mediator.config_dict.keys():
-                base_dir = self._mediator.config_dict['path_to_test_exec_dir']
-                path = "/{}/{}/tree/{}/{}{}".format(self._repo_fork,
-                                                    self._repo_name,
-                                                    self._git_sha,
-                                                    base_dir,
-                                                    test_log.test_file)
-            if self._mediator.ci_environment == 'asc':
-                # for Molecule repo of repos pattern
-                path = "/{}/{}/tree/{}/molecule/{}/{}".format(self._repo_fork,
-                                                              self._repo_name,
-                                                              self._git_sha,
-                                                              self._molecule_scenario,
-                                                              test_log.test_file)
-            elif self._mediator.ci_environment == 'mk8s':
-                base_dir = 'tools/installer'  # this value is specific to mk8s and can not be derived from the XML
-                path = "/{}/{}/tree/{}/{}/{}".format(self._repo_fork,
-                                                     self._repo_name,
-                                                     self._git_sha,
-                                                     base_dir,
-                                                     test_log.test_file)
+            base_dir = self._mediator.config_dict.get_config('path_to_test_exec_dir')
+            base_dir = '/'.join([path for path in base_dir.split('/') if path])  # sanitize the path
+            path = "/{fork}/{repo_name}/tree/{sha}/{base_dir}/{test_file}"
+            path = path.format(fork=self._mediator.config_dict.get_config('test_fork'),
+                               repo_name=self._mediator.config_dict.get_config('test_repo_name'),
+                               sha=self._mediator.config_dict.get_config('test_commit'),
+                               base_dir=base_dir,
+                               test_file=test_log.test_file)
             failure_line_number = self._get_line_number_from_failure_output(test_log)
             line = failure_line_number or test_log.def_line_number or ''
             if line:
                 line = "L{}".format(line)
-            return urlunsplit((self._scheme, self._netloc, path, '', line))
-        except AttributeError:
+            return urlunsplit(('https', 'github.com', path, '', line))
+        except(AttributeError, ZigZagConfigError):
             pass  # If we ask for the failure link and can't determine it we should silently fail
 
     def github_diff_link(self, upstream_fork, upstream_base):
@@ -134,37 +95,6 @@ class LinkGenerationFacade(object):
             return match.group(1)
         else:
             return ''
-
-    def _strip_git_ending(self, path):
-        """A helper to remove .git from the end of a string if found
-
-        Args:
-            path (str): The string to strip
-
-        Returns:
-            str: The stripped string
-        """
-        if path.endswith('.git'):
-            path = path[:-4]
-        return path
-
-    def _get_testsuite_prop(self, prop):
-        """A helper to make sure we have good values comming from mediator.testsuite_props.
-        I believe this method is a sin and I do feel bad for it.
-
-        Args:
-            prop (str): the name of the prop to look for
-
-        Returns:
-            str: the value from mediator.testsuite_props
-
-        Raises:
-            KeyError : if a value is 'Unknown' for this module its the same as not being there
-        """
-        value = self._mediator.testsuite_props[prop]
-        if re.match(r'unknown', value, re.IGNORECASE):
-            raise KeyError
-        return value
 
     @property
     def git_sha(self):

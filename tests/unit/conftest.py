@@ -128,18 +128,19 @@ def invalid_json_config(tmpdir_factory,
 
 
 @pytest.fixture(scope='session')
-def simple_json_config(tmpdir_factory,
-                       default_global_properties,
-                       default_testcase_properties,
-                       default_testcase_elements):
+def simple_json_config(tmpdir_factory):
     """config sample"""
     config = \
 """
 {
-    "test_cycle": "pike",
-    "project_id": 12345,
-    "module_hierarchy": ["one","two","three"],
-    "path_to_test_exec_dir": "{{ '' }}"
+    "zigzag": {
+        "test_cycle": "pike",
+        "project_id": "12345",
+        "build_url": "https://bar.com/foo",
+        "build_number": "78",
+        "module_hierarchy": ["one","two","three"],
+        "path_to_test_exec_dir": "{{ '' }}"
+    }
 }
 """ # noqa
 
@@ -192,6 +193,127 @@ def invalid_zigzag_config_file(tmpdir_factory,
              "environment_variables": {
                "BUILD_URL": "url",
            """
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def asc_zigzag_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team"""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+                "BUILD_URL": null,
+                "BUILD_NUMBER": null,
+                "RE_JOB_ACTION": null,
+                "RE_JOB_IMAGE": null,
+                "RE_JOB_SCENARIO": null,
+                "RE_JOB_BRANCH": null,
+                "RPC_RELEASE": null,
+                "RPC_PRODUCT_RELEASE": null,
+                "OS_ARTIFACT_SHA": null,
+                "PYTHON_ARTIFACT_SHA": null,
+                "APT_ARTIFACT_SHA": null,
+                "REPO_URL": null,
+                "GIT_URL": null,
+                "JOB_NAME": null,
+                "MOLECULE_TEST_REPO": null,
+                "MOLECULE_SCENARIO_NAME": null,
+                "PATH_TO_TEST_EXEC_DIR": null,
+                "MOLECULE_GIT_COMMIT": null,
+                "GIT_COMMIT": null
+              },
+              "zigzag": {
+                "test_cycle": "{{ RPC_PRODUCT_RELEASE }}",
+                "project_id": "12345",
+                "module_hierarchy": [
+                  "{{RPC_RELEASE}}",
+                  "{{JOB_NAME}}",
+                  "{{MOLECULE_TEST_REPO}}",
+                  "{{zz_testcase_class}}"
+                ],
+                "path_to_test_exec_dir": "/molecule/default/tests",
+                "build_url": "{{ BUILD_URL }}",
+                "build_number": "{{ BUILD_NUMBER }}",
+                "project_repo_name": "rpc-openstack",
+                "project_branch": "{{ RE_JOB_BRANCH }}",
+                "project_fork": "rcbops",
+                "project_commit": null,
+                "test_repo_name": "{{ MOLECULE_TEST_REPO }}",
+                "test_branch": "{{ RE_JOB_BRANCH }}",
+                "test_fork": "rcbops",
+                "test_commit": "{{ MOLECULE_GIT_COMMIT }}"
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def mk8s_zigzag_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team"""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+                "BUILD_URL": null,
+                "BUILD_NUMBER": null,
+                "BUILD_ID": null,
+                "JOB_NAME": null,
+                "BUILD_TAG": null,
+                "JENKINS_URL": null,
+                "EXECUTOR_NUMBER": null,
+                "WORKSPACE": null,
+                "CVS_BRANCH": null,
+                "GIT_COMMIT": null,
+                "GIT_URL": null,
+                "GIT_BRANCH": null,
+                "GIT_LOCAL_BRANCH": null,
+                "GIT_AUTHOR_NAME": null,
+                "GIT_AUTHOR_EMAIL": null,
+                "BRANCH_NAME": null,
+                "CHANGE_AUTHOR_DISPLAY_NAME": null,
+                "CHANGE_AUTHOR": null,
+                "CHANGE_BRANCH": null,
+                "CHANGE_FORK": null,
+                "CHANGE_ID": null,
+                "CHANGE_TARGET": null,
+                "CHANGE_TITLE": null,
+                "CHANGE_URL": null,
+                "JOB_URL": null,
+                "NODE_LABELS": null,
+                "NODE_NAME": null,
+                "PWD": null,
+                "STAGE_NAME": null
+              },
+              "zigzag": {
+                "test_cycle": "{{ 'PR' if CHANGE_BRANCH else BRANCH_NAME }}",
+                "project_id": "12345",
+                "module_hierarchy": [
+                  "{{ zz_testcase_class }}"
+                ],
+                "path_to_test_exec_dir": "tools/installer/tests",
+                "build_url": "{{ BUILD_URL }}",
+                "build_number": "{{ BUILD_NUMBER }}",
+                "project_repo_name": "mk8s",
+                "project_branch": "{{ CHANGE_BRANCH }}",
+                "project_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+                "project_commit": "{{ GIT_COMMIT }}",
+                "test_repo_name": "mk8s",
+                "test_branch": "{{ CHANGE_BRANCH }}",
+                "test_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+                "test_commit": "{{ GIT_COMMIT }}"
+              }
+            }"""
 
     with open(filename, 'w') as f:
         f.write(config_json)

@@ -15,7 +15,8 @@ requirements = ['Click>=6.0',
                 'lxml',
                 'rpc-qtest-swagger-client<10.0.0',
                 'requests',
-                'future']
+                'future',
+                'jinja2']
 packages = ['zigzag']
 entry_points = {
     'console_scripts': [

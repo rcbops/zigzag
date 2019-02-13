@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "zigzag-config",
+  "description": "A JSON schema for pytest-zigzag configuration files.",
+  "type": "object",
+  "required": ["zigzag"],
+  "properties": {
+    "zigzag": {
+      "description": "A list of possible config options",
+      "type": "object",
+      "properties": {
+        "project_id": {"type": ["string"]},
+        "test_cycle": {"type": ["string"]},
+        "module_hierarchy": {"type": ["array"] },
+        "path_to_test_exec_dir": {"type": ["string", "null"] },
+        "build_url": {"type": ["string", "null"] },
+        "build_number": {"type": ["string", "null"] },
+        "project_repo_name": {"type": ["string", "null"] },
+        "project_branch": {"type": ["string", "null"]},
+        "project_fork": {"type": ["string", "null"]},
+        "project_commit": {"type": ["string", "null"]},
+        "test_repo_name": {"type": ["string", "null"]},
+        "test_branch": {"type": ["string", "null"]},
+        "test_fork": {"type": ["string", "null"]},
+        "test_commit": {"type": ["string", "null"]}
+      },
+      "required": ["project_id", "test_cycle", "module_hierarchy"],
+      "minItems": 3,
+      "uniqueItems": true
+    }
+  }
+}

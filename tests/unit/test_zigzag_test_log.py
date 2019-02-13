@@ -925,7 +925,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -943,7 +942,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         qtest_id_exp = 5678
@@ -968,7 +966,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -990,7 +987,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1012,7 +1008,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(test_execution_parameters, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1034,7 +1029,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1065,7 +1059,6 @@ class TestZigZagTestLog(object):
         mock_zigzag(search_response)
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]   # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1082,7 +1075,6 @@ class TestZigZagTestLog(object):
         mock_zigzag()
         zz = ZigZag(single_passing_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1164,14 +1156,16 @@ class TestZigZagTestLog(object):
 class TestZigZagTestLogWithSteps(object):
     """Tests for the _ZigZagTestLog class through the ZigZagTestLogs public class."""
 
-    def test_single_test_multiple_steps(self, single_test_with_mixed_status_steps_xml, simple_json_config, mock_zigzag):
+    def test_single_test_multiple_steps(self,
+                                        single_test_with_mixed_status_steps_xml,
+                                        asc_zigzag_config_file,
+                                        mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
+        zz = ZigZag(single_test_with_mixed_status_steps_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exps = \
@@ -1201,22 +1195,21 @@ class TestZigZagTestLogWithSteps(object):
         assert len(test_logs[0].qtest_test_log.test_step_logs) == 3
         assert test_logs[0].name == 'TestCaseWithSteps'
         assert test_logs[0].status == 'FAILED'
-        assert test_logs[0].module_hierarchy[-1] == 'test_default'  # Validate that the hierarchy was adjusted.
+        assert test_logs[0].module_hierarchy[-1] == 'tests.test_default'  # Updated to be the classname
         for ts_log_actual, ts_log_exp in zip(test_logs[0].qtest_test_log.test_step_logs, test_step_log_exps):
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(ts_log_exp, ts_log_actual.to_dict())
 
     def test_single_test_multiple_skipping_steps(self,
                                                  single_test_with_multiple_skipping_steps_xml,
-                                                 simple_json_config,
+                                                 asc_zigzag_config_file,
                                                  mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_multiple_skipping_steps_xml, simple_json_config, TOKEN)
+        zz = ZigZag(single_test_with_multiple_skipping_steps_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'SKIPPED',
@@ -1230,22 +1223,21 @@ class TestZigZagTestLogWithSteps(object):
         assert len(test_logs[0].qtest_test_log.test_step_logs) == 2
         assert test_logs[0].name == 'TestCaseWithSteps'
         assert test_logs[0].status == 'SKIPPED'
-        assert test_logs[0].module_hierarchy[-1] == 'test_default'  # Validate that the hierarchy was adjusted.
+        assert test_logs[0].module_hierarchy[-1] == 'tests.test_default'  # updated to be the classname
         for ts_log in test_logs[0].qtest_test_log.test_step_logs:
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(test_step_log_exp, ts_log.to_dict())
 
     def test_single_test_multiple_passing_steps(self,
                                                 single_test_with_multiple_passing_steps_xml,
-                                                simple_json_config,
+                                                asc_zigzag_config_file,
                                                 mock_zigzag):
         """Verify a single test case with multiple test steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(single_test_with_multiple_passing_steps_xml, simple_json_config, TOKEN)
+        zz = ZigZag(single_test_with_multiple_passing_steps_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         test_step_log_exp = {'actual_result': 'PASSED',
@@ -1259,19 +1251,21 @@ class TestZigZagTestLogWithSteps(object):
         assert len(test_logs[0].qtest_test_log.test_step_logs) == 2
         assert test_logs[0].name == 'TestCaseWithSteps'
         assert test_logs[0].status == 'PASSED'
-        assert test_logs[0].module_hierarchy[-1] == 'test_default'  # Validate that the hierarchy was adjusted.
+        assert test_logs[0].module_hierarchy[-1] == 'tests.test_default'  # updated to be the classname
         for ts_log in test_logs[0].qtest_test_log.test_step_logs:
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(test_step_log_exp, ts_log.to_dict())
 
-    def test_multiple_tests_with_step(self, multiple_mixed_status_tests_with_step_xml, simple_json_config, mock_zigzag):
+    def test_multiple_tests_with_step(self,
+                                      multiple_mixed_status_tests_with_step_xml,
+                                      asc_zigzag_config_file,
+                                      mock_zigzag):
         """Verify a multiple test case with a single test step each are handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_mixed_status_tests_with_step_xml, simple_json_config, TOKEN)
+        zz = ZigZag(multiple_mixed_status_tests_with_step_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1296,7 +1290,7 @@ class TestZigZagTestLogWithSteps(object):
         tl_details = {tl.name: tl for tl in ZigZagTestLogs(zz)}
         assert tl_details.keys() == tl_details_exps.keys()
         for test_case_name in tl_details_exps:
-            assert tl_details[test_case_name].module_hierarchy[-1] == 'test_default'
+            assert tl_details[test_case_name].module_hierarchy[-1] == 'tests.test_default'  # update to classname
             assert tl_details[test_case_name].qtest_test_log.status == tl_details_exps[test_case_name]['status']
             # noinspection PyUnresolvedReferences
             assert pytest.helpers.is_sub_dict(tl_details_exps[test_case_name],
@@ -1304,15 +1298,14 @@ class TestZigZagTestLogWithSteps(object):
 
     def test_multiple_tests_with_multiple_steps(self,
                                                 multiple_mixed_status_tests_with_steps_xml,
-                                                simple_json_config,
+                                                asc_zigzag_config_file,
                                                 mock_zigzag):
         """Verify a multiple test cases with multiple test steps are handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_mixed_status_tests_with_steps_xml, simple_json_config, TOKEN)
+        zz = ZigZag(multiple_mixed_status_tests_with_steps_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         tl_details_exps = \
@@ -1357,7 +1350,7 @@ class TestZigZagTestLogWithSteps(object):
         tl_details = {tl.name: tl for tl in ZigZagTestLogs(zz)}
         assert tl_details.keys() == tl_details_exps.keys()
         for test_case_name in tl_details_exps:
-            assert tl_details[test_case_name].module_hierarchy[-1] == 'test_default'
+            assert tl_details[test_case_name].module_hierarchy[-1] == 'tests.test_default'  # update to classname
             assert tl_details[test_case_name].qtest_test_log.status == tl_details_exps[test_case_name][0]['status']
             assert len(tl_details[test_case_name].qtest_test_log.test_step_logs) == 2
             for test_step, test_step_exp in zip(tl_details[test_case_name].qtest_test_log.test_step_logs,
@@ -1369,14 +1362,13 @@ class TestZigZagTestLogWithSteps(object):
 class TestZigZagTestLogs(object):
     """Tests for the TestLog class"""
 
-    def test_mix_of_test_logs(self, multiple_tests_with_and_without_steps_xml, simple_json_config, mock_zigzag):
+    def test_mix_of_test_logs(self, multiple_tests_with_and_without_steps_xml, asc_zigzag_config_file, mock_zigzag):
         """Verify that a test suite with a mix of tests with and without steps is handled correctly."""
 
         # Setup
         mock_zigzag()
-        zz = ZigZag(multiple_tests_with_and_without_steps_xml, simple_json_config, TOKEN)
+        zz = ZigZag(multiple_tests_with_and_without_steps_xml, asc_zigzag_config_file, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Expectations
         ts_detail_exp = {'actual_result': 'PASSED',
@@ -1390,12 +1382,11 @@ class TestZigZagTestLogs(object):
         assert len(tls) == 2
         assert tls[0].name == 'TestCaseWithSteps'
         assert tls[0].status == 'PASSED'
-        assert tls[0].module_hierarchy[-1] == 'test_default'
         # noinspection PyUnresolvedReferences
         assert pytest.helpers.is_sub_dict(ts_detail_exp, tls[0].qtest_test_log.test_step_logs[0].to_dict())
         assert tls[1].name == 'test_case_without_steps'
         assert tls[1].status == 'PASSED'
-        assert tls[0].module_hierarchy[-1] == 'test_default'
+        assert tls[0].module_hierarchy[-1] == 'tests.test_default'  # updated to just be the test classname
         assert tls[1].qtest_test_log.test_step_logs is None
 
 
@@ -1413,7 +1404,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1441,7 +1431,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1468,7 +1457,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_duplicate_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1496,7 +1484,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1524,7 +1511,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_failing_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1550,7 +1536,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1582,7 +1567,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_no_sys_capture_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1609,7 +1593,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_err_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1641,7 +1624,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_test_with_mixed_status_steps_missing_sys_out_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]
@@ -1670,7 +1652,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(single_fail_xml, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1687,7 +1668,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(short_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1704,7 +1684,6 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(long_single_line_failure_message, simple_json_config, TOKEN)
         zz.parse()
-        zz.load_config()
 
         # Test
         tl = ZigZagTestLogs(zz)[0]  # Create a new TestLog object through the ZigZagTestLogs public class
@@ -1735,7 +1714,7 @@ class TestFailedTestCases(object):
         mock_zigzag()
         zz = ZigZag(test_without_test_step, simple_json_config, TOKEN)
 
-        with pytest.raises(ZigZagTestLogError, message='Test found without test_step property'):
+        with pytest.raises(ZigZagTestLogError, match='Test found without test_step property'):
             zz.parse()
 
     def test_calculate_time(self, tempest_xml, simple_json_config, mock_zigzag):
@@ -1746,7 +1725,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1776,7 +1754,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):
@@ -1801,7 +1778,6 @@ class TestFailedTestCases(object):
         zz = ZigZag(tempest_xml, simple_json_config, simple_json_config, TOKEN)
         zz.test_runner = 'tempest'
         zz.parse()
-        zz.load_config()
 
         # Test
         for tl in ZigZagTestLogs(zz):

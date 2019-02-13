@@ -12,8 +12,7 @@ from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
-from json import loads
-from jinja2 import Template
+from zigzag.zigzag_config import ZigZagConfig
 
 
 class ZigZag(object):
@@ -28,10 +27,8 @@ class ZigZag(object):
 
         Args:
             junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
+            config_file (str): A file path to a JSON config file
             qtest_api_token (str): Token to use for authorization to the qTest API.
-            qtest_project_id (int): The target qTest project for the test results.
-            qtest_test_cycle (str): The parent qTest test cycle for test results.
-                (e.g. Product Release codename "Queens")
             pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
         """
 
@@ -41,7 +38,6 @@ class ZigZag(object):
         self._pprint_on_fail = pprint_on_fail
         self._config_file = config_file
         self._test_logs = []
-        self._config_dict = {}
 
         # properties that will be written to an instance of this class as a mediator
         self._qtest_test_cycle_name = None
@@ -54,6 +50,7 @@ class ZigZag(object):
         self._junit_xml_doc = None
         self._qtest_test_cycle_pid = None
         self._qtest_project_id = None
+        self._config_dict = None
 
         self._utility_facade = UtilityFacade(self)
         self._parsing_facade = XmlParsingFacade(self)
@@ -106,15 +103,12 @@ class ZigZag(object):
         """Gets the config dictionary
 
         Returns:
-             Dict: The zigzag config dictionary
+             ZigZagConfig: The zigzag config dictionary
         """
-        return self._config_dict
 
-    @config_dict.setter
-    def config_dict(self, value):
-        """Sets the value for the config_dictionary
-        """
-        self.load_config()
+        if self._config_dict is None:
+            self._config_dict = ZigZagConfig(self._config_file, self.testsuite_props)
+        return self._config_dict
 
     @property
     def qtest_project_id(self):
@@ -329,7 +323,7 @@ class ZigZag(object):
             RuntimeError: Failed to upload test results to qTest Manager.
         """
 
-        project_id = self.config_dict['project_id']
+        project_id = self.config_dict.get_config('project_id')
         self.qtest_project_id = project_id
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()
@@ -356,22 +350,3 @@ class ZigZag(object):
         """Parse the xml"""
 
         self._parsing_facade.parse(self._junit_xml_file_path)  # this was moved from the init method
-
-    def load_config(self):
-        """Validate and load the contents of a 'zigzag' config file into memory.
-
-        Args:
-            config_file (str): The name of the built-in config (e.g. 'asc') or the path to a valid zigzag
-                config file.
-        """
-        props = self.junit_xml.getchildren()[0]
-        try:
-            conf_template = open(self._config_file, 'r')
-            template = Template(conf_template.read())
-            props_d = {prop.values()[0]: prop.values()[1] for prop in props.getchildren()}
-            rendered_zigzag_config_str = template.render(props_d)
-            self._config_dict = loads(rendered_zigzag_config_str)
-        except (OSError, IOError):
-            print("Failed to load '{}' config file!".format(self._config_file))
-        except ValueError as e:
-            print("The '{}' config file is not valid JSON: {}".format(self._config_file, str(e)))
