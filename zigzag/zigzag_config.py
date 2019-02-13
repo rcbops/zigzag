@@ -25,6 +25,8 @@ class ZigZagConfig(object):
         Args:
             config_file_path (str): the path to the config file
             global_props (dict): the props from the XML
+        Raises:
+            ZigZagConfigError
         """
         try:
             with open(config_file_path, 'r') as f:
@@ -53,6 +55,9 @@ class ZigZagConfig(object):
             dict
             list
             None
+
+        Raises:
+            ZigZagConfigError
         """
 
         try:
