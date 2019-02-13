@@ -13,14 +13,14 @@ import pytest
 # ======================================================================================================================
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def single_skipping_test_step_for_asc(_zigzag_runner_factory):
+def single_skipping_test_step_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with a test case containing one skipping test step.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_skipping_test_step_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('single_skipping_test_step_for_asc.xml', asc_config_file, asc_global_props)
     zz_runner.add_test_case('passed', test_steps=[{'state': 'skipped'}])
 
     return zz_runner
@@ -28,14 +28,14 @@ def single_skipping_test_step_for_asc(_zigzag_runner_factory):
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def single_erroring_test_step_for_asc(_zigzag_runner_factory):
+def single_erroring_test_step_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with a test case containing one erroring test step.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_erroring_test_step_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('single_erroring_test_step_for_asc.xml', asc_config_file, asc_global_props)
     zz_runner.add_test_case('passed', test_steps=[{'state': 'error'}])
 
     return zz_runner
@@ -43,7 +43,7 @@ def single_erroring_test_step_for_asc(_zigzag_runner_factory):
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def mixed_status_test_steps_for_asc(_zigzag_runner_factory):
+def mixed_status_test_steps_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with 4 test steps covering the various test execution
      states in the JUnitXML file.
 
@@ -55,7 +55,7 @@ def mixed_status_test_steps_for_asc(_zigzag_runner_factory):
                   {'state': 'failure'},
                   {'state': 'skipped'}]
 
-    zz_runner = _zigzag_runner_factory('mixed_status_test_steps_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('mixed_status_test_steps_for_asc.xml', asc_config_file, asc_global_props)
     zz_runner.add_test_case('failure', test_steps=test_steps)
 
     return zz_runner
@@ -63,14 +63,14 @@ def mixed_status_test_steps_for_asc(_zigzag_runner_factory):
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def single_skipping_test_step_for_mk8s(_zigzag_runner_factory):
+def single_skipping_test_step_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner configured for the "mk8s" CI environment with a test case containing one skipping test step.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_skipping_test_step_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('single_skipping_test_step_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
     zz_runner.add_test_case('passed', test_steps=[{'state': 'skipped'}])
 
     return zz_runner
@@ -78,14 +78,14 @@ def single_skipping_test_step_for_mk8s(_zigzag_runner_factory):
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def single_erroring_test_step_for_mk8s(_zigzag_runner_factory):
+def single_erroring_test_step_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner configured for the "mk8s" CI environment with a test case containing one erroring test step.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_erroring_test_step_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('single_erroring_test_step_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
     zz_runner.add_test_case('passed', test_steps=[{'state': 'error'}])
 
     return zz_runner
@@ -93,7 +93,7 @@ def single_erroring_test_step_for_mk8s(_zigzag_runner_factory):
 
 # noinspection PyShadowingNames
 @pytest.fixture(scope='module')
-def mixed_status_test_steps_for_mk8s(_zigzag_runner_factory):
+def mixed_status_test_steps_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with 4 test steps covering the various test execution
      states in the JUnitXML file.
 
@@ -105,7 +105,7 @@ def mixed_status_test_steps_for_mk8s(_zigzag_runner_factory):
                   {'state': 'failure'},
                   {'state': 'skipped'}]
 
-    zz_runner = _zigzag_runner_factory('mixed_status_test_steps_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('mixed_status_test_steps_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
     zz_runner.add_test_case('failure', test_steps=test_steps)
 
     return zz_runner
