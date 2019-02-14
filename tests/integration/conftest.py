@@ -283,10 +283,10 @@ def asc_config_file(tmpdir_factory):
                 "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
                 "module_hierarchy": [
                   "{{ RPC_PRODUCT_RELEASE }}",
-                  "{{RPC_RELEASE}}",
-                  "{{JOB_NAME}}",
-                  "{{MOLECULE_TEST_REPO}}",
-                  "{{zz_testcase_class}}"
+                  "{ {RPC_RELEASE }}",
+                  "{{ JOB_NAME }}",
+                  "{{ MOLECULE_TEST_REPO }}",
+                  "{{ zz_testcase_class }}"
                 ],
                 "path_to_test_exec_dir": "/molecule/default",
                 "build_url": "{{ BUILD_URL }}",
