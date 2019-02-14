@@ -92,7 +92,7 @@ def get_qtest_property(model, prop_name):
     else:
         raise AssertionError("The '{}' property not found in the provided swagger_client model!".format(prop_name))
 
-    return actual_values
+    return list(actual_values)
 
 
 # noinspection PyUnresolvedReferences
