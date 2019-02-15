@@ -11,9 +11,6 @@ from zigzag.zigzag import ZigZag
 from zigzag.zigzag_test_log import ZigZagTestLogs
 from zigzag.zigzag_test_log import _ZigZagTestLog
 from zigzag.zigzag_test_log import ZigZagTestLogError
-from datetime import datetime
-from datetime import timedelta
-from uuid import UUID
 from lxml import etree
 
 
@@ -1600,5 +1597,3 @@ class TestFailedTestCases(object):
 
         with pytest.raises(ZigZagTestLogError, match='Test found without test_step property'):
             zz.parse()
-
-

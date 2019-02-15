@@ -10,7 +10,6 @@ import requests
 import swagger_client
 from base64 import b64encode
 from datetime import datetime
-from datetime import timedelta
 from future.moves.collections import Sequence
 from zigzag.utility_facade import UtilityFacade
 from zigzag.link_generation_facade import LinkGenerationFacade

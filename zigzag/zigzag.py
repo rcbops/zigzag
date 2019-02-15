@@ -42,7 +42,6 @@ class ZigZag(object):
 
         # properties that will be written to an instance of this class as a mediator
         self._qtest_test_cycle_name = None
-        self._ci_environment = None
         self._build_number = None
         self._build_url = None
         self._testsuite_props = None
@@ -57,8 +56,6 @@ class ZigZag(object):
         self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
         self._module_hierarchy_facade = ModuleHierarchyFacade(self)
-
-        self._test_runner = 'pytest-zigzag'  # the default test_runner assumed by ZigZag
 
     #  properties with only getters
     @property
@@ -159,19 +156,6 @@ class ZigZag(object):
         return self._pprint_on_fail
 
     #  properties with setters and getters
-    @property
-    def test_runner(self):
-        """Gets the test_runner used to generate the files to be processed
-
-        Returns:
-            str: the name of the test_runner used to generate the files to be processed
-        """
-        return self._test_runner
-
-    @test_runner.setter
-    def test_runner(self, value):
-        """Sets the value for test_runner"""
-        self._test_runner = value
 
     @property
     def build_url(self):
@@ -254,22 +238,6 @@ class ZigZag(object):
     def serialized_junit_xml(self, value):
         """Sets the serialized junit xml"""
         self._serialized_junit_xml = value
-
-    @property
-    def ci_environment(self):
-        """Gets the configured test_runner
-
-        Returns:
-            str: the configured ci_environment
-        """
-
-        return self._ci_environment
-
-    @ci_environment.setter
-    def ci_environment(self, value):
-        """Sets the configured ci_environment"""
-
-        self._ci_environment = value
 
     @property
     def test_logs(self):

@@ -6,7 +6,6 @@
 import pytest
 import swagger_client
 from zigzag.zigzag import ZigZag
-from zigzag.utility_facade import UtilityFacade
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from swagger_client.rest import ApiException
 import requests
@@ -29,26 +28,6 @@ ASC_TESTSUITE_PROPS = {
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
-class TestModuleHierarchyFacade(object):
-    """Tests for the ModuleHierarchyFacade"""
-
-    def test_bad_value(self, mocker):
-        """Validate that if a bad value gets in we default to asc"""
-        # Mock
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'oops'
-        zz.utility_facade = UtilityFacade(zz)
-        zz.testsuite_props = ASC_TESTSUITE_PROPS
-
-        # Setup
-        classname = 'test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        mh = mhf.get_module_hierarchy(classname)
-        assert mh == ['test_default']
-
-
 class TestDiscoverParentTestCycle(object):
     """Test cases for the 'discover_parent_test_cycle' function"""
 
