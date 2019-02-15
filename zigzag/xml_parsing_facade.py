@@ -31,23 +31,14 @@ class XmlParsingFacade(object):
         sets the property 'build_number' on the mediator
         """
 
-        if self._mediator.test_runner == 'pytest-zigzag':
-            self._read(file_path)
-            self._determine_ci_environment()
-            self._validate()
-            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
-                                              for p in self._mediator.junit_xml.findall('./properties/property')}
-            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
-                                                                 encoding='UTF-8',
-                                                                 xml_declaration=True)
-
-        elif self._mediator.test_runner == 'tempest':
-            self._read(file_path)
-            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
-                                              for p in self._mediator.junit_xml.findall('./properties/property')}
-            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
-                                                                 encoding='UTF-8',
-                                                                 xml_declaration=True)
+        self._read(file_path)
+        self._determine_ci_environment()
+        self._validate()
+        self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
+                                          for p in self._mediator.junit_xml.findall('./properties/property')}
+        self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
+                                                             encoding='UTF-8',
+                                                             xml_declaration=True)
 
         ZigZagTestLogs(self._mediator)  # new test logs attach themselves to the mediator
 
