@@ -25,6 +25,20 @@ def single_passing_test_for_asc(_zigzag_runner_factory, asc_config_file, asc_glo
 
 
 @pytest.fixture(scope='session')
+def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory, custom_hierarchy_config_file, asc_global_props):
+    """ZigZag CLI runner configured for the "asc" CI environment with one passing test in the JUnitXML file.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_hierarchy_config_file, asc_global_props)
+    zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
 def single_passing_test_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner configured for the "mk8s" CI environment with one passing test in the JUnitXML file.
 
@@ -247,6 +261,35 @@ def single_passing_test_step_for_mk8s(_zigzag_runner_factory, mk8s_config_file, 
 
 
 @pytest.fixture(scope='session')
+def custom_hierarchy_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team
+
+    Returns:
+        str : a path to a config file
+    """
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+              },
+              "zigzag": {
+                "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
+                "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
+                "module_hierarchy": [
+                  "node1",
+                  "node2"
+                ]
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def asc_config_file(tmpdir_factory):
     """A config for zigzag used by the ASC team
 
@@ -283,7 +326,7 @@ def asc_config_file(tmpdir_factory):
                 "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
                 "module_hierarchy": [
                   "{{ RPC_PRODUCT_RELEASE }}",
-                  "{ {RPC_RELEASE }}",
+                  "{{ RPC_RELEASE }}",
                   "{{ JOB_NAME }}",
                   "{{ MOLECULE_TEST_REPO }}",
                   "{{ zz_testcase_class }}"
