@@ -25,14 +25,28 @@ def single_passing_test_for_asc(_zigzag_runner_factory, asc_config_file, asc_glo
 
 
 @pytest.fixture(scope='session')
-def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory, custom_hierarchy_config_file, asc_global_props):
-    """ZigZag CLI runner configured for the "asc" CI environment with one passing test in the JUnitXML file.
+def single_passing_test_with_custom_build_url(_zigzag_runner_factory, custom_build_url_config_file, custom_config_global_props):
+    """ZigZag CLI runner with custom configuration.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_hierarchy_config_file, asc_global_props)
+    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_build_url_config_file, custom_config_global_props)
+    zz_runner.add_test_case('passed')
+
+    return zz_runner
+
+
+@pytest.fixture(scope='session')
+def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory, custom_hierarchy_config_file, custom_config_global_props):
+    """ZigZag CLI runner with custom configuration.
+
+    Returns:
+        ZigZagRunner
+    """
+
+    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_hierarchy_config_file, custom_config_global_props)
     zz_runner.add_test_case('passed')
 
     return zz_runner
@@ -261,6 +275,37 @@ def single_passing_test_step_for_mk8s(_zigzag_runner_factory, mk8s_config_file, 
 
 
 @pytest.fixture(scope='session')
+def custom_build_url_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team
+
+    Returns:
+        str : a path to a config file
+    """
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+              },
+              "zigzag": {
+                "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
+                "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
+                "module_hierarchy": [
+                  "node1",
+                  "node2"
+                ],
+                "build_url": "https://github.com/rcbops/zigzag",
+                "build_number": "4"
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def custom_hierarchy_config_file(tmpdir_factory):
     """A config for zigzag used by the ASC team
 
@@ -420,6 +465,17 @@ def mk8s_config_file(tmpdir_factory):
         f.write(config_json)
 
     return filename
+
+
+@pytest.fixture(scope='session')
+def custom_config_global_props():
+    """The properties collected by the ASC team
+
+    Returns:
+        dict : a dictionary to support custom config testing
+    """
+    return {"BUILD_URL": "BUILD_URL2",
+            "BUILD_NUMBER": "BUILD_NUMBER"}
 
 
 @pytest.fixture(scope='session')

@@ -117,7 +117,7 @@ def required_configs(tmpdir_factory):
 # ======================================================================================================================
 class TestConfig(object):
     # noinspection PyUnresolvedReferences
-    def test_publish_single_passing_custom_mod_hierarchy(self, single_passing_test_with_custom_mod_hierarchy):
+    def test_publish_single_passing_test_with_custom_mod_hierarchy(self, single_passing_test_with_custom_mod_hierarchy):
         """Verify ZigZag can publish results from the "asc" CI environment with one passing test in the JUnitXML
         file.
         """
@@ -200,4 +200,3 @@ class TestConfigNegative(object):
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             zz_runner.assert_invoke_zigzag()
-
