@@ -279,7 +279,9 @@ def custom_hierarchy_config_file(tmpdir_factory):
                 "module_hierarchy": [
                   "node1",
                   "node2"
-                ]
+                ],
+                "build_url": "https://github.com/rcbops/zigzag",
+                "build_number": "4"
               }
             }"""
 
