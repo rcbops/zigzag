@@ -26,8 +26,7 @@ def single_passing_test_for_asc(_zigzag_runner_factory, asc_config_file, asc_glo
 
 @pytest.fixture(scope='session')
 def single_passing_test_with_custom_build_url(_zigzag_runner_factory,
-                                              custom_build_url_config_file,
-                                              custom_config_global_props):
+                                              custom_build_url_config_file):
     """ZigZag CLI runner with custom configuration.
 
     Returns:
@@ -35,8 +34,7 @@ def single_passing_test_with_custom_build_url(_zigzag_runner_factory,
     """
 
     zz_runner = _zigzag_runner_factory('single_passing_asc.xml',
-                                       custom_build_url_config_file,
-                                       custom_config_global_props)
+                                       custom_build_url_config_file)
     zz_runner.add_test_case('passed')
 
     return zz_runner
@@ -44,8 +42,7 @@ def single_passing_test_with_custom_build_url(_zigzag_runner_factory,
 
 @pytest.fixture(scope='session')
 def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory,
-                                                  custom_hierarchy_config_file,
-                                                  custom_config_global_props):
+                                                  custom_hierarchy_config_file):
     """ZigZag CLI runner with custom configuration.
 
     Returns:
@@ -53,8 +50,7 @@ def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory,
     """
 
     zz_runner = _zigzag_runner_factory('single_passing_asc.xml',
-                                       custom_hierarchy_config_file,
-                                       custom_config_global_props)
+                                       custom_hierarchy_config_file)
     zz_runner.add_test_case('passed')
 
     return zz_runner
@@ -471,17 +467,6 @@ def mk8s_config_file(tmpdir_factory):
         f.write(config_json)
 
     return filename
-
-
-@pytest.fixture(scope='session')
-def custom_config_global_props():
-    """The properties collected by the ASC team
-
-    Returns:
-        dict : a dictionary to support custom config testing
-    """
-    return {"BUILD_URL": "BUILD_URL2",
-            "BUILD_NUMBER": "BUILD_NUMBER"}
 
 
 @pytest.fixture(scope='session')
