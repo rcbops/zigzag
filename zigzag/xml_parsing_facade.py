@@ -8,7 +8,6 @@ import os
 import pkg_resources
 from lxml import etree
 from zigzag.zigzag_test_log import ZigZagTestLogs
-from zigzag.zigzag_error import ZigZagConfigError
 
 
 class XmlParsingFacade(object):

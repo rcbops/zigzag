@@ -5,7 +5,6 @@
 # ======================================================================================================================
 # Imports
 # ======================================================================================================================
-import uuid
 import pytest
 from zigzag.zigzag_config import ZigZagConfigError
 from tests.helper.classes.zigzag_runner import ZigZagRunner
@@ -145,7 +144,6 @@ class TestConfig(object):
 
         # Setup
         single_passing_test_with_custom_mod_hierarchy.assert_invoke_zigzag()
-        test_runs = single_passing_test_with_custom_mod_hierarchy.tests[0].qtest_test_runs
 
         # Expectations
         parent_test_cycle_name_exp = 'node2'

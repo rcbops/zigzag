@@ -25,28 +25,36 @@ def single_passing_test_for_asc(_zigzag_runner_factory, asc_config_file, asc_glo
 
 
 @pytest.fixture(scope='session')
-def single_passing_test_with_custom_build_url(_zigzag_runner_factory, custom_build_url_config_file, custom_config_global_props):
+def single_passing_test_with_custom_build_url(_zigzag_runner_factory,
+                                              custom_build_url_config_file,
+                                              custom_config_global_props):
     """ZigZag CLI runner with custom configuration.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_build_url_config_file, custom_config_global_props)
+    zz_runner = _zigzag_runner_factory('single_passing_asc.xml',
+                                       custom_build_url_config_file,
+                                       custom_config_global_props)
     zz_runner.add_test_case('passed')
 
     return zz_runner
 
 
 @pytest.fixture(scope='session')
-def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory, custom_hierarchy_config_file, custom_config_global_props):
+def single_passing_test_with_custom_mod_hierarchy(_zigzag_runner_factory,
+                                                  custom_hierarchy_config_file,
+                                                  custom_config_global_props):
     """ZigZag CLI runner with custom configuration.
 
     Returns:
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('single_passing_asc.xml', custom_hierarchy_config_file, custom_config_global_props)
+    zz_runner = _zigzag_runner_factory('single_passing_asc.xml',
+                                       custom_hierarchy_config_file,
+                                       custom_config_global_props)
     zz_runner.add_test_case('passed')
 
     return zz_runner
