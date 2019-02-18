@@ -19,7 +19,6 @@ class ModuleHierarchyFacade(object):
         """
 
         self._mediator = mediator
-        self._pr_regex = re.compile(r'.*(PR-\d+).*')
 
     def get_module_hierarchy(self, classname):
         """Get module hierarchy
