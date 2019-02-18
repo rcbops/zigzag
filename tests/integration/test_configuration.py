@@ -16,6 +16,27 @@ from tests.helper.classes.zigzag_runner import ZigZagRunner
 # ======================================================================================================================
 
 @pytest.fixture(scope='session')
+def bad_hierarchy_config_file(tmpdir_factory):
+    """A configuration with a module_hierarchy of the wrong type
+    """
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "zigzag": {
+                "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
+                "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
+                "module_hierarchy": "node1, node2"
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def no_test_cycle_config(tmpdir_factory):
     """A configuration missing the test_cycle config
     """
@@ -137,6 +158,16 @@ class TestConfig(object):
 
 
 class TestConfigNegative(object):
+
+    def test_bad_module_hierarchy(self, _zigzag_runner_factory, bad_hierarchy_config_file, asc_global_props):
+        """Verify that an error will be raised when the test_cycle config is not present"""
+
+        zz_runner = _zigzag_runner_factory('junit.xml', bad_hierarchy_config_file, asc_global_props)
+        zz_runner.add_test_case('passed')
+        expected_message = "does not comply with schema: u'node1, node2' is not of type u'array'"
+
+        with pytest.raises(ZigZagConfigError, match=expected_message):
+            zz_runner.assert_invoke_zigzag()
 
     def test_missing_test_cycle(self, _zigzag_runner_factory, no_test_cycle_config, asc_global_props):
         """Verify that an error will be raised when the test_cycle config is not present"""
