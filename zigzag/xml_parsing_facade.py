@@ -42,12 +42,6 @@ class XmlParsingFacade(object):
                                                                  encoding='UTF-8',
                                                                  xml_declaration=True)
 
-            try:
-                # TODO move this logic into lazy load properties
-                self._mediator.build_url = self._mediator.config_dict.get_config('build_url')
-                self._mediator.build_number = self._mediator.config_dict.get_config('build_number')
-            except (KeyError, ZigZagConfigError) as e:
-                raise RuntimeError("Test suite is missing the required property!\n\n{}".format(str(e)))
         elif self._mediator.test_runner == 'tempest':
             self._read(file_path)
             self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']

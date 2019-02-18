@@ -13,6 +13,7 @@ from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from zigzag.zigzag_config import ZigZagConfig
+from zigzag.zigzag_config import ZigZagConfigError
 
 
 class ZigZag(object):
@@ -179,13 +180,10 @@ class ZigZag(object):
         Returns:
             str: The url for the build
         """
-        return self._build_url
-
-    @build_url.setter
-    def build_url(self, value):
-        """Sets the value for build_url
-        """
-        self._build_url = value
+        try:
+            return self.config_dict.get_config('build_url')
+        except ZigZagConfigError:
+            pass  # this is not a required property
 
     @property
     def build_number(self):
@@ -194,13 +192,10 @@ class ZigZag(object):
         Returns:
             int: the number of the build
         """
-        return self._build_number
-
-    @build_number.setter
-    def build_number(self, value):
-        """Sets the number of the build
-        """
-        self._build_number = value
+        try:
+            return self.config_dict.get_config('build_number')
+        except ZigZagConfigError:
+            pass  # this is not a required property
 
     @property
     def testsuite_props(self):
