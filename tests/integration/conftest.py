@@ -248,7 +248,7 @@ def single_passing_test_step_for_mk8s(_zigzag_runner_factory, mk8s_config_file, 
 
 @pytest.fixture(scope='session')
 def asc_config_file(tmpdir_factory):
-    """A config for zigzag used by the ASC team
+    """A config for zigzag used to mock ASC team test configuration
 
     Returns:
         str : a path to a config file
@@ -283,7 +283,7 @@ def asc_config_file(tmpdir_factory):
                 "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
                 "module_hierarchy": [
                   "{{ RPC_PRODUCT_RELEASE }}",
-                  "{ {RPC_RELEASE }}",
+                  "{{ RPC_RELEASE }}",
                   "{{ JOB_NAME }}",
                   "{{ MOLECULE_TEST_REPO }}",
                   "{{ zz_testcase_class }}"
