@@ -60,7 +60,7 @@ class ZigZagConfig(object):
             ZigZagConfigError
         """
 
-        error_message = "The config '{}' was not found in the config file".format(config_name)
+        error_message = "The config setting '{}' was not found in the config file".format(config_name)
 
         try:
             if test_log:
