@@ -166,7 +166,7 @@ class TestZigZagConfig(object):
 
         properties = {}
         config = ZigZagConfig(config_with_interpolation, properties)
-        expected_message = "The config 'path_to_test_exec_dir' was not found in the config file"
+        expected_message = "The config setting 'path_to_test_exec_dir' was not found in the config file"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             config.get_config('path_to_test_exec_dir')
@@ -222,7 +222,7 @@ class TestZigZagConfig(object):
         """Test a config where the value is an empty list"""
 
         config = ZigZagConfig(empty_module_hierarchy, {})
-        expected_message = "The config 'module_hierarchy' was not found in the config file"
+        expected_message = "The config setting 'module_hierarchy' was not found in the config file"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             config.get_config('module_hierarchy')
