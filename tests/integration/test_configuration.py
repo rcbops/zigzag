@@ -147,7 +147,7 @@ def custom_hierarchy_config_file(tmpdir_factory):
                 "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
                 "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
                 "module_hierarchy": [
-                  "{{ zz_testcase_class }}"
+                  "{{ NODE_NAME }}"
                 ]
               }
             }"""
@@ -159,7 +159,7 @@ def custom_hierarchy_config_file(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def computed_hierarchy_config_file_falsey(tmpdir_factory):
+def conditional_hierarchy_config_file(tmpdir_factory):
     """A config for zigzag that computes an interpolated value based on a false condition
 
     Returns:
@@ -173,33 +173,7 @@ def computed_hierarchy_config_file_falsey(tmpdir_factory):
                 "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
                 "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
                 "module_hierarchy": [
-                  "{{ 'foo' if False else 'bar' }}"
-                ]
-              }
-            }"""
-
-    with open(filename, 'w') as f:
-        f.write(config_json)
-
-    return filename
-
-
-@pytest.fixture(scope='session')
-def computed_hierarchy_config_file_truthy(tmpdir_factory):
-    """A config for zigzag that computes an interpolated value based on a true condition
-
-    Returns:
-        str : a path to a config file
-    """
-
-    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
-    config_json = \
-        """{
-              "zigzag": {
-                "test_cycle": "{{ ZZ_INTEGRATION_TEST_CYCLE }}",
-                "project_id": "{{ ZZ_INTEGRATION_PROJECT_ID }}",
-                "module_hierarchy": [
-                  "{{ 'foo' if True else 'bar' }}"
+                  "{{ A if BOOL else B }}"
                 ]
               }
             }"""
@@ -222,55 +196,66 @@ class TestConfig(object):
             a zigzag config
         """
 
-        zz_runner = _zigzag_runner_factory('junit.xml', custom_hierarchy_config_file, {})
+        zz_runner = _zigzag_runner_factory('junit.xml', custom_hierarchy_config_file, {"NODE_NAME": "node_name"})
         zz_runner.add_test_case('passed')
         zz_runner.assert_invoke_zigzag()
         test = zz_runner.tests[0]
         qtest_parent_test_cycle_name = test.qtest_parent_test_cycles[0].name
 
         # Expectations
-        parent_test_cycle_name_exp = 'tests.test_default'
+        parent_test_cycle_name_exp = 'node_name'
 
         # Test
         assert parent_test_cycle_name_exp == qtest_parent_test_cycle_name
 
     # noinspection PyUnresolvedReferences
-    def test_publish_single_passing_test_with_computed_mod_hierarchy_truthy(self,
-                                                                            _zigzag_runner_factory,
-                                                                            computed_hierarchy_config_file_truthy):
+    def test_publish_single_passing_test_with_conditional_mod_hierarchy(self,
+                                                                        _zigzag_runner_factory,
+                                                                        conditional_hierarchy_config_file):
         """ Verify that value can be computed based on a true boolean condition
         """
 
-        zz_runner = _zigzag_runner_factory('junit.xml', computed_hierarchy_config_file_truthy, {})
+        zz_runner = _zigzag_runner_factory('junit.xml', conditional_hierarchy_config_file, {"BOOL": True, "A": "a"})
         zz_runner.add_test_case('passed')
         zz_runner.assert_invoke_zigzag()
         test = zz_runner.tests[0]
         qtest_parent_test_cycle_name = test.qtest_parent_test_cycles[0].name
 
         # Expectations
-        parent_test_cycle_name_exp = 'foo'
+        parent_test_cycle_name_exp = 'a'
 
         # Test
         assert parent_test_cycle_name_exp == qtest_parent_test_cycle_name
 
     # noinspection PyUnresolvedReferences
-    def test_publish_single_passing_test_with_computed_mod_hierarchy_falsey(self,
-                                                                            _zigzag_runner_factory,
-                                                                            computed_hierarchy_config_file_falsey):
+    def test_publish_single_passing_test_with_computed_mod_hierarchy(self,
+                                                                     _zigzag_runner_factory,
+                                                                     conditional_hierarchy_config_file):
         """ Verify that value can be computed based on a false boolean condition
         """
 
-        zz_runner = _zigzag_runner_factory('junit.xml', computed_hierarchy_config_file_falsey, {})
+        zz_runner = _zigzag_runner_factory('junit.xml', conditional_hierarchy_config_file, {"B": "b"})
         zz_runner.add_test_case('passed')
         zz_runner.assert_invoke_zigzag()
         test = zz_runner.tests[0]
         qtest_parent_test_cycle_name = test.qtest_parent_test_cycles[0].name
 
         # Expectations
-        parent_test_cycle_name_exp = 'bar'
+        parent_test_cycle_name_exp = 'b'
 
         # Test
         assert parent_test_cycle_name_exp == qtest_parent_test_cycle_name
+
+        # Test change of the module hierarchy
+        zz_runner._global_props['B'] = 'b_post_change'
+        zz_runner.assert_invoke_zigzag()
+        qtest_parent_test_cycle_name_post_change = test.qtest_parent_test_cycles[0].name
+
+        # Expectations
+        parent_test_cycle_name_exp_post_change = 'b_post_change'
+
+        # Test
+        assert parent_test_cycle_name_exp_post_change == qtest_parent_test_cycle_name_post_change
 
 
 class TestConfigNegative(object):
