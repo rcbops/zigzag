@@ -60,7 +60,7 @@ def config_with_zz_variable(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def config_missing_zigzag_key(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """config missing zigzag key"""
     config = \
         """
         {
@@ -81,7 +81,7 @@ def config_missing_zigzag_key(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def config_missing_project_id_key(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """config missing project_id key"""
     config = \
         """
         {
@@ -103,7 +103,7 @@ def config_missing_project_id_key(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def module_hierarchy_two_nodes(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """config with module_hierarchy containing two items"""
     config = \
         """
         {
@@ -126,7 +126,7 @@ def module_hierarchy_two_nodes(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def empty_module_hierarchy(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """Config file with an empty module_hierarchy"""
     config = \
         """
         {
