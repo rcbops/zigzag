@@ -60,7 +60,7 @@ def config_with_zz_variable(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def config_missing_zigzag_key(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """config missing zigzag key"""
     config = \
         """
         {
@@ -81,13 +81,59 @@ def config_missing_zigzag_key(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def config_missing_project_id_key(tmpdir_factory):
-    """config with one value in a jinga template"""
+    """config missing project_id key"""
     config = \
         """
         {
             "zigzag": {
                 "test_cycle": "pike",
                 "module_hierarchy": ["one","two","three"],
+                "path_to_test_exec_dir": "{{ FOO }}"
+            }
+        }
+        """  # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
+def module_hierarchy_two_nodes(tmpdir_factory):
+    """config with module_hierarchy containing two items"""
+    config = \
+        """
+        {
+            "zigzag": {
+                "project_id": "12345",
+                "test_cycle": "pike",
+                "module_hierarchy": ["{{ NODE_ONE }}", "{{ NODE_TWO }}"],
+                "path_to_test_exec_dir": "{{ FOO }}"
+            }
+        }
+        """  # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
+def empty_module_hierarchy(tmpdir_factory):
+    """Config file with an empty module_hierarchy"""
+    config = \
+        """
+        {
+            "zigzag": {
+                "project_id": "12345",
+                "test_cycle": "pike",
+                "module_hierarchy": [],
                 "path_to_test_exec_dir": "{{ FOO }}"
             }
         }
@@ -120,7 +166,7 @@ class TestZigZagConfig(object):
 
         properties = {}
         config = ZigZagConfig(config_with_interpolation, properties)
-        expected_message = "The config 'path_to_test_exec_dir' was not found in the config file"
+        expected_message = "The config setting 'path_to_test_exec_dir' was not found in the config file"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             config.get_config('path_to_test_exec_dir')
@@ -161,3 +207,22 @@ class TestZigZagConfig(object):
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             ZigZagConfig(config_missing_project_id_key, properties)
+
+    def test_list_value_containing_empty_value(self, module_hierarchy_two_nodes):
+        """Test a config where a list contains an empty string"""
+
+        properties = {'NODE_ONE': 'FOO'}  # do not supply NODE_TWO
+        config = ZigZagConfig(module_hierarchy_two_nodes, properties)
+        expected_message = 'The config module_hierarchy contained an empty value'
+
+        with pytest.raises(ZigZagConfigError, match=expected_message):
+            config.get_config('module_hierarchy')
+
+    def test_empty_list(self, empty_module_hierarchy):
+        """Test a config where the value is an empty list"""
+
+        config = ZigZagConfig(empty_module_hierarchy, {})
+        expected_message = "The config setting 'module_hierarchy' was not found in the config file"
+
+        with pytest.raises(ZigZagConfigError, match=expected_message):
+            config.get_config('module_hierarchy')

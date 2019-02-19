@@ -330,7 +330,7 @@ class TestConfigNegative(object):
 
         zz_runner.add_test_case('passed')
 
-        expected_message = "The config 'project_id' was not found in the config file"
+        expected_message = "The config setting 'project_id' was not found in the config file"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             zz_runner.assert_invoke_zigzag()

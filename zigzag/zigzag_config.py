@@ -60,6 +60,8 @@ class ZigZagConfig(object):
             ZigZagConfigError
         """
 
+        error_message = "The config setting '{}' was not found in the config file".format(config_name)
+
         try:
             if test_log:
                 # add testcase specific info to the props
@@ -81,9 +83,13 @@ class ZigZagConfig(object):
                 value = pre_render_config_value
 
         except KeyError:
-            raise ZigZagConfigError("The config '{}' was not found in the config file".format(config_name))
+            raise ZigZagConfigError(error_message)
 
-        if value == '':  # TODO decide what should be an allowable value None??? emptystring????
-            raise ZigZagConfigError("The config '{}' was not found in the config file".format(config_name))
+        if not value:
+            #  value is an empty object
+            raise ZigZagConfigError(error_message)
+        elif isinstance(value, list) and any([True for v in value if not v]):
+            #  value is a list with an empty value inside
+            raise ZigZagConfigError("The config {} contained an empty value".format(config_name))
 
         return value
