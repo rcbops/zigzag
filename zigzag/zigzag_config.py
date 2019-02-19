@@ -88,7 +88,7 @@ class ZigZagConfig(object):
         if not value:
             #  value is an empty object
             raise ZigZagConfigError(error_message)
-        elif isinstance(value, list) and any([ True for v in value if not v]):
+        elif isinstance(value, list) and any([True for v in value if not v]):
             #  value is a list with an empty value inside
             raise ZigZagConfigError("The config {} contained an empty value".format(config_name))
 
