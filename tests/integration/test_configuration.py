@@ -138,8 +138,8 @@ def required_configs(tmpdir_factory):
 class TestConfig(object):
     # noinspection PyUnresolvedReferences
     def test_publish_single_passing_test_with_custom_mod_hierarchy(self, single_passing_test_with_custom_mod_hierarchy):
-        """Verify ZigZag can publish results from the "asc" CI environment with one passing test in the JUnitXML
-        file.
+        """ Verify that computed values rendered by the jinja configuration template
+            will affect the resulting qtest representation of test results.
         """
 
         # Setup
@@ -152,13 +152,15 @@ class TestConfig(object):
         qtest_parent_test_cycle_name = test.qtest_parent_test_cycles[0].name
 
         # Test
-        assert(parent_test_cycle_name_exp == qtest_parent_test_cycle_name)
+        assert parent_test_cycle_name_exp == qtest_parent_test_cycle_name
 
 
 class TestConfigNegative(object):
 
     def test_bad_module_hierarchy(self, _zigzag_runner_factory, bad_hierarchy_config_file, asc_global_props):
-        """Verify that an error will be raised when the test_cycle config is not present"""
+        """Verify that an error will be raised when the wrong data type is provided for module_hierarchy;
+           specifically a comma delimited string instead of an array.
+        """
 
         zz_runner = _zigzag_runner_factory('junit.xml', bad_hierarchy_config_file, asc_global_props)
         zz_runner.add_test_case('passed')
