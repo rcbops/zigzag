@@ -137,6 +137,6 @@ release-patch: develop lint test-all bump-patch bump-release build publish ## pa
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release: develop lint test-all bump-release bump-release build publish ## package and upload a release
+release: develop lint test-all bump-release build publish ## package and upload a release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
