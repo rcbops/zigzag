@@ -31,34 +31,15 @@ class XmlParsingFacade(object):
         sets the property 'build_number' on the mediator
         """
 
-        if self._mediator.test_runner == 'pytest-zigzag':
-            self._read(file_path)
-            self._determine_ci_environment()
-            self._validate()
-            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
-                                              for p in self._mediator.junit_xml.findall('./properties/property')}
-            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
-                                                                 encoding='UTF-8',
-                                                                 xml_declaration=True)
-
-        elif self._mediator.test_runner == 'tempest':
-            self._read(file_path)
-            self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
-                                              for p in self._mediator.junit_xml.findall('./properties/property')}
-            self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
-                                                                 encoding='UTF-8',
-                                                                 xml_declaration=True)
+        self._read(file_path)
+        self._validate()
+        self._mediator.testsuite_props = {p.attrib['name']: p.attrib['value']
+                                          for p in self._mediator.junit_xml.findall('./properties/property')}
+        self._mediator.serialized_junit_xml = etree.tostring(self._mediator.junit_xml,
+                                                             encoding='UTF-8',
+                                                             xml_declaration=True)
 
         ZigZagTestLogs(self._mediator)  # new test logs attach themselves to the mediator
-
-    def _determine_ci_environment(self):
-        """Determines the ci-environment that was used to create the junit xml file"""
-        try:
-            ci_environment = self._mediator.junit_xml.find(
-                "./properties/property/[@name='ci-environment']").attrib['value']
-            self._mediator.ci_environment = ci_environment
-        except AttributeError:
-            self._mediator.ci_environment = 'asc'  # hard code this here
 
     def _read(self, file_path):
         """Read the input file contents

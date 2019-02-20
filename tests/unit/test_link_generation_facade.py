@@ -72,7 +72,7 @@ class TestLinkGenerationFacade(object):
     """Tests for the LinkGenerationFacade"""
 
     def test_asc_failure_link(self, asc_zigzag_config_file, mocker):
-        """Validate when configured with asc as ci-environment"""
+        """Validate when configured with a config file similar to the one used by the asc-team"""
 
         molecule_test_repo = 'molecule-validate-neutron-deploy'
         molecule_scenario_name = 'default'
@@ -180,7 +180,7 @@ class TestLinkGenerationFacade(object):
                                             TEST_FILE))
 
     def test_mk8s_master_branch(self, mk8s_zigzag_config_file, mocker):
-        """Validate when configured with mk8s as ci-environment"""
+        """Validate when configured with a config file similar to the one used by the mk8s-team"""
 
         zz = mocker.MagicMock()
         testsuite_props = {
@@ -238,12 +238,11 @@ class TestLinkGenerationFacade(object):
         assert failure_link is None
 
     def test_mk8s_pr_testing(self, mk8s_zigzag_config_file, mocker):
-        """Validate when configured with mk8s as ci-environment testing a PR"""
+        """Validate when configured with a config file similar to the one used by the mk8s-team testing a PR"""
         change_branch = 'asc-123/master/this_is_my_feature'
         change_fork = 'zreichert'
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
         testsuite_props = {
             'GIT_URL': 'https://github.com/rcbops/mk8s.git',
             'GIT_COMMIT': SHA,
@@ -278,7 +277,6 @@ class TestLinkGenerationFacade(object):
         fork = 'rcbops'
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
         zz.testsuite_props = {
             'REPO_URL': 'https://github.com/{}/rpc-openstack'.format(fork),
             'MOLECULE_GIT_COMMIT': SHA,
@@ -308,7 +306,6 @@ class TestLinkGenerationFacade(object):
         repo_name = 'mk8s'
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
         zz.testsuite_props = {
             'GIT_URL': 'https://github.com/{}/{}.git'.format(fork, repo_name),
             'GIT_COMMIT': SHA,
@@ -333,7 +330,6 @@ class TestLinkGenerationFacade(object):
         """diff link should be 'Unknown' when it cant be calculated"""
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
         zz.testsuite_props = {}
 
         lgf = LinkGenerationFacade(zz)
@@ -347,7 +343,6 @@ class TestLinkGenerationFacade(object):
         """diff link should be 'Unknown' when it cant be calculated"""
 
         zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
         zz.testsuite_props = {}
 
         lgf = LinkGenerationFacade(zz)
