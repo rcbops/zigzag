@@ -8,64 +8,11 @@ import os
 import re
 import swagger_client
 from time import sleep
-from copy import deepcopy
 from warnings import warn
 from zigzag.zigzag import ZigZag
 from swagger_client.rest import ApiException
 from jinja2 import Environment, FileSystemLoader
 from tests.helper.classes.test_suite_info import TestSuiteInfo
-
-# ======================================================================================================================
-# Globals
-# ======================================================================================================================
-DEFAULT_ASC_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
-                                 "BUILD_NUMBER": "BUILD_NUMBER",
-                                 "RE_JOB_ACTION": "RE_JOB_ACTION",
-                                 "RE_JOB_IMAGE": "RE_JOB_IMAGE",
-                                 "RE_JOB_SCENARIO": "RE_JOB_SCENARIO",
-                                 "RE_JOB_BRANCH": "pike-rc",
-                                 "RPC_RELEASE": "RPC_RELEASE",
-                                 "RPC_PRODUCT_RELEASE": "RPC_PRODUCT_RELEASE",
-                                 "OS_ARTIFACT_SHA": "OS_ARTIFACT_SHA",
-                                 "PYTHON_ARTIFACT_SHA": "PYTHON_ARTIFACT_SHA",
-                                 "APT_ARTIFACT_SHA": "APT_ARTIFACT_SHA",
-                                 "REPO_URL": "https://github.com/rcbops/rpc-openstack",
-                                 "JOB_NAME": "JOB_NAME",
-                                 "MOLECULE_TEST_REPO": "MOLECULE_TEST_REPO",
-                                 "MOLECULE_SCENARIO_NAME": "MOLECULE_SCENARIO_NAME",
-                                 "MOLECULE_GIT_COMMIT": "Unknown",
-                                 "ci-environment": "asc"}
-
-DEFAULT_MK8S_GLOBAL_PROPERTIES = {"BUILD_URL": "BUILD_URL",
-                                  "BUILD_NUMBER": "BUILD_NUMBER",
-                                  "BUILD_ID": "BUILD_ID",
-                                  "JOB_NAME": "JOB_NAME",
-                                  "BUILD_TAG": "BUILD_TAG",
-                                  "JENKINS_URL": "JENKINS_URL",
-                                  "EXECUTOR_NUMBER": "EXECUTOR_NUMBER",
-                                  "WORKSPACE": "WORKSPACE",
-                                  "CVS_BRANCH": "CVS_BRANCH",
-                                  "GIT_COMMIT": "GIT_COMMIT",
-                                  "GIT_URL": "Unknown",
-                                  "GIT_BRANCH": "master",
-                                  "GIT_LOCAL_BRANCH": "GIT_LOCAL_BRANCH",
-                                  "GIT_AUTHOR_NAME": "GIT_AUTHOR_NAME",
-                                  "GIT_AUTHOR_EMAIL": "GIT_AUTHOR_EMAIL",
-                                  "BRANCH_NAME": "BRANCH_NAME",
-                                  "CHANGE_AUTHOR_DISPLAY_NAME": "CHANGE_AUTHOR_DISPLAY_NAME",
-                                  "CHANGE_AUTHOR": "CHANGE_AUTHOR",
-                                  "CHANGE_BRANCH": "CHANGE_BRANCH",
-                                  "CHANGE_FORK": "CHANGE_FORK",
-                                  "CHANGE_ID": "CHANGE_ID",
-                                  "CHANGE_TARGET": "CHANGE_TARGET",
-                                  "CHANGE_TITLE": "CHANGE_TITLE",
-                                  "CHANGE_URL": "CHANGE_URL",
-                                  "JOB_URL": "JOB_URL",
-                                  "NODE_LABELS": "NODE_LABELS",
-                                  "NODE_NAME": "NODE_NAME",
-                                  "PWD": "PWD",
-                                  "STAGE_NAME": "STAGE_NAME",
-                                  "ci-environment": "mk8s"}
 
 
 # ======================================================================================================================
@@ -87,7 +34,8 @@ class ZigZagRunner(object):
                  qtest_root_test_cycle,
                  qtest_root_req_module,
                  junit_xml_file_path,
-                 ci_environment,
+                 config_file_path,
+                 global_properties_dict,
                  metadata=None):
         """Instantiate an object used to write ZigZag compliant JUnitXML files and execute ZigZag.
 
@@ -99,8 +47,7 @@ class ZigZagRunner(object):
             qtest_root_req_module (swagger_client.ModuleResource): The module to use as the parent for Jira requirements
                 in the qTest 'Requirements' view.
             junit_xml_file_path (str): A file path to a JUnitXML file.
-            ci_environment (str): The CI environment used to produce the JUnitXML file.
-                (Valid values: 'asc', 'mk8s')
+            config_file_path (str): The Path to the config file to be used
             metadata (dict): Provide a dictionary of arbitrary metadata for this runner. Useful for when you want to
                 attach extra fixture data to the runner.
 
@@ -108,14 +55,8 @@ class ZigZagRunner(object):
             RuntimeError: Invalid value provided for the 'ci_environment' argument.
         """
 
-        if ci_environment == 'asc':
-            self._global_props = deepcopy(DEFAULT_ASC_GLOBAL_PROPERTIES)
-        elif ci_environment == 'mk8s':
-            self._global_props = deepcopy(DEFAULT_MK8S_GLOBAL_PROPERTIES)
-        else:
-            raise RuntimeError("Invalid value provided for the 'ci_environment' argument!")
-
-        self._ci_environment = ci_environment
+        self._global_props = global_properties_dict
+        self._config_file_path = config_file_path
         self._qtest_api_token = qtest_api_token
         self._qtest_project_id = qtest_project_id
         self._qtest_root_test_cycle = qtest_root_test_cycle
@@ -177,16 +118,6 @@ class ZigZagRunner(object):
         """
 
         return self._junit_xml_file_path
-
-    @property
-    def ci_environment(self):
-        """The CI environment used to produce the JUnitXML file.
-
-        Returns:
-            str: The CI environment used to produce the JUnitXML file.
-        """
-
-        return self._ci_environment
 
     @property
     def global_props(self):
@@ -310,9 +241,8 @@ class ZigZagRunner(object):
             f.write(self._junit_template.render(tests=self._tests, global_props=self._global_props))
 
         zz = ZigZag(self._junit_xml_file_path,
+                    self._config_file_path,
                     self._qtest_api_token,
-                    self._qtest_project_id,
-                    self._qtest_root_test_cycle.name,
                     False)
         zz.parse()
 

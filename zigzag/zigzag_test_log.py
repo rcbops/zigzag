@@ -10,7 +10,6 @@ import requests
 import swagger_client
 from base64 import b64encode
 from datetime import datetime
-from datetime import timedelta
 from future.moves.collections import Sequence
 from zigzag.utility_facade import UtilityFacade
 from zigzag.link_generation_facade import LinkGenerationFacade
@@ -79,7 +78,7 @@ class _ZigZagTestLog(object):
             try:
                 self._name = _ZigZagTestLog._TESTCASE_NAME_RGX.match(self._testcase_xml.attrib['name']).group(0)
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                raise RuntimeError("Test case '{}' is missing the required property name!".format(self._name))
 
         return self._name
 
@@ -292,7 +291,8 @@ class _ZigZagTestLog(object):
             try:
                 self._automation_content = self._find_property('test_id')
             except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
+                message = "Test case '{}' is missing the required property! automation content".format(self._name)
+                raise ZigZagTestLogError(message)
         return self._automation_content
 
     @property
@@ -324,7 +324,7 @@ class _ZigZagTestLog(object):
             RuntimeError: the testcase 'classname' attribute is invalid
         """
 
-        return self._mediator.module_hierarchy_facade.get_module_hierarchy(self.classname)
+        return self._mediator.config_dict.get_config('module_hierarchy', self)
 
     @property
     def test_file(self):
@@ -870,7 +870,7 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
             qtest_test_step_log = swagger_client.AutomationTestStepLog()
 
             # set the status based on the previous status
-            previous_position = order - 1 if order is not 0 else 0
+            previous_position = order - 1 if order != 0 else 0
             previous_status = self._zz_test_step_logs[previous_position].status
             if zz_test_step_log.status == 'FAILED':
                 qtest_test_step_log.status = 'FAILED'
@@ -894,88 +894,6 @@ class _ZigZagTestLogWithSteps(_ZigZagTestLog):
         return qtest_test_step_logs
 
 
-class _ZigZagTestLogTempest(_ZigZagTestLog):
-
-    _TEMPEST_UUID_RGX = re.compile(r'(\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)')
-
-    def __init__(self, testcase_xml, mediator):
-        """Create a TestLog object from tempest generated xml.
-
-        Args:
-            testcase_xml (ElementTree): A XML element representing a JUnit style testcase result.
-            mediator (ZigZag): The mediator that stores shared data.
-        """
-
-        super(_ZigZagTestLogTempest, self).__init__(testcase_xml, mediator)
-
-        self._testcase_xml = testcase_xml
-        self._mediator = mediator
-
-        # it might be best to do a short circuit here
-        # properties that this class does not implement should be set to ''
-        self._stdout = ''
-        self._stderr = ''
-        self._test_file = ''
-        self._failure_output = ''
-        self._def_line_number = ''
-        self._full_failure_output = ''
-        self._jira_issues = []  # needs to be a list
-
-    @property
-    def automation_content(self):
-        """Gets the automation content of this test log
-
-        Returns:
-            str: The UUID that we associate with this Test Case
-        """
-        if self._automation_content is None:
-            try:
-                self._automation_content = _ZigZagTestLogTempest._TEMPEST_UUID_RGX.search(
-                    self._testcase_xml.attrib['name']).group(0)
-            except AttributeError:
-                raise ZigZagTestLogError('OHH snap there is no UUID!!!')
-
-        return self._automation_content
-
-    @property
-    def end_date(self):
-        """Gets the end date of this test log
-
-        Returns:
-            str: the end date of this test execution
-        """
-        if self._end_date is None:
-            start = datetime.strptime(self.start_date, self._date_time_format)
-            try:
-                # if time is a fraction of a second round up to one second
-                time = 1 if float(self._testcase_xml.attrib['time']) < 1 else float(self._testcase_xml.attrib['time'])
-                duration = timedelta(seconds=time)
-            except AttributeError:
-                raise RuntimeError("Test case '{}' is missing the required property!".format(self._name))
-            end = start + duration
-            self._end_date = end.strftime(self._date_time_format)
-
-        return self._end_date
-
-    @property
-    def status(self):
-        """Gets the status of this test log
-
-        Return:
-            str: the status of this test execution
-        """
-        if self._status is None:
-            status_tags = ['skipped', 'error', 'failure']
-            if all([self._testcase_xml.find(tag) is None for tag in status_tags]):
-                self._status = 'PASSED'
-            elif self._testcase_xml.find('skipped') is not None:
-                self._status = 'SKIPPED'
-            else:
-                self._status = 'FAILED'
-
-        return self._status
-
-
 class ZigZagTestLogs(Sequence):
     def __init__(self, mediator):
         """Create test logs.
@@ -987,11 +905,8 @@ class ZigZagTestLogs(Sequence):
         self._mediator = mediator
         self._test_logs = []
 
-        if self._mediator.test_runner == 'tempest':
-            self._parse_tempest_test_cases()
-        elif self._mediator.test_runner == 'pytest-zigzag':
-            self._parse_test_cases_with_steps()
-            self._parse_test_cases_without_steps()
+        self._parse_test_cases_with_steps()
+        self._parse_test_cases_without_steps()
 
         self._mediator.test_logs = self
 
@@ -1074,7 +989,10 @@ class ZigZagTestLogs(Sequence):
         """Parse the JUnitXML for test cases that are NOT marked as steps."""
 
         for testcase_xml in self._find_test_step_test_cases(False):
-            self._test_logs.append(_ZigZagTestLog(testcase_xml, self._mediator))
+            try:
+                self._test_logs.append(_ZigZagTestLog(testcase_xml, self._mediator))
+            except ZigZagTestLogError:
+                pass  # TODO log this error because we cant process this log
 
     def _find_test_step_test_cases(self, test_step_property_value):
         """Find test_step testcases
@@ -1097,12 +1015,6 @@ class ZigZagTestLogs(Sequence):
             raise ZigZagTestLogError('Test found without test_step property')
         else:
             return self._mediator.junit_xml.findall(testcases_with_steps_xpath)
-
-    def _parse_tempest_test_cases(self):
-        """Parse JUnitXML generated by tempest"""
-
-        for testcase_xml in self._mediator.junit_xml.findall('testcase'):
-            self._test_logs.append(_ZigZagTestLogTempest(testcase_xml, self._mediator))
 
 
 class ZigZagTestLogError(Exception):

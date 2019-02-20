@@ -246,6 +246,7 @@ class TestMixed(object):
             pytest.helpers.assert_qtest_property(test_runs[0], 'Status', test_run_status_exp)
 
 
+@pytest.mark.skip(reason="The mechanism for specifying module hiararchy has changed")
 class TestRename(object):
     """Validate that test cases can be renamed."""
 

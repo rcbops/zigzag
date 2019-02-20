@@ -14,7 +14,7 @@ from zigzag.zigzag_test_log import SWEET_UNICORN_GIF
 # ======================================================================================================================
 # noinspection PyShadowingNames
 @pytest.fixture
-def multi_line_failure_message_for_asc(_zigzag_runner_factory):
+def multi_line_failure_message_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with one failing test that has a multi-line failure
     message which will need to be truncated.
 
@@ -38,7 +38,7 @@ E        +  where '' = CommandResult(command="lxc-attach -n `lxc-ls -1 | grep ut
 
 tests/test_scan_images_and_flavors.py:26: AssertionError'''     # noqa
 
-    zz_runner = _zigzag_runner_factory('multi_line_failure_message_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('multi_line_failure_message_for_asc.xml', asc_config_file, asc_global_props)
     zz_runner.add_test_case('failure', message=failure_message)
 
     return zz_runner
@@ -46,7 +46,7 @@ tests/test_scan_images_and_flavors.py:26: AssertionError'''     # noqa
 
 # noinspection PyShadowingNames
 @pytest.fixture
-def multi_line_failure_message_for_mk8s(_zigzag_runner_factory):
+def multi_line_failure_message_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner configured for the "asc" CI environment with one failing test that has a multi-line failure
     message which will need to be truncated.
 
@@ -156,14 +156,14 @@ E       docker.errors.APIError: 500 Server Error: Internal Server Error ("Get ht
 
 /usr/local/lib/python3.5/dist-packages/docker/errors.py:31: APIError'''     # noqa
 
-    zz_runner = _zigzag_runner_factory('multi_line_failure_message_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('multi_line_failure_message_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
     zz_runner.add_test_case('failure', message=failure_message)
 
     return zz_runner
 
 
 @pytest.fixture(scope='session')
-def state_change_failure_for_asc(_zigzag_runner_factory):
+def state_change_failure_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner with a failing test configured for the "asc" CI environment to create a valid link to GitHub
     via the "Failure Link" qTest field.
 
@@ -174,7 +174,7 @@ def state_change_failure_for_asc(_zigzag_runner_factory):
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('github_failure_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('github_failure_for_asc.xml', asc_config_file, asc_global_props)
 
     failure_message = """
             host = &lt;testinfra.host.Host object at 0x7f61d2c20e10&gt;
@@ -211,7 +211,7 @@ def state_change_failure_for_asc(_zigzag_runner_factory):
 
 
 @pytest.fixture(scope='session')
-def state_change_failure_for_mk8s(_zigzag_runner_factory):
+def state_change_failure_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner with a failing test configured for the "mk8s" CI environment to create a valid link to GitHub
     via the "Failure Link" qTest field.
 
@@ -222,7 +222,7 @@ def state_change_failure_for_mk8s(_zigzag_runner_factory):
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('github_failure_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('github_failure_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
 
     failure_message = """
             host = &lt;testinfra.host.Host object at 0x7f61d2c20e10&gt;

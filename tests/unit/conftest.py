@@ -104,6 +104,55 @@ def default_testcase_elements():
 
 
 @pytest.fixture(scope='session')
+def invalid_json_config(tmpdir_factory,
+                        default_global_properties,
+                        default_testcase_properties,
+                        default_testcase_elements):
+    """config sample"""
+    config = \
+"""
+{
+    "test_cycle": "pike",
+    "project_id": 12345,
+    "module_hierarchy": ["one","two","three"],
+    "path_to_test_exec_dir
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
+def simple_json_config(tmpdir_factory):
+    """config sample"""
+    config = \
+"""
+{
+    "zigzag": {
+        "test_cycle": "pike",
+        "project_id": "12345",
+        "build_url": "https://bar.com/foo",
+        "build_number": "78",
+        "module_hierarchy": ["one","two","three"],
+        "path_to_test_exec_dir": "{{ '' }}"
+    }
+}
+""" # noqa
+
+    config_path = tmpdir_factory.mktemp('data').join('./conf.json').strpath
+
+    with open(str(config_path), 'w') as f:
+        f.write(config)
+
+    return config_path
+
+
+@pytest.fixture(scope='session')
 def single_passing_xml(tmpdir_factory,
                        default_global_properties,
                        default_testcase_properties,
@@ -127,6 +176,186 @@ def single_passing_xml(tmpdir_factory,
 
     with open(filename, 'w') as f:
         f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def invalid_zigzag_config_file(tmpdir_factory,
+                               default_global_properties,
+                               default_testcase_properties,
+                               default_testcase_elements):
+    """JUnitXML sample representing a single passing test."""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
+    config_json = \
+        """{
+             "environment_variables": {
+               "BUILD_URL": "url",
+           """
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def asc_zigzag_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team"""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+                "BUILD_URL": null,
+                "BUILD_NUMBER": null,
+                "RE_JOB_ACTION": null,
+                "RE_JOB_IMAGE": null,
+                "RE_JOB_SCENARIO": null,
+                "RE_JOB_BRANCH": null,
+                "RPC_RELEASE": null,
+                "RPC_PRODUCT_RELEASE": null,
+                "OS_ARTIFACT_SHA": null,
+                "PYTHON_ARTIFACT_SHA": null,
+                "APT_ARTIFACT_SHA": null,
+                "REPO_URL": null,
+                "GIT_URL": null,
+                "JOB_NAME": null,
+                "MOLECULE_TEST_REPO": null,
+                "MOLECULE_SCENARIO_NAME": null,
+                "PATH_TO_TEST_EXEC_DIR": null,
+                "MOLECULE_GIT_COMMIT": null,
+                "GIT_COMMIT": null
+              },
+              "zigzag": {
+                "test_cycle": "{{ RPC_PRODUCT_RELEASE }}",
+                "project_id": "12345",
+                "module_hierarchy": [
+                  "{{RPC_RELEASE}}",
+                  "{{JOB_NAME}}",
+                  "{{MOLECULE_TEST_REPO}}",
+                  "{{zz_testcase_class}}"
+                ],
+                "path_to_test_exec_dir": "/molecule/default/tests",
+                "build_url": "{{ BUILD_URL }}",
+                "build_number": "{{ BUILD_NUMBER }}",
+                "project_repo_name": "rpc-openstack",
+                "project_branch": "{{ RE_JOB_BRANCH }}",
+                "project_fork": "rcbops",
+                "project_commit": null,
+                "test_repo_name": "{{ MOLECULE_TEST_REPO }}",
+                "test_branch": "{{ RE_JOB_BRANCH }}",
+                "test_fork": "rcbops",
+                "test_commit": "{{ MOLECULE_GIT_COMMIT }}"
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def mk8s_zigzag_config_file(tmpdir_factory):
+    """A config for zigzag used by the ASC team"""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.json').strpath
+    config_json = \
+        """{
+              "pytest_zigzag_env_vars": {
+                "BUILD_URL": null,
+                "BUILD_NUMBER": null,
+                "BUILD_ID": null,
+                "JOB_NAME": null,
+                "BUILD_TAG": null,
+                "JENKINS_URL": null,
+                "EXECUTOR_NUMBER": null,
+                "WORKSPACE": null,
+                "CVS_BRANCH": null,
+                "GIT_COMMIT": null,
+                "GIT_URL": null,
+                "GIT_BRANCH": null,
+                "GIT_LOCAL_BRANCH": null,
+                "GIT_AUTHOR_NAME": null,
+                "GIT_AUTHOR_EMAIL": null,
+                "BRANCH_NAME": null,
+                "CHANGE_AUTHOR_DISPLAY_NAME": null,
+                "CHANGE_AUTHOR": null,
+                "CHANGE_BRANCH": null,
+                "CHANGE_FORK": null,
+                "CHANGE_ID": null,
+                "CHANGE_TARGET": null,
+                "CHANGE_TITLE": null,
+                "CHANGE_URL": null,
+                "JOB_URL": null,
+                "NODE_LABELS": null,
+                "NODE_NAME": null,
+                "PWD": null,
+                "STAGE_NAME": null
+              },
+              "zigzag": {
+                "test_cycle": "{{ 'PR' if CHANGE_BRANCH else BRANCH_NAME }}",
+                "project_id": "12345",
+                "module_hierarchy": [
+                  "{{ zz_testcase_class }}"
+                ],
+                "path_to_test_exec_dir": "tools/installer/tests",
+                "build_url": "{{ BUILD_URL }}",
+                "build_number": "{{ BUILD_NUMBER }}",
+                "project_repo_name": "mk8s",
+                "project_branch": "{{ CHANGE_BRANCH }}",
+                "project_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+                "project_commit": "{{ GIT_COMMIT }}",
+                "test_repo_name": "mk8s",
+                "test_branch": "{{ CHANGE_BRANCH }}",
+                "test_fork": "{{ CHANGE_FORK if CHANGE_FORK else 'rcbops' }}",
+                "test_commit": "{{ GIT_COMMIT }}"
+              }
+            }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
+def valid_zigzag_config_file(tmpdir_factory,
+                             default_global_properties,
+                             default_testcase_properties,
+                             default_testcase_elements):
+    """JUnitXML sample representing a single passing test."""
+
+    filename = tmpdir_factory.mktemp('data').join('config_file.xml').strpath
+    config_json = \
+        """{
+             "pytest_zigzag_env_vars": {
+               "BUILD_URL": "url",
+               "BUILD_NUMBER": null,
+               "RE_JOB_ACTION": null,
+               "RE_JOB_IMAGE": null,
+               "RE_JOB_SCENARIO": null,
+               "RE_JOB_BRANCH": null,
+               "RPC_RELEASE": null,
+               "RPC_PRODUCT_RELEASE": null,
+               "OS_ARTIFACT_SHA": null,
+               "PYTHON_ARTIFACT_SHA": null,
+               "APT_ARTIFACT_SHA": null,
+               "REPO_URL": "https://github.com/rcbops/zigzag_asc",
+               "GIT_URL": "https://github.com/rcbops/zigzag_mk8s",
+               "JOB_NAME": null,
+               "MOLECULE_TEST_REPO": "pytest-zigzag",
+               "MOLECULE_SCENARIO_NAME": "molecule_scenario",
+               "PATH_TO_TEST_EXEC_DIR": "custom_test_dir/",
+               "MOLECULE_GIT_COMMIT": "8216c9449ef99216c922f2f2fd01f28e412cfe87",
+               "GIT_COMMIT": "mk8s_gitsha"
+             }
+           }"""
+
+    with open(filename, 'w') as f:
+        f.write(config_json)
 
     return filename
 
@@ -468,6 +697,24 @@ def missing_test_id_xml(tmpdir_factory, default_global_properties, default_testc
 
 
 @pytest.fixture(scope='session')
+def xml_with_unknown_elements(tmpdir_factory, default_global_properties):
+    """JUnitXML sample representing an xml document missing testcases."""
+
+    filename = tmpdir_factory.mktemp('data').join('missing_test_id.xml').strpath
+    junit_xml = \
+        """<?xml version="1.0" encoding="utf-8"?>
+        <testsuitefoo errors="0" failures="0" name="pytest" skips="0" tests="5" time="1.664">
+            {global_properties}
+        </testsuitefoo>
+        """.format(global_properties=default_global_properties)
+
+    with open(filename, 'w') as f:
+        f.write(junit_xml)
+
+    return filename
+
+
+@pytest.fixture(scope='session')
 def missing_build_url_xml(tmpdir_factory, default_testcase_properties, default_testcase_elements):
     """JUnitXML sample representing a test suite that is missing the "BUILD_URL" property."""
 
@@ -554,38 +801,6 @@ def invalid_classname_xml(tmpdir_factory,
         """.format(global_properties=default_global_properties,
                    testcase_properties=default_testcase_properties,
                    testcase_elements=default_testcase_elements)
-
-    with open(filename, 'w') as f:
-        f.write(junit_xml)
-
-    return filename
-
-
-@pytest.fixture(scope='session')
-def tempest_xml(tmpdir_factory):
-    """The first example of tempest xml results"""
-    filename = tmpdir_factory.mktemp('data').join('tempest.xml').strpath
-    junit_xml = \
-        """
-        <testsuite errors="0" failures="0" name="" tests="8" time="183.872">
-            <testcase classname="tempest.api.identity.admin.v3.test_domains.DefaultDomainTestJSON" name="test_default_domain_exists[id-17a5de24-e6a0-4e4a-a9ee-d85b6e5612b5,smoke]" time="0.029"/>
-            <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_list_user_projects[id-a831e70c-e35b-430b-92ed-81ebbc5437b8]" time="2.098"/>
-            <testcase classname="tempest.api.identity.admin.v3.test_users.UsersV3TestJSON" name="test_password_history_not_enforced_in_admin_reset[id-568cd46c-ee6c-4ab4-a33a-d3791931979e]" time="0.000">
-                <skipped>Security compliance not available.</skipped>
-            </testcase>
-            <testcase classname="tempest.api.identity.admin.v3.test_groups.GroupsV3TestJSON" name="test_list_user_groups[id-64573281-d26a-4a52-b899-503cb0f4e4ec]" time="1.230"/>
-            <testcase classname="" name="setUpClass (tempest.api.identity.admin.v3.test_trusts.TrustsV3TestJSON)" time="0.000">
-                <skipped>Trusts aren't enabled</skipped>
-            </testcase>
-            <testcase classname="tempest.api.identity.v3.test_users.IdentityV3UsersTest" name="test_password_history_check_self_service_api[id-941784ee-5342-4571-959b-b80dd2cea516]" time="0.000">
-                <skipped>Security compliance not available.</skipped>
-            </testcase>
-            <testcase classname="tempest.api.identity.v3.test_users.IdentityV3UsersTest" name="test_user_account_lockout[id-a7ad8bbf-2cff-4520-8c1d-96332e151658]" time="0.000">
-                <skipped>Security compliance not available.</skipped>
-            </testcase>
-            <testcase classname="tempest.scenario.test_server_basic_ops.TestServerBasicOps" name="test_server_basic_ops[compute,id-7fff3fb3-91d8-4fd0-bd7d-0204f1f180ba,network,smoke]" time="38.366"/>
-        </testsuite>
-        """  # noqa
 
     with open(filename, 'w') as f:
         f.write(junit_xml)

@@ -6,7 +6,6 @@
 import pytest
 import swagger_client
 from zigzag.zigzag import ZigZag
-from zigzag.utility_facade import UtilityFacade
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
 from swagger_client.rest import ApiException
 import requests
@@ -29,94 +28,6 @@ ASC_TESTSUITE_PROPS = {
 # ======================================================================================================================
 # Test Suites
 # ======================================================================================================================
-class TestModuleHierarchyFacade(object):
-    """Tests for the ModuleHierarchyFacade"""
-
-    def test_asc(self, mocker):
-        """Validate when configured with asc as ci-environment"""
-
-        # Mock
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        zz.utility_facade = UtilityFacade(zz)
-        zz.testsuite_props = ASC_TESTSUITE_PROPS
-
-        # Setup
-        classname = 'tests.test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        mh = mhf.get_module_hierarchy(classname)
-        assert mh == ['foo', 'bar', 'baz', 'barf', 'test_default']
-
-    def test_mk8s_pr(self, mocker):
-        """Validate when configured with mk8s as ci-environment"""
-
-        # Mock
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        zz.utility_facade = UtilityFacade(zz)
-        zz.testsuite_props = {
-            'BRANCH_NAME': 'PR-123',
-        }
-
-        # Setup
-        classname = 'tests.test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        assert mhf.get_module_hierarchy(classname) == ['PR-123', 'tests.test_default']
-
-    def test_mk8s_branch_periodic(self, mocker):
-        """Validate when configured with mk8s as ci-environment"""
-
-        # Mock
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        zz.utility_facade = UtilityFacade(zz)
-        zz.testsuite_props = {
-            'BRANCH_NAME': 'master',
-        }
-
-        # Setup
-        classname = 'tests.test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        assert mhf.get_module_hierarchy(classname) == ['tests.test_default']
-
-    def test_tempest(self, mocker):
-        """Validate when configured with tempest as tool"""
-
-        # Mock
-        zz = mocker.MagicMock()
-        zz.test_runner = 'tempest'
-        zz.utility_facade = UtilityFacade(zz)
-
-        # Setup
-        classname = 'tests.test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        assert ['tests.test_default'] == mhf.get_module_hierarchy(classname)
-
-    def test_bad_value(self, mocker):
-        """Validate that if a bad value gets in we default to asc"""
-        # Mock
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'oops'
-        zz.utility_facade = UtilityFacade(zz)
-        zz.testsuite_props = ASC_TESTSUITE_PROPS
-
-        # Setup
-        classname = 'tests.test_default'
-
-        # Test
-        mhf = ModuleHierarchyFacade(zz)
-        mh = mhf.get_module_hierarchy(classname)
-        assert mh == ['foo', 'bar', 'baz', 'barf', 'test_default']
-
-
 class TestDiscoverParentTestCycle(object):
     """Test cases for the 'discover_parent_test_cycle' function"""
 
@@ -286,53 +197,3 @@ class TestDiscoverParentTestCycle(object):
         # Test
         with pytest.raises(RuntimeError):
             mhf.discover_root_test_cycle(test_cycle_name)
-
-
-class TestCycleName(object):
-    """Tests for the logic that controles default cycle names"""
-
-    def test_tempest_cycle(self, mocker):
-        """Test the default test cycle for tempest tests"""
-
-        # Setup
-        zz = mocker.MagicMock()
-        zz.test_runner = 'tempest'
-
-        # Test
-        assert 'Tempest' == ModuleHierarchyFacade(zz).get_test_cycle_name()
-
-    def test_asc_cycle(self, mocker):
-        """Verify the default test cycle for asc tests"""
-
-        # Setup
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'asc'
-        release = 'Pike'
-        zz.testsuite_props = {'RPC_PRODUCT_RELEASE': release}
-
-        # Test
-        assert release == ModuleHierarchyFacade(zz).get_test_cycle_name()
-
-    def test_mk8s_pr_cycle(self, mocker):
-        """Verify that mk8s pr test cycle gets set correctly"""
-
-        # Setup
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        branch = 'PR-123'
-        zz.testsuite_props = {'BRANCH_NAME': branch}
-
-        # Test
-        assert 'PR' == ModuleHierarchyFacade(zz).get_test_cycle_name()
-
-    def test_mk8s_non_pr_cycle(self, mocker):
-        """Verify that non PR tests use the branch name"""
-
-        # Setup
-        zz = mocker.MagicMock()
-        zz.ci_environment = 'mk8s'
-        branch = 'Master'
-        zz.testsuite_props = {'BRANCH_NAME': branch}
-
-        # Test
-        assert branch == ModuleHierarchyFacade(zz).get_test_cycle_name()

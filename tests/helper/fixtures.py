@@ -8,6 +8,7 @@ import os
 import uuid
 import pytest
 import swagger_client
+from copy import deepcopy
 from swagger_client.rest import ApiException
 from tests.helper.classes.zigzag_runner import ZigZagRunner
 
@@ -97,12 +98,13 @@ def _zigzag_runner_factory(qtest_env_vars, _configure_test_environment, tmpdir_f
     root_module_ids = []
     temp_dir = tmpdir_factory.mktemp('data')
 
-    def _factory(junit_xml_file_name, ci_environment):
+    def _factory(junit_xml_file_name, config_file_path, global_properties_dict):
         """Instantiate an object used to write ZigZag compliant JUnitXML files and execute ZigZag CLI.
 
         Args:
             junit_xml_file_name (str): The name of the JUnitXML file. (Do not supply a file path!)
-            ci_environment (str): The CI environment used to produce the JUnitXML file.
+            config_file_path (str): The path to the config file to be used.
+            global_properties_dict (dict): The global properties to be used to build the XML
 
         Returns:
             ZigZagRunner: Write ZigZag compliant JUnitXML files and execute ZigZag CLI.
@@ -111,14 +113,19 @@ def _zigzag_runner_factory(qtest_env_vars, _configure_test_environment, tmpdir_f
             RuntimeError: Invalid value provided for the 'ci_environment' argument.
         """
 
+        gpd = deepcopy(global_properties_dict)
         root_test_cycle, root_req_module = _configure_test_environment
+        gpd['ZZ_INTEGRATION_TEST_CYCLE'] = root_test_cycle.name
+        gpd['ZZ_INTEGRATION_PROJECT_ID'] = qtest_env_vars['QTEST_SANDBOX_PROJECT_ID']
+
         junit_xml_file_path = temp_dir.join(junit_xml_file_name).strpath
         runner = ZigZagRunner(qtest_env_vars['QTEST_API_TOKEN'],
                               qtest_env_vars['QTEST_SANDBOX_PROJECT_ID'],
                               root_test_cycle,
                               root_req_module,
                               junit_xml_file_path,
-                              ci_environment)
+                              config_file_path,
+                              gpd)
         zz_runners.append(runner)
 
         return runner

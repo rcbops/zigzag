@@ -13,7 +13,7 @@ from zigzag.zigzag_test_log import SWEET_UNICORN_GIF
 # Fixtures
 # ======================================================================================================================
 @pytest.fixture(scope='session')
-def github_failure_for_asc(_zigzag_runner_factory):
+def github_failure_for_asc(_zigzag_runner_factory, asc_config_file, asc_global_props):
     """ZigZag CLI runner with a failing test configured for the "asc" CI environment to create a valid link to GitHub
     via the "Failure Link" qTest field.
 
@@ -24,7 +24,7 @@ def github_failure_for_asc(_zigzag_runner_factory):
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('github_failure_for_asc.xml', 'asc')
+    zz_runner = _zigzag_runner_factory('github_failure_for_asc.xml', asc_config_file, asc_global_props)
 
     failure_message = """
             host = &lt;testinfra.host.Host object at 0x7f61d2c20e10&gt;
@@ -61,7 +61,7 @@ def github_failure_for_asc(_zigzag_runner_factory):
 
 
 @pytest.fixture(scope='session')
-def github_failure_for_mk8s(_zigzag_runner_factory):
+def github_failure_for_mk8s(_zigzag_runner_factory, mk8s_config_file, mk8s_global_props):
     """ZigZag CLI runner with a failing test configured for the "mk8s" CI environment to create a valid link to GitHub
     via the "Failure Link" qTest field.
 
@@ -72,7 +72,7 @@ def github_failure_for_mk8s(_zigzag_runner_factory):
         ZigZagRunner
     """
 
-    zz_runner = _zigzag_runner_factory('github_failure_for_mk8s.xml', 'mk8s')
+    zz_runner = _zigzag_runner_factory('github_failure_for_mk8s.xml', mk8s_config_file, mk8s_global_props)
 
     failure_message = """
             host = &lt;testinfra.host.Host object at 0x7f61d2c20e10&gt;
@@ -92,8 +92,9 @@ def github_failure_for_mk8s(_zigzag_runner_factory):
 
     # Setup global props and test case for use with the 'https://github.com/rcbops/asc-test-repo/tree/mk8s' fixture.
     zz_runner.global_props['GIT_URL'] = 'https://github.com/rcbops/asc-test-repo.git'
-    zz_runner.global_props['GIT_COMMIT'] = 'mk8s'
+    zz_runner.global_props['GIT_COMMIT'] = 'b8627fda1fef02dea802f7eec0fcae9edc700993'
     zz_runner.global_props['CHANGE_BRANCH'] = 'Unknown'
+    zz_runner.global_props['CHANGE_FORK'] = 'foo'
     zz_runner.add_test_case(state='failure',
                             name='test_first_thing',
                             file_path='tests/test-cases/test_things.py',
@@ -102,7 +103,7 @@ def github_failure_for_mk8s(_zigzag_runner_factory):
                             message=failure_message)
 
     # Store the expected GitHub failure link URL to the runner as metadata.
-    zz_runner.metadata['github_failure_url_exp'] = ('https://github.com/rcbops/asc-test-repo/tree/mk8s/'
+    zz_runner.metadata['github_failure_url_exp'] = ('https://github.com/foo/mk8s/tree/b8627fda1fef02dea802f7eec0fcae9edc700993/'  # noqa
                                                     'tools/installer/tests/test-cases/test_things.py#L15')
 
     return zz_runner
@@ -134,9 +135,11 @@ class TestGitHubLinking(object):
     def test_missing_github_link_for_asc(self, single_failing_test_for_asc):
         """Verify that GitHub failure links are omitted when required environment variables are absent for the
         "asc" CI environment.
+        We will remove the value associated with the config test_commit
         """
 
         # Setup
+        single_failing_test_for_asc.global_props.pop('MOLECULE_GIT_COMMIT')
         single_failing_test_for_asc.assert_invoke_zigzag()
         test_runs = single_failing_test_for_asc.tests[0].qtest_test_runs
 
@@ -166,6 +169,7 @@ class TestGitHubLinking(object):
         """
 
         # Setup
+        single_failing_test_for_mk8s.global_props.pop('GIT_COMMIT')
         single_failing_test_for_mk8s.assert_invoke_zigzag()
         test_runs = single_failing_test_for_mk8s.tests[0].qtest_test_runs
 

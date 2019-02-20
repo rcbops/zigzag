@@ -5,6 +5,7 @@ flake8
 future
 ipython
 jinja2
+jsonschema
 lxml
 pytest
 pytest-cov

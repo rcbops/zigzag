@@ -12,38 +12,36 @@ from zigzag.xml_parsing_facade import XmlParsingFacade
 from zigzag.requirements_link_facade import RequirementsLinkFacade
 from zigzag.zigzag_test_log import ZigZagTestLogError
 from zigzag.module_hierarchy_facade import ModuleHierarchyFacade
+from zigzag.zigzag_config import ZigZagConfig
+from zigzag.zigzag_config import ZigZagConfigError
 
 
 class ZigZag(object):
 
     def __init__(self,
                  junit_xml_file_path,
+                 config_file,
                  qtest_api_token,
-                 qtest_project_id,
-                 qtest_test_cycle=None,  # if None this will be assigned by the module_hierarchy_facade
                  pprint_on_fail=False):
         """ Create a ZigZag facade class object. The ZigZag class uses the Facade pattern to call out to
         subsystems and sub Facades.
 
         Args:
             junit_xml_file_path (str): A file path to a XML element representing a JUnit style testsuite response.
+            config_file (str): A file path to a JSON config file
             qtest_api_token (str): Token to use for authorization to the qTest API.
-            qtest_project_id (int): The target qTest project for the test results.
-            qtest_test_cycle (str): The parent qTest test cycle for test results.
-                (e.g. Product Release codename "Queens")
             pprint_on_fail (bool): A flag for enabling debug pretty print on schema failure.
         """
 
         swagger_client.configuration.api_key['Authorization'] = qtest_api_token
         self._qtest_api_token = qtest_api_token
         self._junit_xml_file_path = junit_xml_file_path
-        self._qtest_project_id = qtest_project_id
-        self._qtest_test_cycle_name = qtest_test_cycle
         self._pprint_on_fail = pprint_on_fail
+        self._config_file = config_file
         self._test_logs = []
 
         # properties that will be written to an instance of this class as a mediator
-        self._ci_environment = None
+        self._qtest_test_cycle_name = None
         self._build_number = None
         self._build_url = None
         self._testsuite_props = None
@@ -51,13 +49,13 @@ class ZigZag(object):
         self._junit_xml = None
         self._junit_xml_doc = None
         self._qtest_test_cycle_pid = None
+        self._qtest_project_id = None
+        self._config_dict = None
 
         self._utility_facade = UtilityFacade(self)
         self._parsing_facade = XmlParsingFacade(self)
         self._requirement_link_facade = RequirementsLinkFacade(self)
         self._module_hierarchy_facade = ModuleHierarchyFacade(self)
-
-        self._test_runner = 'pytest-zigzag'  # the default test_runner assumed by ZigZag
 
     #  properties with only getters
     @property
@@ -99,6 +97,18 @@ class ZigZag(object):
         return self._junit_xml_file_path
 
     @property
+    def config_dict(self):
+        """Gets the config dictionary
+
+        Returns:
+             ZigZagConfig: The zigzag config dictionary
+        """
+
+        if self._config_dict is None:
+            self._config_dict = ZigZagConfig(self._config_file, self.testsuite_props)
+        return self._config_dict
+
+    @property
     def qtest_project_id(self):
         """Gets the qTest project ID
 
@@ -106,6 +116,12 @@ class ZigZag(object):
              int: The qTest project ID
         """
         return self._qtest_project_id
+
+    @qtest_project_id.setter
+    def qtest_project_id(self, value):
+        """Sets the value for qtest_project_id
+        """
+        self._qtest_project_id = value
 
     @property
     def qtest_test_cycle_name(self):
@@ -140,19 +156,6 @@ class ZigZag(object):
         return self._pprint_on_fail
 
     #  properties with setters and getters
-    @property
-    def test_runner(self):
-        """Gets the test_runner used to generate the files to be processed
-
-        Returns:
-            str: the name of the test_runner used to generate the files to be processed
-        """
-        return self._test_runner
-
-    @test_runner.setter
-    def test_runner(self, value):
-        """Sets the value for test_runner"""
-        self._test_runner = value
 
     @property
     def build_url(self):
@@ -161,13 +164,10 @@ class ZigZag(object):
         Returns:
             str: The url for the build
         """
-        return self._build_url
-
-    @build_url.setter
-    def build_url(self, value):
-        """Sets the value for build_url
-        """
-        self._build_url = value
+        try:
+            return self.config_dict.get_config('build_url')
+        except ZigZagConfigError:
+            pass  # this is not a required property
 
     @property
     def build_number(self):
@@ -176,13 +176,10 @@ class ZigZag(object):
         Returns:
             int: the number of the build
         """
-        return self._build_number
-
-    @build_number.setter
-    def build_number(self, value):
-        """Sets the number of the build
-        """
-        self._build_number = value
+        try:
+            return self.config_dict.get_config('build_number')
+        except ZigZagConfigError:
+            pass  # this is not a required property
 
     @property
     def testsuite_props(self):
@@ -243,22 +240,6 @@ class ZigZag(object):
         self._serialized_junit_xml = value
 
     @property
-    def ci_environment(self):
-        """Gets the configured test_runner
-
-        Returns:
-            str: the configured ci_environment
-        """
-
-        return self._ci_environment
-
-    @ci_environment.setter
-    def ci_environment(self, value):
-        """Sets the configured ci_environment"""
-
-        self._ci_environment = value
-
-    @property
     def test_logs(self):
         """Gets the test log objects.
 
@@ -305,6 +286,8 @@ class ZigZag(object):
             RuntimeError: Failed to upload test results to qTest Manager.
         """
 
+        project_id = self.config_dict.get_config('project_id')
+        self.qtest_project_id = project_id
         auto_api = swagger_client.TestlogApi()
         auto_req = self._generate_auto_request()
 
@@ -329,4 +312,4 @@ class ZigZag(object):
     def parse(self):
         """Parse the xml"""
 
-        self._parsing_facade.parse()  # this was moved from the init method
+        self._parsing_facade.parse(self._junit_xml_file_path)  # this was moved from the init method

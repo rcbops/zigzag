@@ -1,0 +1,6 @@
+{
+    "test_cycle": "test_cycle_name",
+    "project_id": "",
+    "module_hierarchy": "{{ [] }}",
+    "path_to_test_exec_dir": "{{ PATH_TO_TEST_EXEC_DIR }}"
+}

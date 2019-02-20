@@ -19,8 +19,6 @@ class ModuleHierarchyFacade(object):
         """
 
         self._mediator = mediator
-        self._pr_regex = re.compile(r'.*(PR-\d+).*')
-        self._pr_match = None
 
     def get_module_hierarchy(self, classname):
         """Get module hierarchy
@@ -32,14 +30,16 @@ class ModuleHierarchyFacade(object):
             list[str]: The strings to use for the module_hierarchy
         """
 
-        if self._mediator.ci_environment == 'asc':
-            return self._asc(classname)
-        elif self._mediator.ci_environment == 'mk8s':
-            return self._mk8s(classname)
-        elif self._mediator.test_runner == 'tempest':
-            return self._tempest(classname)
-        else:
-            return self._asc(classname)  # This is the default
+        modhierarchy = []
+        defined_hierarchy = self._mediator.config_dict.get_config('module_hierarchy')
+        test_file_name = classname[classname.rfind(".")+1:]
+        try:
+            re.search("(^[a-zA-Z_][a-zA-Z0-9_]*$)", test_file_name).groups()
+            modhierarchy = [str(h) for h in defined_hierarchy]
+            modhierarchy.append(test_file_name)
+        except AttributeError:
+            raise RuntimeError("Test case '{}' has an invalid 'classname' attribute!".format(classname))
+        return modhierarchy
 
     def get_test_cycle_name(self):
         """Gets the test_cycle name
@@ -47,16 +47,7 @@ class ModuleHierarchyFacade(object):
         Returns:
             str: The test_cycle name
         """
-        if self._mediator.ci_environment == 'asc':
-            return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
-        elif self._mediator.ci_environment == 'mk8s':
-            # organize all PR related testing by pr number ex: 'PR-123'
-            # organize all non PR related testing by branch name
-            return 'PR' if self.pr_match else self._mediator.testsuite_props['BRANCH_NAME']
-        elif self._mediator.test_runner == 'tempest':
-            return 'Tempest'
-        else:
-            return self._mediator.testsuite_props['RPC_PRODUCT_RELEASE']
+        return self._mediator.config_dict.get_config('test_cycle')
 
     def discover_root_test_cycle(self, test_cycle_name):
         """Search for a test cycle at the root of the qTest Test Execution with a matching name. (Case insensitive) If a
@@ -102,67 +93,3 @@ class ModuleHierarchyFacade(object):
                                "Message: {}".format(e.status, e.reason, e.body))
 
         return test_cycle_pid
-
-    @property
-    def pr_match(self):
-        """Tells if tests results are from a PR
-
-        Returns:
-            match: the regex match object
-        """
-        if self._pr_match is None:
-            self._pr_match = re.match(self._pr_regex, self._mediator.testsuite_props['BRANCH_NAME'])
-
-        return self._pr_match
-
-    def _asc(self, classname):
-        """Gets the module hierarchy for asc test cases
-
-        Args:
-            classname (str): A string representing the 'classname' attribute on the 'testcase' XML element.
-
-        Returns:
-            list[str]: The strings to use for the module_hierarchy
-        """
-
-        testsuite_props = self._mediator.testsuite_props
-        module_hierarchy = [testsuite_props['RPC_RELEASE'],             # RPC Release Version (e.g. 16.0.0)
-                            testsuite_props['JOB_NAME'],                # CI Job name (e.g. PM_rpc-openstack-pike-xenial_mnaio_no_artifacts-swift-system) # noqa
-                            testsuite_props['MOLECULE_TEST_REPO'],      # (e.g. molecule-validate-neutron-deploy)
-                            testsuite_props['MOLECULE_SCENARIO_NAME']]  # (e.g. "default")
-
-        try:
-            testcase_groups = self._mediator.utility_facade.testcase_group_rgx.search(classname).groups()
-        except AttributeError:
-            raise RuntimeError("Test case '{}' has an invalid 'classname' attribute!".format(classname))
-
-        module_hierarchy.append(testcase_groups[0])         # Always append at least the filename of the test grouping.
-        if testcase_groups[1]:
-            module_hierarchy.append(testcase_groups[1])     # Append the class name of tests if specified.
-
-        return module_hierarchy
-
-    def _mk8s(self, classname):
-        """Gets the module hierarchy for test cases that are mk8s
-
-        Args:
-            classname (str): A string representing the 'classname' attribute on the 'testcase' XML element.
-
-        Returns:
-            list[str]: The strings to use for the module_hierarchy
-        """
-
-        if self.pr_match:
-            module_hierarchy = [self.pr_match.group(1), classname]  # The specific PR
-        else:
-            module_hierarchy = [classname]
-
-        return module_hierarchy
-
-    def _tempest(self, classname):
-        """Gets the module hierarchy for tempest test cases
-
-        Returns:
-            list[str]: The strings to use for the module_hierarchy
-        """
-        return [classname]  # this is a placeholder, use something more meaningful
