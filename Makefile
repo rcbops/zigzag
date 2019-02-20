@@ -86,10 +86,6 @@ coverage-html: ## check code coverage with an HTML report
 coverage-term: ## check code coverage with a simple terminal report
 	py.test --cov-report term-missing --cov=zigzag tests/
 
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
 dist: clean ## builds source and wheel package
 	python setup.py sdist
 	python setup.py bdist_wheel
@@ -123,14 +119,24 @@ bump-minor: ## bumps the version of by minor
 bump-patch: ## bumps the version of by patch
 	bumpversion patch
 
-release-major: develop lint test-all bump-major build publish ## package and upload a major release
+bump-build: ## bumps the version of by build
+	bumpversion build
+
+bump-release: ## prepares the version number for production release
+	bumpversion --tag release
+
+release-major: develop lint test-all bump-major build bump-release publish ## package and upload a major release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-minor: develop lint test-all bump-minor build publish ## package and upload a minor release
+release-minor: develop lint test-all bump-minor build bump-release publish ## package and upload a minor release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-patch: develop lint test-all bump-patch build publish ## package and upload a patch release
+release-patch: develop lint test-all bump-patch build bump-release publish ## package and upload a patch release
+	echo 'Successfully released!'
+	echo 'Please push the newly created tag and commit to GitHub.'
+
+release: develop lint test-all bump-release build bump-release publish ## package and upload a release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
