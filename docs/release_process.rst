@@ -16,7 +16,9 @@ project in production.
 3. Decide if you are going to increment the major, minor, or patch version.
    You can refer to semver_ to help you make that decision.
 
-4. Use the `release-major`, `release-minor`, or `release-patch`. ::
+4. Verify that the pre-requisites for running `integration tests`_ are satisfied. (See the "Executing Integration Tests" section)
+
+5. Use the `release-major`, `release-minor`, or `release-patch`. ::
 
     make release-minor
 
@@ -80,6 +82,7 @@ onto `PyPI`_ in order to test other projects that are dependent on this one.
 
 10. Create a release on GitHub. (`GitHub release`_)
 
+.. _integration tests: integration_testing.rst
 .. _semver: https://semver.org
 .. _shared_accounts: https://rpc-openstack.atlassian.net/wiki/spaces/ASC/pages/143949893/Useful+Links#UsefulLinks-SharedAccounts
 .. _GitHub release: https://help.github.com/articles/creating-releases/

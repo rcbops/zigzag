@@ -125,18 +125,18 @@ bump-build: ## bumps the version of by build
 bump-release: ## prepares the version number for production release
 	bumpversion --tag release
 
-release-major: develop lint test-all bump-major build bump-release publish ## package and upload a major release
+release-major: develop lint test-all bump-major bump-release build publish ## package and upload a major release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-minor: develop lint test-all bump-minor build bump-release publish ## package and upload a minor release
+release-minor: develop lint test-all bump-minor bump-release build publish ## package and upload a minor release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release-patch: develop lint test-all bump-patch build bump-release publish ## package and upload a patch release
+release-patch: develop lint test-all bump-patch bump-release build publish ## package and upload a patch release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
 
-release: develop lint test-all bump-release build bump-release publish ## package and upload a release
+release: develop lint test-all bump-release bump-release build publish ## package and upload a release
 	echo 'Successfully released!'
 	echo 'Please push the newly created tag and commit to GitHub.'
