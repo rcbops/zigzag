@@ -36,8 +36,8 @@ class ZigZagConfig(object):
                                            'data/schema/zigzag-config.schema.json').read().decode())
             validate(self._config_dict, schema)
 
-        except (OSError, IOError):
-            raise ZigZagConfigError("Failed to load '{}' config file!".format(config_file_path))
+        except (OSError, IOError) as e:
+            raise ZigZagConfigError("Failed to load '{}' config file!: {}".format(config_file_path, str(e)))
         except ValueError as e:
             raise ZigZagConfigError("The '{}' config file is not valid JSON: {}".format(config_file_path, str(e)))
         except ValidationError as e:

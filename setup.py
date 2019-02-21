@@ -15,6 +15,7 @@ requirements = ['Click>=6.0',
                 'lxml',
                 'rpc-qtest-swagger-client<10.0.0',
                 'requests',
+                'jsonschema',
                 'future',
                 'jinja2']
 packages = ['zigzag']
@@ -26,7 +27,7 @@ entry_points = {
 
 setup(
     name='rpc-zigzag',
-    version='0.14.0',
+    version='1.0.0-dev5',
     author="rcbops",
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',
