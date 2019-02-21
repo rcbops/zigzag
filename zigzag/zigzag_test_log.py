@@ -44,7 +44,7 @@ class _ZigZagTestLog(object):
         self._mediator = mediator
 
         # this is data that will be collected from qTest
-        self._qtest_requirements = []  # lazy loaded & simple cache
+        self._qtest_requirements = None  # lazy loaded & simple cache
         self._qtest_testcase_id = None
         self._test_execution_parameters = None
 
@@ -129,7 +129,7 @@ class _ZigZagTestLog(object):
         Returns:
             list[int]: a list of associated qTest requirements object IDs
         """
-        if not len(self._qtest_requirements):
+        if not self._qtest_requirements:
             self._lookup_requirements()
         return self._qtest_requirements
 
@@ -588,6 +588,8 @@ class _ZigZagTestLog(object):
                                    "Reason: {}\n"
                                    "Message: {}".format(e.status, e.reason, e.body))
             exact_jira_regex = re.compile(r'([a-zA-Z]+-\d+)')
+            if not self._qtest_requirements:
+                self._qtest_requirements = []
             if parsed['total'] == 1:
                 self._qtest_requirements.append(parsed['items'][0]['id'])
             elif parsed['total'] > 1:
