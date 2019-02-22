@@ -27,7 +27,7 @@ entry_points = {
 
 setup(
     name='rpc-zigzag',
-    version='1.0.0-dev5',
+    version='1.0.0',
     author="rcbops",
     author_email='rcb-deploy@lists.rackspace.com',
     maintainer='rcbops',

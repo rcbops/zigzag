@@ -4,4 +4,4 @@
 
 __author__ = """rcbops"""
 __email__ = 'rcb-deploy@lists.rackspace.com'
-__version__ = '1.0.0-dev5'
+__version__ = '1.0.0'
