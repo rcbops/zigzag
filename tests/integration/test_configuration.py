@@ -267,7 +267,7 @@ class TestConfigNegative(object):
 
         zz_runner = _zigzag_runner_factory('junit.xml', bad_hierarchy_config_file, {})
         zz_runner.add_test_case('passed')
-        expected_message = "does not comply with schema: u'node1, node2' is not of type u'array'"
+        expected_message = "does not comply with schema:"
 
         with pytest.raises(ZigZagConfigError, match=expected_message):
             zz_runner.assert_invoke_zigzag()
