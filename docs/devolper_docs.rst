@@ -29,7 +29,7 @@ Generally Zigzag uses APIs provided by the `swagger_client`_ but there have been
 ZigZag's xsd
 ------------
 
-When ZigZag is asked to process an xml document it uses an xsd to perform the first level of validation for the document.  The file `junit.xsd`_ is used to perform validation for xml produced by any tool.  At a high level this document ensures that the xml has a <suite> element with <testcase> elements inside of it.  The logic used to validate the presence of other required attributes of the xml is handled within zigzag itself. If a piece of information is required and it is not able to be determined with the available information it should raise an error that inherits from the base error class in `zigzag_error.py`_
+When ZigZag is asked to process an xml document it uses an xsd to perform the first level of validation for the document.  The file `junit.xsd`_ is used to perform validation for xml produced by any tool.  At a high level this document ensures that the xml has a <testsuite> element with <testcase> elements inside of it.  The logic used to validate the presence of other required attributes of the xml is handled within zigzag itself. If a piece of information is required and it is not able to be determined with the available information it should raise an error that inherits from the base error class in `zigzag_error.py`_
 
 --------------------------
 Gotchas and Best Practices
