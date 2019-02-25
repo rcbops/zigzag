@@ -26,6 +26,11 @@ APIs used by ZigZag
 
 Generally Zigzag uses APIs provided by the `swagger_client`_ but there have been scenarios where bugs have prevented us from doing this.  In these cases we are using the `qTest Manager API`_ endpoints without going through the swagger client.  The library we use to do this is requests.
 
+ZigZag's xsd
+------------
+
+When ZigZag is asked to process an xml document it uses an xsd to perform the first level of validation for the document.  The file `junit.xsd`_ is used to perform validation for xml produced by any tool.  At a high level this document ensures that the xml has a <testsuite> element with <testcase> elements inside of it.  The logic used to validate the presence of other required attributes of the xml is handled within zigzag itself. If a piece of information is required and it is not able to be determined with the available information it should raise an error that inherits from the base error class in `zigzag_error.py`_
+
 --------------------------
 Gotchas and Best Practices
 --------------------------
@@ -69,6 +74,8 @@ This repository implements the following test layers:
 .. _Unit: ../tests/unit/conftest.py
 .. _Integration: ../tests/integration/conftest.py
 .. _integration_testing.rst: integration_testing.rst
+.. _junit.xsd: ../zigzag/data/junit.xsd
+.. _zigzag_error.py: ../zigzag/zigzag_error.py
 .. _swagger_client: https://github.com/rcbops/qtest-swagger-client
 .. _Facade Pattern: https://sourcemaking.com/design_patterns/facade
 .. _Mediator Pattern: https://sourcemaking.com/design_patterns/mediator
